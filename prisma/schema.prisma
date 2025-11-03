@@ -1,0 +1,197 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                 String    @id @default(uuid())
+  userId             String
+  providerType       String
+  providerId         String
+  providerAccountId  String
+  refreshToken       String?
+  accessToken        String?
+  accessTokenExpires DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  user               User      @relation(fields: [userId], references: [id])
+
+  @@unique([providerId, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(uuid())
+  userId       String
+  expires      DateTime
+  sessionToken String   @unique
+  accessToken  String   @unique
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  user         User     @relation(fields: [userId], references: [id])
+}
+
+model User {
+  id                     String                   @id @default(uuid())
+  name                   String?
+  email                  String                   @unique
+  password               String
+  emailVerified          DateTime?
+  image                  String?
+  createdAt              DateTime                 @default(now())
+  updatedAt              DateTime                 @updatedAt
+  accounts               Account[]
+  sessions               Session[]
+  OrganizationMember     OrganizationMember[]
+  UserRole               UserRole[]
+  UserPermissionOverride UserPermissionOverride[]
+  Invitation             Invitation[]
+}
+
+model VerificationRequest {
+  id         String   @id @default(uuid())
+  identifier String
+  token      String   @unique
+  expires    DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([identifier, token])
+}
+
+// ============================
+// Organizações (tenant)
+// ============================
+model Organization {
+  id                     String                   @id @default(uuid())
+  name                   String
+  slug                   String                   @unique // para subdomínio
+  createdAt              DateTime                 @default(now())
+  updatedAt              DateTime                 @updatedAt
+  OrganizationMember     OrganizationMember[]
+  Role                   Role[]
+  UserRole               UserRole[]
+  UserPermissionOverride UserPermissionOverride[]
+  Invitation             Invitation[]
+}
+
+model OrganizationMember {
+  id        String       @id @default(uuid())
+  orgId     String
+  userId    String
+  org       Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  @@unique([orgId, userId], name: "organization_member_unique")
+}
+
+// ============================
+// Catálogo de permissões (global)
+// ============================
+model Permission {
+  id                     String                   @id @default(uuid())
+  key                    String                   @unique // ex: "customer:view"
+  name                   String                   @unique
+  description            String? // ex: "Permite visualizar clientes"
+  createdAt              DateTime                 @default(now())
+  updatedAt              DateTime                 @updatedAt
+  RolePermission         RolePermission[]
+  UserPermissionOverride UserPermissionOverride[]
+}
+
+// ============================
+// Roles por organização
+// ============================
+model Role {
+  id             String           @id @default(uuid())
+  orgId          String
+  name           String // ex: "Manager"
+  key            String           @unique // ex: "customer:admin"
+  org            Organization     @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  RolePermission RolePermission[]
+  UserRole       UserRole[]
+  Invitation     Invitation[]
+
+  @@unique([orgId, key], name: "role_org_key_unique")
+}
+
+model RolePermission {
+  id           String     @id @default(uuid())
+  roleId       String
+  permissionId String
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@unique([roleId, permissionId], name: "role_permission_unique")
+}
+
+model UserRole {
+  id        String       @id @default(uuid())
+  orgId     String
+  userId    String
+  roleId    String
+  org       Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      Role         @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  @@unique([orgId, userId, roleId], name: "user_role_unique")
+}
+
+enum OverrideMode {
+  allow
+  deny
+}
+
+model UserPermissionOverride {
+  id           String       @id @default(uuid())
+  orgId        String
+  userId       String
+  permissionId String
+  mode         OverrideMode
+  org          Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  permission   Permission   @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@unique([orgId, userId, permissionId], name: "user_permission_override_unique")
+}
+
+// ============================
+// Convites para organização
+// ============================
+model Invitation {
+  id         String    @id @default(uuid())
+  orgId      String
+  email      String
+  roleId     String?
+  invitedBy  String
+  token      String    @unique
+  expiresAt  DateTime
+  acceptedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  org  Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  role Role?        @relation(fields: [roleId], references: [id], onDelete: SetNull)
+  user User         @relation(fields: [invitedBy], references: [id], onDelete: Cascade)
+
+  @@unique([orgId, email], name: "invitation_org_email_unique")
+}
