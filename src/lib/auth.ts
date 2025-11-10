@@ -35,12 +35,32 @@ export const authOptions: NextAuthOptions = {
 
         if (!user || !compareSync(password, user.password)) return null;
 
-        return user;
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          image: user.image,
+        };
       },
     }),
   ],
+  pages: {
+    signIn: "/signin",
+  },
   adapter: PrismaAdapter(prisma),
   session: {
     strategy: "jwt",
+  },
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user?.id) token.id = user.id;
+      return token;
+    },
+    async session({ session, token }) {
+      if (session.user && token.id) {
+        session.user.id = token.id;
+      }
+      return session;
+    },
   },
 };

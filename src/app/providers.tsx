@@ -2,12 +2,14 @@
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { httpBatchLink, loggerLink } from "@trpc/client";
-import { createTRPCReact } from "@trpc/react-query";
 import { type ReactNode, useState } from "react";
 import superjson from "superjson";
-import type { AppRouter } from "@/server/routers/_app";
+import { trpc } from "@/ib/trpc/client";
 
-export const trpc = createTRPCReact<AppRouter>();
+function getOrgId() {
+  if (typeof window === "undefined") return "";
+  return localStorage.getItem("current_org_id") || "";
+}
 
 export function Providers({ children }: { children: ReactNode }) {
   const [queryClient] = useState(() => new QueryClient());
@@ -22,6 +24,9 @@ export function Providers({ children }: { children: ReactNode }) {
         httpBatchLink({
           url: "/api/trpc",
           transformer: superjson,
+          headers: {
+            "current-org-id": getOrgId(),
+          },
         }),
       ],
     }),

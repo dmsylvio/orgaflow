@@ -89,6 +89,7 @@ model OrganizationMember {
   id        String       @id @default(uuid())
   orgId     String
   userId    String
+  isOwner   Boolean      @default(false) // <- DONO/ADMIN da org
   org       Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
   user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime     @default(now())
@@ -194,4 +195,17 @@ model Invitation {
   user User         @relation(fields: [invitedBy], references: [id], onDelete: Cascade)
 
   @@unique([orgId, email], name: "invitation_org_email_unique")
+}
+
+model Customer {
+  id        String   @id @default(uuid())
+  orgId     String
+  name      String
+  email     String?  @unique
+  phone     String?
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([orgId], map: "idx_customer_org")
 }
