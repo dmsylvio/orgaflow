@@ -65,7 +65,7 @@ export default function OrgSwitchPage() {
 
         <div className="grid sm:grid-cols-2 gap-3">
           {(myOrgs.data ?? []).map((o) => (
-            <button
+            <span
               key={o.id}
               onClick={() => onSwitch(o.id)}
               className={cn(
@@ -79,8 +79,12 @@ export default function OrgSwitchPage() {
                 <div className="mt-2 inline-flex items-center rounded-md border px-2 py-0.5 text-xs">
                   Owner
                 </div>
-              ) : null}
-            </button>
+              ) : (
+                <div className="mt-2 inline-flex items-center rounded-md border px-2 py-0.5 text-xs">
+                  Member
+                </div>
+              )}
+            </span>
           ))}
         </div>
 

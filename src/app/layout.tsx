@@ -5,15 +5,15 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { Providers } from "./providers";
 
-const poppins = Poppins({ 
-  subsets: ["latin"], 
-  variable: "--font-poppins", 
-  weight: ["400", "500", "600", "700", "800"]
+const poppins = Poppins({
+  subsets: ["latin"],
+  variable: "--font-poppins",
+  weight: ["400", "500", "600", "700", "800"],
 });
 
-const openSans = Open_Sans({ 
-  subsets: ["latin"], 
-  variable: "--font-open-sans"
+const openSans = Open_Sans({
+  subsets: ["latin"],
+  variable: "--font-open-sans",
 });
 
 export const metadata: Metadata = {
@@ -29,7 +29,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${openSans.variable} ${poppins.variable} h-full overflow-hidden bg-gray-100 font-base`}
+        className={`${openSans.variable} ${poppins.variable} h-full overflow-hidden bg-gray-100 font-base antialiased`}
       >
         <ThemeProvider
           attribute="class"

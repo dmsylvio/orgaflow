@@ -1,18 +1,26 @@
 import { hash } from "bcryptjs";
 import { prisma } from "@/lib/prisma";
-
+import { expandAbilities } from "@/server/iam/ability/expand";
 // IMPORTA O CATÁLOGO COMO CÓDIGO (uma fonte da verdade)
 import {
+  type AbilityKey,
   PERMISSIONS,
-  type PermissionKey,
 } from "../src/server/iam/permissions/catalog";
 
 async function main() {
-  // 1) Sincroniza PERMISSIONS (createMany com skipDuplicates)
+  // --- (Opcional para DEV) reset IAM inteiro ---
+  // await prisma.userPermissionOverride.deleteMany({});
+  // await prisma.userRole.deleteMany({});
+  // await prisma.rolePermission.deleteMany({});
+  // await prisma.role.deleteMany({});
+  // await prisma.permission.deleteMany({});
+
+  // 1) Sincroniza PERMISSIONS (fonte: catálogo em código)
   await prisma.permission.createMany({
-    data: PERMISSIONS.map((key) => ({
-      key,
-      name: key, // pode trocar por rótulos melhores depois
+    data: PERMISSIONS.map((p) => ({
+      key: p.key,
+      name: p.name,
+      description: p.description,
     })),
     skipDuplicates: true,
   });
@@ -35,12 +43,9 @@ async function main() {
       email: ownerEmail,
       name: "Owner XYZ",
       password: passwordHash,
-      activeOrgId: org.id, // Define org ativa no create
+      activeOrgId: org.id, // ativa org no create
     },
-    update: {
-      // Se usuário já existe, atualiza activeOrgId apenas se for null
-      activeOrgId: org.id,
-    },
+    update: { activeOrgId: org.id },
   });
 
   const member = await prisma.user.upsert({
@@ -49,12 +54,9 @@ async function main() {
       email: memberEmail,
       name: "Manager XYZ",
       password: passwordHash,
-      activeOrgId: org.id, // Define org ativa no create
-    },
-    update: {
-      // Se usuário já existe, atualiza activeOrgId apenas se for null
       activeOrgId: org.id,
     },
+    update: { activeOrgId: org.id },
   });
 
   // 4) Vincula membership (owner e member)
@@ -77,19 +79,32 @@ async function main() {
     update: {},
   });
 
-  // 6) Anexa TODAS as permissions à role "manager"
-  // (pode filtrar por módulo se quiser; aqui vai CRUD de customer/item/invoice/estimate)
+  // 6) Define abilities da role "manager" (usando curingas + expander)
+  //    Ajuste livre conforme seu gosto (ex.: adicionar/remover módulos).
+  const managerAbilities = expandAbilities([
+    "customer:*",
+    "item:*",
+    "estimate:*",
+    "invoice:*",
+    "payment:view",
+    "expense:view",
+    "report:financial:view",
+  ]).values();
+
+  const managerKeys = Array.from(managerAbilities) as AbilityKey[];
+
+  // Busca IDs das permissions e evita duplicar vínculos
   const allPerms = await prisma.permission.findMany({
-    where: { key: { in: PERMISSIONS as PermissionKey[] } },
-    select: { id: true },
+    where: { key: { in: managerKeys } },
+    select: { id: true, key: true },
   });
 
-  // Evita duplicar vínculos
   const existing = await prisma.rolePermission.findMany({
     where: { roleId: role.id },
     select: { permissionId: true },
   });
   const existingSet = new Set(existing.map((e) => e.permissionId));
+
   const toAttach = allPerms
     .filter((p) => !existingSet.has(p.id))
     .map((p) => ({ roleId: role.id, permissionId: p.id }));
@@ -113,7 +128,7 @@ async function main() {
     owner: { email: owner.email, activeOrgId: owner.activeOrgId },
     member: { email: member.email, activeOrgId: member.activeOrgId },
     role: { id: role.id, key: role.key },
-    totalPermissions: PERMISSIONS.length,
+    managerPermissions: managerKeys.length,
   });
 }
 

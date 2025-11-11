@@ -1,35 +1,85 @@
-import type { PermissionKey } from "../permissions/catalog";
-import { IMPLIED } from "../permissions/catalog";
+import {
+  type AbilityKey,
+  ALL_ABILITIES,
+  type AnyAbility,
+  PERMISSIONS,
+  WILDCARDS,
+} from "../permissions/catalog";
+
+// Mapa rápido de dependências cruzadas (inclusive CRUD->view já está no catálogo)
+const DEP_MAP: Record<AbilityKey, AbilityKey[]> = PERMISSIONS.reduce(
+  (acc, p) => {
+    if (p.dependsOn?.length) acc[p.key] = p.dependsOn;
+    return acc;
+  },
+  {} as Record<AbilityKey, AbilityKey[]>,
+);
+
+function expandWildcard(a: AnyAbility): AbilityKey[] {
+  if (a in WILDCARDS) return WILDCARDS[a as keyof typeof WILDCARDS];
+  return [a as AbilityKey];
+}
 
 /**
- * Expande um conjunto de permissions aplicando implicações (ex.: edit ⇒ view).
+ * Expande uma lista de abilities (da role) aplicando:
+ * - curingas (ex.: invoice:*)
+ * - dependências cruzadas (ex.: invoice:create ⇒ customer:view, item:view, invoice:view)
+ * Retorna um Set final, sem duplicatas.
  */
-export function expandPermissions(keys: Iterable<PermissionKey>) {
-  const out = new Set<PermissionKey>();
+export function expandAbilities(input: AnyAbility[]): Set<AbilityKey> {
+  const out = new Set<AbilityKey>();
 
-  const add = (k: PermissionKey) => {
-    if (out.has(k)) return;
-    out.add(k);
-    const deps = IMPLIED.get(k) ?? [];
-    for (const d of deps) add(d);
-  };
+  const stack: AbilityKey[] = [];
+  // 1) expandir curingas
+  for (const a of input) {
+    for (const k of expandWildcard(a)) {
+      stack.push(k);
+    }
+  }
 
-  for (const k of keys) add(k);
+  // 2) DFS de dependências
+  while (stack.length) {
+    const curr = stack.pop()!;
+    if (out.has(curr)) continue;
+    out.add(curr);
+    const deps = DEP_MAP[curr];
+    if (deps?.length) {
+      for (const d of deps) stack.push(d);
+    }
+  }
+
   return out;
 }
 
 /**
- * Aplica overrides (allow/deny) sobre um Set base.
- * Retorna um novo Set expandido novamente.
+ * Owner bypass: retorna TODAS as abilities do catálogo.
  */
-export function applyOverrides(
-  base: Set<PermissionKey>,
-  overrides: { key: PermissionKey; mode: "allow" | "deny" }[],
-) {
-  const copy = new Set(base);
-  for (const ov of overrides) {
-    if (ov.mode === "allow") copy.add(ov.key);
-    if (ov.mode === "deny") copy.delete(ov.key);
-  }
-  return expandPermissions(copy);
+export function expandAsOwner(): Set<AbilityKey> {
+  return new Set(ALL_ABILITIES);
+}
+
+/**
+ * Mescla múltiplas fontes: várias roles + overrides allow/deny.
+ * - rolesAbilities: abilities declaradas das roles do usuário (podem conter curingas)
+ * - allow: overrides de allow (chaves específicas; podem conter curingas)
+ * - deny: overrides de deny (chaves específicas; podem conter curingas)
+ */
+export function resolveEffectiveAbilities(
+  rolesAbilities: AnyAbility[],
+  allow: AnyAbility[] = [],
+  deny: AnyAbility[] = [],
+  { ownerBypass = false }: { ownerBypass?: boolean } = {},
+): Set<AbilityKey> {
+  if (ownerBypass) return expandAsOwner();
+
+  const roleSet = expandAbilities(rolesAbilities);
+  const allowSet = expandAbilities(allow);
+  const denySet = expandAbilities(deny);
+
+  // union roles + allow
+  const merged = new Set<AbilityKey>([...roleSet, ...allowSet]);
+  // remove denies
+  for (const d of denySet) merged.delete(d);
+
+  return merged;
 }

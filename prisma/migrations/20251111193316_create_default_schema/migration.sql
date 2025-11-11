@@ -197,6 +197,9 @@ CREATE INDEX "OrganizationMember_orgId_idx" ON "OrganizationMember"("orgId");
 CREATE INDEX "OrganizationMember_userId_idx" ON "OrganizationMember"("userId");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "OrganizationMember_orgId_userId_key" ON "OrganizationMember"("orgId", "userId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Permission_key_key" ON "Permission"("key");
 
 -- CreateIndex
@@ -212,6 +215,9 @@ CREATE INDEX "RolePermission_roleId_idx" ON "RolePermission"("roleId");
 CREATE INDEX "RolePermission_permissionId_idx" ON "RolePermission"("permissionId");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "RolePermission_roleId_permissionId_key" ON "RolePermission"("roleId", "permissionId");
+
+-- CreateIndex
 CREATE INDEX "UserRole_orgId_idx" ON "UserRole"("orgId");
 
 -- CreateIndex
@@ -221,6 +227,9 @@ CREATE INDEX "UserRole_userId_idx" ON "UserRole"("userId");
 CREATE INDEX "UserRole_roleId_idx" ON "UserRole"("roleId");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "UserRole_orgId_userId_roleId_key" ON "UserRole"("orgId", "userId", "roleId");
+
+-- CreateIndex
 CREATE INDEX "UserPermissionOverride_orgId_idx" ON "UserPermissionOverride"("orgId");
 
 -- CreateIndex
@@ -228,6 +237,9 @@ CREATE INDEX "UserPermissionOverride_userId_idx" ON "UserPermissionOverride"("us
 
 -- CreateIndex
 CREATE INDEX "UserPermissionOverride_permissionId_idx" ON "UserPermissionOverride"("permissionId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "UserPermissionOverride_orgId_userId_permissionId_key" ON "UserPermissionOverride"("orgId", "userId", "permissionId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Invitation_token_key" ON "Invitation"("token");

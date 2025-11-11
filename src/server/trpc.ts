@@ -27,7 +27,10 @@ export const orgProcedure = protectedProcedure.use(async ({ ctx, next }) => {
   await assertOrgMembership(orgId, (ctx.session!.user as any).id);
 
   return next({
-    ctx: { ...ctx, orgId },
+    ctx: {
+      ...ctx,
+      orgId,
+    },
   });
 });
 
