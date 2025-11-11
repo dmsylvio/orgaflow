@@ -10,7 +10,7 @@ const t = initTRPC.context<TRPCContext>().create({
 });
 
 export const router = t.router;
-export const procedure = t.procedure;
+export const publicProcedure = t.procedure;
 
 export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
   if (!ctx.session || !ctx.session.user) {
@@ -40,11 +40,12 @@ export function requirePermissions(required: string[]) {
     // ctx.orgId já é string aqui (garantido pelo orgProcedure)
     // Mas TypeScript não sabe disso, então fazemos um cast seguro
     const orgId = (ctx as any).orgId as string;
-    
+
     if (!orgId) {
       throw new TRPCError({
         code: "INTERNAL_SERVER_ERROR",
-        message: "Organization ID not found in context. Use orgProcedure before requirePermissions.",
+        message:
+          "Organization ID not found in context. Use orgProcedure before requirePermissions.",
       });
     }
 

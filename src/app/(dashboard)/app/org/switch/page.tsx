@@ -1,20 +1,29 @@
 // src/app/app/org/switch/page.tsx
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
-  Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogTrigger
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { trpc } from "@/lib/trpc/client";
 import { cn } from "@/lib/utils";
-import { trpc } from "@/ib/trpc/client";
 
 export default function OrgSwitchPage() {
   const router = useRouter();
-  const myOrgs = trpc.org.listMine.useQuery(undefined, { refetchOnWindowFocus: false });
-  const current = trpc.org.current.useQuery(undefined, { refetchOnWindowFocus: false });
+  const myOrgs = trpc.org.listMine.useQuery(undefined, {
+    refetchOnWindowFocus: false,
+  });
+  const current = trpc.org.current.useQuery(undefined, {
+    refetchOnWindowFocus: false,
+  });
 
   const switchMut = trpc.org.switch.useMutation();
   const createMut = trpc.org.create.useMutation();
@@ -41,14 +50,17 @@ export default function OrgSwitchPage() {
       <div>
         <h1 className="text-xl font-semibold">Selecionar organização</h1>
         <p className="text-sm text-muted-foreground">
-          Escolha uma organização para continuar. Você também pode criar uma nova.
+          Escolha uma organização para continuar. Você também pode criar uma
+          nova.
         </p>
       </div>
 
       <div className="grid gap-3">
         {myOrgs.isLoading ? <p>Carregando...</p> : null}
         {myOrgs.error ? (
-          <div className="text-sm text-red-600">Erro: {myOrgs.error.message}</div>
+          <div className="text-sm text-red-600">
+            Erro: {myOrgs.error.message}
+          </div>
         ) : null}
 
         <div className="grid sm:grid-cols-2 gap-3">
@@ -58,7 +70,7 @@ export default function OrgSwitchPage() {
               onClick={() => onSwitch(o.id)}
               className={cn(
                 "rounded-lg border p-4 text-left hover:bg-accent",
-                current.data?.id === o.id && "border-foreground"
+                current.data?.id === o.id && "border-foreground",
               )}
             >
               <div className="font-medium">{o.name}</div>
@@ -90,8 +102,13 @@ export default function OrgSwitchPage() {
                 />
               </div>
               <DialogFooter>
-                <Button variant="ghost" onClick={() => setOpenCreate(false)}>Cancelar</Button>
-                <Button onClick={onCreate} disabled={createMut.isPending || !orgName.trim()}>
+                <Button variant="ghost" onClick={() => setOpenCreate(false)}>
+                  Cancelar
+                </Button>
+                <Button
+                  onClick={onCreate}
+                  disabled={createMut.isPending || !orgName.trim()}
+                >
                   {createMut.isPending ? "Criando..." : "Criar"}
                 </Button>
               </DialogFooter>

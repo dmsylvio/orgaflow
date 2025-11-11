@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { trpc } from "@/ib/trpc/client";
+import { trpc } from "@/lib/trpc/client";
 
 export default function CustomersTestPage() {
   const [q, setQ] = useState("");
@@ -49,4 +49,3 @@ export default function CustomersTestPage() {
     </div>
   );
 }
-

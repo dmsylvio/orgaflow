@@ -191,7 +191,10 @@ CREATE UNIQUE INDEX "VerificationRequest_identifier_token_key" ON "VerificationR
 CREATE UNIQUE INDEX "Organization_slug_key" ON "Organization"("slug");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "OrganizationMember_orgId_userId_key" ON "OrganizationMember"("orgId", "userId");
+CREATE INDEX "OrganizationMember_orgId_idx" ON "OrganizationMember"("orgId");
+
+-- CreateIndex
+CREATE INDEX "OrganizationMember_userId_idx" ON "OrganizationMember"("userId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Permission_key_key" ON "Permission"("key");
@@ -200,19 +203,31 @@ CREATE UNIQUE INDEX "Permission_key_key" ON "Permission"("key");
 CREATE UNIQUE INDEX "Permission_name_key" ON "Permission"("name");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Role_key_key" ON "Role"("key");
-
--- CreateIndex
 CREATE UNIQUE INDEX "Role_orgId_key_key" ON "Role"("orgId", "key");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "RolePermission_roleId_permissionId_key" ON "RolePermission"("roleId", "permissionId");
+CREATE INDEX "RolePermission_roleId_idx" ON "RolePermission"("roleId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "UserRole_orgId_userId_roleId_key" ON "UserRole"("orgId", "userId", "roleId");
+CREATE INDEX "RolePermission_permissionId_idx" ON "RolePermission"("permissionId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "UserPermissionOverride_orgId_userId_permissionId_key" ON "UserPermissionOverride"("orgId", "userId", "permissionId");
+CREATE INDEX "UserRole_orgId_idx" ON "UserRole"("orgId");
+
+-- CreateIndex
+CREATE INDEX "UserRole_userId_idx" ON "UserRole"("userId");
+
+-- CreateIndex
+CREATE INDEX "UserRole_roleId_idx" ON "UserRole"("roleId");
+
+-- CreateIndex
+CREATE INDEX "UserPermissionOverride_orgId_idx" ON "UserPermissionOverride"("orgId");
+
+-- CreateIndex
+CREATE INDEX "UserPermissionOverride_userId_idx" ON "UserPermissionOverride"("userId");
+
+-- CreateIndex
+CREATE INDEX "UserPermissionOverride_permissionId_idx" ON "UserPermissionOverride"("permissionId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Invitation_token_key" ON "Invitation"("token");
@@ -221,16 +236,19 @@ CREATE UNIQUE INDEX "Invitation_token_key" ON "Invitation"("token");
 CREATE UNIQUE INDEX "Invitation_orgId_email_key" ON "Invitation"("orgId", "email");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Customer_email_key" ON "Customer"("email");
+CREATE INDEX "idx_customer_org" ON "Customer"("orgId");
 
 -- CreateIndex
-CREATE INDEX "idx_customer_org" ON "Customer"("orgId");
+CREATE UNIQUE INDEX "Customer_orgId_email_key" ON "Customer"("orgId", "email");
 
 -- AddForeignKey
 ALTER TABLE "Account" ADD CONSTRAINT "Account_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Session" ADD CONSTRAINT "Session_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "User" ADD CONSTRAINT "User_activeOrgId_fkey" FOREIGN KEY ("activeOrgId") REFERENCES "Organization"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "OrganizationMember" ADD CONSTRAINT "OrganizationMember_orgId_fkey" FOREIGN KEY ("orgId") REFERENCES "Organization"("id") ON DELETE CASCADE ON UPDATE CASCADE;

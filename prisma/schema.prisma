@@ -49,6 +49,7 @@ model User {
   emailVerified          DateTime?
   image                  String?
   activeOrgId            String?
+  activeOrg              Organization?            @relation(fields: [activeOrgId], references: [id], onDelete: SetNull)
   createdAt              DateTime                 @default(now())
   updatedAt              DateTime                 @updatedAt
   accounts               Account[]
@@ -84,6 +85,7 @@ model Organization {
   UserRole               UserRole[]
   UserPermissionOverride UserPermissionOverride[]
   Invitation             Invitation[]
+  users                  User[]
 }
 
 model OrganizationMember {
@@ -97,6 +99,8 @@ model OrganizationMember {
   updatedAt DateTime     @updatedAt
 
   @@unique([orgId, userId], name: "organization_member_unique")
+  @@index([orgId])
+  @@index([userId])
 }
 
 // ============================
@@ -120,7 +124,7 @@ model Role {
   id             String           @id @default(uuid())
   orgId          String
   name           String // ex: "Manager"
-  key            String           @unique // ex: "customer:admin"
+  key            String
   org            Organization     @relation(fields: [orgId], references: [id], onDelete: Cascade)
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
@@ -141,6 +145,8 @@ model RolePermission {
   updatedAt    DateTime   @updatedAt
 
   @@unique([roleId, permissionId], name: "role_permission_unique")
+  @@index([roleId])
+  @@index([permissionId])
 }
 
 model UserRole {
@@ -155,6 +161,9 @@ model UserRole {
   updatedAt DateTime     @updatedAt
 
   @@unique([orgId, userId, roleId], name: "user_role_unique")
+  @@index([orgId])
+  @@index([userId])
+  @@index([roleId])
 }
 
 enum OverrideMode {
@@ -175,6 +184,9 @@ model UserPermissionOverride {
   updatedAt    DateTime     @updatedAt
 
   @@unique([orgId, userId, permissionId], name: "user_permission_override_unique")
+  @@index([orgId])
+  @@index([userId])
+  @@index([permissionId])
 }
 
 // ============================
@@ -202,11 +214,12 @@ model Customer {
   id        String   @id @default(uuid())
   orgId     String
   name      String
-  email     String?  @unique
+  email     String?
   phone     String?
   notes     String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@unique([orgId, email], name: "customer_org_email_unique")
   @@index([orgId], map: "idx_customer_org")
 }
