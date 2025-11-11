@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { procedure, router } from "../trpc";
 import { customersRouter } from "./customers";
+import { orgRouter } from "./org";
 export const appRouter = router({
   hello: procedure
     .input(
@@ -14,6 +15,7 @@ export const appRouter = router({
       };
     }),
   customers: customersRouter,
+  org: orgRouter,
 });
 // export type definition of API
 export type AppRouter = typeof appRouter;

@@ -6,11 +6,6 @@ import { type ReactNode, useState } from "react";
 import superjson from "superjson";
 import { trpc } from "@/ib/trpc/client";
 
-function getOrgId() {
-  if (typeof window === "undefined") return "";
-  return localStorage.getItem("current_org_id") || "";
-}
-
 export function Providers({ children }: { children: ReactNode }) {
   const [queryClient] = useState(() => new QueryClient());
   const [trpcClient] = useState(() =>
@@ -24,9 +19,6 @@ export function Providers({ children }: { children: ReactNode }) {
         httpBatchLink({
           url: "/api/trpc",
           transformer: superjson,
-          headers: {
-            "current-org-id": getOrgId(),
-          },
         }),
       ],
     }),

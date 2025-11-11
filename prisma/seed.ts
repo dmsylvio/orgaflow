@@ -35,8 +35,12 @@ async function main() {
       email: ownerEmail,
       name: "Owner XYZ",
       password: passwordHash,
+      activeOrgId: org.id, // Define org ativa no create
     },
-    update: {},
+    update: {
+      // Se usuário já existe, atualiza activeOrgId apenas se for null
+      activeOrgId: org.id,
+    },
   });
 
   const member = await prisma.user.upsert({
@@ -45,8 +49,12 @@ async function main() {
       email: memberEmail,
       name: "Manager XYZ",
       password: passwordHash,
+      activeOrgId: org.id, // Define org ativa no create
     },
-    update: {},
+    update: {
+      // Se usuário já existe, atualiza activeOrgId apenas se for null
+      activeOrgId: org.id,
+    },
   });
 
   // 4) Vincula membership (owner e member)
@@ -102,8 +110,8 @@ async function main() {
   console.log("Seed concluído com sucesso:");
   console.log({
     org: { id: org.id, slug: org.slug, name: org.name },
-    owner: { email: owner.email },
-    member: { email: member.email },
+    owner: { email: owner.email, activeOrgId: owner.activeOrgId },
+    member: { email: member.email, activeOrgId: member.activeOrgId },
     role: { id: role.id, key: role.key },
     totalPermissions: PERMISSIONS.length,
   });

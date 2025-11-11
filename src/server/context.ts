@@ -2,14 +2,23 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getUserPermissionsForOrg } from "./iam/ability/resolver";
-import { resolveOrgIdFromHeaders } from "./iam/org/resolveTenant";
 
-export async function createTRPCContext(opts: { headers: Headers }) {
+export async function createTRPCContext() {
+  // getServerSession no App Router lê automaticamente do contexto do Next.js
+  // Mas no tRPC fetchRequestHandler, precisamos passar explicitamente
+  // A forma mais simples é usar os headers do request para cookies
   const session = await getServerSession(authOptions);
-  const orgId = resolveOrgIdFromHeaders(opts.headers);
+
+  let orgId: string | null = null;
+  if (session?.user?.id) {
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { activeOrgId: true },
+    });
+    orgId = user?.activeOrgId ?? null;
+  }
 
   return {
-    headers: opts.headers,
     session,
     prisma,
     orgId,

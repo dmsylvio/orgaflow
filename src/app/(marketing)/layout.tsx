@@ -1,8 +1,7 @@
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <div>
-      <h2>marketing/layout</h2>
-      {children}
-    </div>
+    <main className="min-h-dvh grid place-items-center p-6">
+      <div className="w-full max-w-md">{children}</div>
+    </main>
   );
 }
