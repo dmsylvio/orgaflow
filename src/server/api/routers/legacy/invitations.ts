@@ -1,4 +1,4 @@
-import { router, protectedProcedure, publicProcedure } from "../trpc";
+import { router, protectedProcedure, publicProcedure } from "../../trpc";
 import { TRPCError } from "@trpc/server";
 import { prisma } from "@/lib/prisma";
 import { randomUUID } from "crypto";

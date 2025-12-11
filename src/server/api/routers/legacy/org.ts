@@ -1,6 +1,6 @@
-import { assertOrgMembership } from "../iam/guards/requireMember";
-import { assertOrgResolved } from "../iam/guards/requireOrg";
-import { protectedProcedure, router } from "../trpc";
+import { assertOrgMembership } from "../../iam/guards/requireMember";
+import { assertOrgResolved } from "../../iam/guards/requireOrg";
+import { protectedProcedure, router } from "../../trpc";
 import { TRPCError } from "@trpc/server";
 import {
   createOrganizationInput,

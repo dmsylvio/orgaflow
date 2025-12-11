@@ -1,5 +1,5 @@
 // src/server/trpc/routers/me.ts
-import { router, protectedProcedure } from "../trpc";
+import { router, protectedProcedure } from "../../trpc";
 import { TRPCError } from "@trpc/server";
 
 export const meRouter = router({

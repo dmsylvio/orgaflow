@@ -2,7 +2,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getServerSessionSafe } from "@/server/auth/session";
-import { getServerCaller } from "@/server/caller";
+import { getServerCaller } from "@/server/api/caller";
 
 type PageParams = Promise<{ token: string }>;
 
