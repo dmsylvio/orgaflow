@@ -1,7 +1,7 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { getUserAbilitiesForOrg } from "./iam/ability/resolver";
+import { getUserAbilitiesForOrg } from "../iam/ability/resolver";
 
 export async function createTRPCContext() {
   // getServerSession no App Router lê automaticamente do contexto do Next.js

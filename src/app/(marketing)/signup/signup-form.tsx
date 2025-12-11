@@ -26,7 +26,7 @@ type Step = "account" | "org";
 export default function SignupForm() {
   const [step, setStep] = useState<Step>("account");
   const router = useRouter();
-  const m = trpc.authSignup.signupAndBoot.useMutation();
+  const m = trpc.auth.signup.useMutation();
 
   const accountForm = useForm<z.infer<typeof signupAccountSchema>>({
     resolver: zodResolver(signupAccountSchema),

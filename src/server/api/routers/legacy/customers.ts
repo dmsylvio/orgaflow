@@ -1,5 +1,5 @@
 // src/server/trpc/routers/customers.ts
-import { router, protectedProcedure } from "../trpc";
+import { router, protectedProcedure } from "../../trpc";
 import { TRPCError } from "@trpc/server";
 import {
   listCustomersInput,

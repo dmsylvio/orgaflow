@@ -1,5 +1,5 @@
 // src/server/trpc/routers/dashboard.ts
-import { router, protectedProcedure } from "../trpc";
+import { router, protectedProcedure } from "../../trpc";
 
 export const dashboardRouter = router({
   counters: protectedProcedure.query(async ({ ctx }) => {
