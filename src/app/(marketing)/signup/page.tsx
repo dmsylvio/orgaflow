@@ -1,10 +1,5 @@
 import SignupForm from "./signup-form";
 
-export default function Page() {
-  return (
-    <div>
-      <p>auth/signup</p>
-      <SignupForm />
-    </div>
-  );
+export default function SignupPage() {
+  return <SignupForm />;
 }

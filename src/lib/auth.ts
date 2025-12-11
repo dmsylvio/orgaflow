@@ -1,5 +1,5 @@
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
-import { compareSync } from "bcryptjs";
+import { compare } from "bcryptjs";
 import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { prisma } from "./prisma";
@@ -33,7 +33,9 @@ export const authOptions: NextAuthOptions = {
           },
         });
 
-        if (!user || !compareSync(password, user.password)) return null;
+        if (!user || !user.password) return null;
+        const ok = await compare(password, user.password);
+        if (!ok) return null;
 
         return {
           id: user.id,

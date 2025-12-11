@@ -1,52 +1,55 @@
-import type { MenuConfig, NavItem, NavSection } from "./nav.types";
+// src/components/layout/nav.resolve.ts
+import type { MenuConfig, ResolvedMenu } from "./nav.types";
 
 type ResolveInput = {
   config: MenuConfig;
   isOwner: boolean;
-  permissions: Set<string>; // do ctx.getPermissions()
-  features?: Record<string, boolean>; // ex: { reports: true }
-  counters?: Record<string, number>; // ex: { invoicesDue: 3 }
+  permissions: Set<string>;
+  features?: Record<string, boolean>;
 };
 
-function allowItem(
-  item: NavItem,
+function canSee(
   isOwner: boolean,
   permissions: Set<string>,
-  features?: Record<string, boolean>,
+  features: Record<string, boolean> | undefined,
+  item: {
+    ownerOnly?: boolean;
+    ability?: string;
+    features?: string[];
+  },
 ) {
+  // 1) Gate de ownerOnly
   if (item.ownerOnly && !isOwner) return false;
+
+  // 2) Gate de features (sempre respeitado)
+  if (item.features && item.features.some((f) => !features?.[f])) return false;
+
+  // 3) Owners veem tudo que passou pelos gates acima
+  if (isOwner) return true;
+
+  // 4) Não-owner: precisa da ability quando definida
   if (item.ability && !permissions.has(item.ability)) return false;
-  if (item.features?.length) {
-    for (const f of item.features) if (!features?.[f]) return false;
-  }
+
   return true;
 }
 
-function mapCounters(item: NavItem, counters?: Record<string, number>) {
-  const _count = item.counterKey ? (counters?.[item.counterKey] ?? 0) : 0;
-  return { ...item, _count } as NavItem & { _count?: number };
-}
+export function resolveMenu({
+  config,
+  isOwner,
+  permissions,
+  features,
+}: ResolveInput): ResolvedMenu {
+  const filterSection = <T extends { items: any[] }>(section: T) => ({
+    ...section,
+    items: section.items.filter((it) =>
+      canSee(isOwner, permissions, features, it),
+    ),
+  });
 
-export function resolveMenu(input: ResolveInput) {
-  const { config, isOwner, permissions, features, counters } = input;
+  const main = config.main.map(filterSection).filter((s) => s.items.length > 0);
+  const settings = config.settings
+    .map(filterSection)
+    .filter((s) => s.items.length > 0);
 
-  const mapSection = (section: NavSection) => {
-    const items = (section.items || [])
-      .filter((it) => allowItem(it, isOwner, permissions, features))
-      .map((it) => {
-        const mapped = mapCounters(it, counters);
-        if (mapped.children?.length) {
-          mapped.children = mapped.children.filter((c) =>
-            allowItem(c, isOwner, permissions, features),
-          );
-        }
-        return mapped;
-      });
-    return { ...section, items };
-  };
-
-  return {
-    main: config.main.map(mapSection).filter((s) => s.items.length),
-    settings: config.settings.map(mapSection).filter((s) => s.items.length),
-  };
+  return { main, settings };
 }

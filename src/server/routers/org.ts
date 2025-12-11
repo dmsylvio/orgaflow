@@ -1,9 +1,15 @@
-import z from "zod";
 import { assertOrgMembership } from "../iam/guards/requireMember";
 import { assertOrgResolved } from "../iam/guards/requireOrg";
 import { protectedProcedure, router } from "../trpc";
+import { TRPCError } from "@trpc/server";
+import {
+  createOrganizationInput,
+  switchOrganizationInput,
+  deleteOrganizationInput,
+} from "@/validations/organization.schema";
 
 export const orgRouter = router({
+  // Return the currently active organization for the session user
   current: protectedProcedure.query(async ({ ctx }) => {
     const orgId = assertOrgResolved(ctx.orgId);
     await assertOrgMembership(orgId, ctx.session!.user.id);
@@ -20,6 +26,7 @@ export const orgRouter = router({
     return org;
   }),
 
+  // List organizations the user belongs to, with owner flag
   listMine: protectedProcedure.query(async ({ ctx }) => {
     const rows = await ctx.prisma.organizationMember.findMany({
       where: { userId: ctx.session!.user.id },
@@ -44,12 +51,9 @@ export const orgRouter = router({
     }));
   }),
 
+  // Switch active organization
   switch: protectedProcedure
-    .input(
-      z.object({
-        orgId: z.uuid(),
-      }),
-    )
+    .input(switchOrganizationInput)
     .mutation(async ({ ctx, input }) => {
       await assertOrgMembership(input.orgId, ctx.session!.user.id);
       await ctx.prisma.user.update({
@@ -59,12 +63,9 @@ export const orgRouter = router({
       return { ok: true };
     }),
 
+  // Create a new organization and make current user owner
   create: protectedProcedure
-    .input(
-      z.object({
-        name: z.string().min(2),
-      }),
-    )
+    .input(createOrganizationInput.pick({ name: true }))
     .mutation(async ({ ctx, input }) => {
       const base = input.name
         .toLowerCase()
@@ -114,5 +115,59 @@ export const orgRouter = router({
       });
 
       return { org };
+    }),
+
+  // Update organization name and slug (owner only)
+  update: protectedProcedure
+    .input(
+      createOrganizationInput.extend({
+        orgId: switchOrganizationInput.shape.orgId,
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const membership = await ctx.prisma.organizationMember.findUnique({
+        where: {
+          organization_member_unique: {
+            orgId: input.orgId,
+            userId: ctx.session!.user.id,
+          },
+        },
+        select: { isOwner: true },
+      });
+      if (!membership?.isOwner) throw new TRPCError({ code: "FORBIDDEN" });
+
+      const conflict = await ctx.prisma.organization.findUnique({
+        where: { slug: input.slug },
+        select: { id: true },
+      });
+      if (conflict && conflict.id !== input.orgId) {
+        throw new TRPCError({ code: "CONFLICT", message: "Slug já em uso" });
+      }
+
+      const org = await ctx.prisma.organization.update({
+        where: { id: input.orgId },
+        data: { name: input.name, slug: input.slug },
+        select: { id: true, name: true, slug: true },
+      });
+      return { org };
+    }),
+
+  // Delete organization (owner only)
+  delete: protectedProcedure
+    .input(deleteOrganizationInput)
+    .mutation(async ({ ctx, input }) => {
+      const membership = await ctx.prisma.organizationMember.findUnique({
+        where: {
+          organization_member_unique: {
+            orgId: input.orgId,
+            userId: ctx.session!.user.id,
+          },
+        },
+        select: { isOwner: true },
+      });
+      if (!membership?.isOwner) throw new TRPCError({ code: "FORBIDDEN" });
+
+      await ctx.prisma.organization.delete({ where: { id: input.orgId } });
+      return { ok: true };
     }),
 });

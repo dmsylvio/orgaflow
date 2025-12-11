@@ -1,4 +1,3 @@
 export default function Page() {
-  return <p>marketing/features</p>
+  return <p>marketing/features</p>;
 }
-

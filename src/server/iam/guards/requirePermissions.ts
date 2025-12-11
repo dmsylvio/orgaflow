@@ -1,32 +1,20 @@
-import {
-  getUserPermissionsForOrg,
-  hasAllPermissions,
-} from "../ability/resolver";
-import { isOrgOwner } from "../org/membership";
+// src/server/iam/guards/requirePermissions.ts
+import { TRPCError } from "@trpc/server";
 
 /**
- * Exige um conjunto de permissions (todas).
- * Dono da org (isOwner=true) tem bypass DENTRO dessa org.
+ * Garante que o usuário possua TODAS as abilities requeridas.
+ * Uso: no resolver tRPC, chame await requirePermissions(ctx, ["customer:view"])
  */
-export async function assertPermissions(params: {
-  orgId: string;
-  userId: string;
-  required: string[];
-}) {
-  const { orgId, userId, required } = params;
-
-  // Dono da org: bypass
-  if (await isOrgOwner(orgId, userId)) return true;
-
-  // Caso comum: verificar permissões por roles/overrides
-  const userPerms = await getUserPermissionsForOrg(orgId, userId);
-  const ok = hasAllPermissions(userPerms, required);
-  if (ok) return true;
-
-  const err = new Error("Permissões insuficientes");
-  // @ts-expect-error
-  err.code = "PERMISSION_DENIED";
-  // @ts-expect-error
-  err.missing = required.filter((p) => !userPerms.has(p));
-  throw err;
+export async function requirePermissions(
+  ctx: { getPermissions: () => Promise<Set<string>> },
+  required: string[],
+) {
+  const abilities = await ctx.getPermissions();
+  const lacks = required.filter((r) => !abilities.has(r));
+  if (lacks.length) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: `Missing abilities: ${lacks.join(", ")}`,
+    });
+  }
 }
