@@ -15,6 +15,13 @@
       "when": 1771910026469,
       "tag": "0001_wise_shatterstar",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1771950877043,
+      "tag": "0002_glamorous_chimera",
+      "breakpoints": true
     }
   ]
 }

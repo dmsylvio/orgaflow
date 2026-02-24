@@ -7,6 +7,7 @@ export * from "./permission";
 export * from "./role";
 export * from "./role-permission";
 export * from "./session";
+export * from "./subscription";
 export * from "./user";
 export * from "./user-permission-override";
 export * from "./user-role";

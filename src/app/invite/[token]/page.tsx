@@ -12,7 +12,7 @@ async function acceptInvite(token: string, _formData: FormData) {
   "use server";
   const session = await getServerSessionSafe();
   if (!session?.user?.id) {
-    redirect(`/signin?callbackUrl=${encodeURIComponent(`/invite/${token}`)}`);
+    redirect(`/auth/sign-in?callbackUrl=${encodeURIComponent(`/invite/${token}`)}`);
   }
   const caller = await getServerCaller();
   await caller.invitations.accept({ token });
@@ -23,7 +23,7 @@ async function rejectInvite(token: string, _formData: FormData) {
   "use server";
   const session = await getServerSessionSafe();
   if (!session?.user?.id) {
-    redirect(`/signin?callbackUrl=${encodeURIComponent(`/invite/${token}`)}`);
+    redirect(`/auth/sign-in?callbackUrl=${encodeURIComponent(`/invite/${token}`)}`);
   }
   const caller = await getServerCaller();
   await caller.invitations.reject({ token });

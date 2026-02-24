@@ -8,7 +8,7 @@ export default async function AppLayout({
   children: React.ReactNode;
 }) {
   const session = await getServerSessionSafe();
-  if (!session) redirect("/signin?callbackUrl=/app");
+  if (!session) redirect("/auth/sign-in?callbackUrl=/app");
 
   return (
     <div className="h-full">

@@ -170,6 +170,12 @@ export const menuConfig: MenuConfig = {
           ability: "payment-mode:view",
         },
         {
+          tKey: "settings.billing",
+          name: "Billing",
+          href: "/app/settings/billing",
+          icon: CreditCard,
+        },
+        {
           tKey: "settings.custom_fields",
           name: "Custom Fields",
           href: "/app/settings/custom-fields",

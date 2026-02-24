@@ -1,4 +1,5 @@
 import { authRouter } from "./routers/auth";
+import { billingRouter } from "./routers/billing";
 import { customersRouter } from "./routers/customers";
 import { dashboardRouter } from "./routers/dashboard";
 import { invitationsRouter } from "./routers/invitations";
@@ -13,6 +14,7 @@ import { router } from "./trpc";
 export const appRouter = router({
   auth: authRouter,
   me: meRouter,
+  billing: billingRouter,
   dashboard: dashboardRouter,
   org: orgRouter,
   invitations: invitationsRouter,

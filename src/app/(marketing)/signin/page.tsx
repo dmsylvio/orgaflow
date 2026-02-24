@@ -1,5 +1,5 @@
-import SigninForm from "./signin-form";
+import { redirect } from "next/navigation";
 
 export default function Page() {
-  return <SigninForm />;
+  redirect("/auth/sign-in");
 }

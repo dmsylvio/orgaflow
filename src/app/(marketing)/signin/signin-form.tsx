@@ -64,9 +64,9 @@ export default function SigninForm() {
   };
 
   return (
-    <div className="rounded border p-6 shadow-sm bg-white">
-      <h1 className="text-xl font-semibold mb-1">Sign in</h1>
-      <p className="text-sm text-neutral-500 mb-6">
+    <div className="rounded-2xl border bg-white p-8 shadow-sm">
+      <h1 className="text-2xl font-semibold">Sign in</h1>
+      <p className="mt-2 text-sm text-neutral-500">
         Access your account to continue.
       </p>
 
@@ -110,11 +110,11 @@ export default function SigninForm() {
         </form>
       </Form>
 
-      <div className="mt-4 text-sm text-neutral-600 flex items-center justify-between">
-        <Link href="/forgot" className="hover:underline">
+      <div className="mt-6 text-sm text-neutral-600 flex items-center justify-between">
+        <Link href="/auth/forgot-password" className="hover:underline">
           Forgot password?
         </Link>
-        <Link href="/signup" className="hover:underline">
+        <Link href="/auth/sign-up" className="hover:underline">
           Create account
         </Link>
       </div>
