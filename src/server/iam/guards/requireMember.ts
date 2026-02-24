@@ -1,3 +1,4 @@
+import { TRPCError } from "@trpc/server";
 import { ensureMembership } from "../org/membership";
 
 /**
@@ -6,8 +7,8 @@ import { ensureMembership } from "../org/membership";
 export async function assertOrgMembership(orgId: string, userId: string) {
   const ok = await ensureMembership(orgId, userId);
   if (ok) return true;
-  const err = new Error("Usuário não é membro da organização");
-  // @ts-expect-error
-  err.code = "ORG_FORBIDDEN";
-  throw err;
+  throw new TRPCError({
+    code: "FORBIDDEN",
+    message: "Usuário não é membro da organização",
+  });
 }

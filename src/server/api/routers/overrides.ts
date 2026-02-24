@@ -1,17 +1,20 @@
-import { router, protectedProcedure } from "../../trpc";
 import { TRPCError } from "@trpc/server";
 import {
-  listOverridesByUserInput,
   createOverrideInput,
-  updateOverrideInput,
   deleteOverrideInput,
+  listOverridesByUserInput,
+  updateOverrideInput,
 } from "@/validations/override.schema";
+import { orgProcedure, protectedProcedure, router } from "@/server/api/trpc";
 
 export const overridesRouter = router({
   // List permission overrides for a user within an organization
-  listByUser: protectedProcedure
+  listByUser: orgProcedure
     .input(listOverridesByUserInput)
     .query(async ({ ctx, input }) => {
+      if (input.orgId !== ctx.orgId) {
+        throw new TRPCError({ code: "FORBIDDEN" });
+      }
       const membership = await ctx.prisma.organizationMember.findUnique({
         where: {
           organization_member_unique: {
@@ -41,9 +44,12 @@ export const overridesRouter = router({
     }),
 
   // Create a new override for a user in an organization
-  create: protectedProcedure
+  create: orgProcedure
     .input(createOverrideInput)
     .mutation(async ({ ctx, input }) => {
+      if (input.orgId !== ctx.orgId) {
+        throw new TRPCError({ code: "FORBIDDEN" });
+      }
       const membership = await ctx.prisma.organizationMember.findUnique({
         where: {
           organization_member_unique: {

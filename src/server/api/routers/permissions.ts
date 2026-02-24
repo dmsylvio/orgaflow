@@ -1,5 +1,5 @@
 // src/server/trpc/routers/permissions.ts
-import { router, protectedProcedure } from "../../trpc";
+import { protectedProcedure, router } from "@/server/api/trpc";
 
 export const permissionsRouter = router({
   catalog: protectedProcedure.query(async ({ ctx }) => {

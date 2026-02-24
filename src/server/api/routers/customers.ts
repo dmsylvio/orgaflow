@@ -1,86 +1,71 @@
 // src/server/trpc/routers/customers.ts
-import { router, protectedProcedure } from "../../trpc";
+
 import { TRPCError } from "@trpc/server";
 import {
-  listCustomersInput,
-  getCustomerByIdInput,
   createCustomerInput,
+  getCustomerByIdInput,
+  listCustomersInput,
   updateCustomerInput,
 } from "@/validations/customer.schema";
+import { orgProcedure, router } from "@/server/api/trpc";
 
 export const customersRouter = router({
   // LIST
   // List customers for the active organization with cursor pagination
-  list: protectedProcedure
-    .input(listCustomersInput)
-    .query(async ({ ctx, input }) => {
-      if (!ctx.orgId) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Organização ativa não definida",
-        });
-      }
+  list: orgProcedure.input(listCustomersInput).query(async ({ ctx, input }) => {
+    const abilities = await ctx.getPermissions();
+    if (!abilities.has("customer:view")) {
+      throw new TRPCError({ code: "FORBIDDEN" });
+    }
 
-      const abilities = await ctx.getPermissions();
-      if (!abilities.has("customer:view")) {
-        throw new TRPCError({ code: "FORBIDDEN" });
-      }
+    const where = {
+      orgId: ctx.orgId,
+      ...(input.q
+        ? {
+            OR: [
+              { name: { contains: input.q, mode: "insensitive" as const } },
+              { email: { contains: input.q, mode: "insensitive" as const } },
+              { phone: { contains: input.q, mode: "insensitive" as const } },
+            ],
+          }
+        : {}),
+    };
 
-      const where = {
-        orgId: ctx.orgId,
-        ...(input.q
-          ? {
-              OR: [
-                { name: { contains: input.q, mode: "insensitive" as const } },
-                { email: { contains: input.q, mode: "insensitive" as const } },
-                { phone: { contains: input.q, mode: "insensitive" as const } },
-              ],
-            }
-          : {}),
-      };
+    // paginação com cursor simples pelo id
+    const take = input.limit + 1;
+    const rows = await ctx.prisma.customer.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      take,
+      ...(input.cursor ? { cursor: { id: input.cursor }, skip: 1 } : {}),
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        notes: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
 
-      // paginação com cursor simples pelo id
-      const take = input.limit + 1;
-      const rows = await ctx.prisma.customer.findMany({
-        where,
-        orderBy: { createdAt: "desc" },
-        take,
-        ...(input.cursor ? { cursor: { id: input.cursor }, skip: 1 } : {}),
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          phone: true,
-          notes: true,
-          createdAt: true,
-          updatedAt: true,
-        },
-      });
+    let nextCursor: string | undefined;
+    if (rows.length > input.limit) {
+      const last = rows.pop();
+      if (last) nextCursor = last.id;
+    }
 
-      let nextCursor: string | undefined = undefined;
-      if (rows.length > input.limit) {
-        const last = rows.pop();
-        if (last) nextCursor = last.id;
-      }
-
-      return {
-        items: rows,
-        nextCursor,
-      };
-    }),
+    return {
+      items: rows,
+      nextCursor,
+    };
+  }),
 
   // GET BY ID
   // Get a single customer by id scoped to the active organization
-  getById: protectedProcedure
+  getById: orgProcedure
     .input(getCustomerByIdInput)
     .query(async ({ ctx, input }) => {
-      if (!ctx.orgId) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Organização ativa não definida",
-        });
-      }
-
       const abilities = await ctx.getPermissions();
       if (!abilities.has("customer:view")) {
         throw new TRPCError({ code: "FORBIDDEN" });
@@ -105,16 +90,9 @@ export const customersRouter = router({
 
   // CREATE
   // Create a new customer for the active organization
-  create: protectedProcedure
+  create: orgProcedure
     .input(createCustomerInput)
     .mutation(async ({ ctx, input }) => {
-      if (!ctx.orgId) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Organização ativa não definida",
-        });
-      }
-
       const abilities = await ctx.getPermissions();
       if (!abilities.has("customer:create")) {
         throw new TRPCError({ code: "FORBIDDEN" });
@@ -145,16 +123,9 @@ export const customersRouter = router({
 
   // UPDATE
   // Update a customer fields, ensuring org scoping
-  update: protectedProcedure
+  update: orgProcedure
     .input(updateCustomerInput)
     .mutation(async ({ ctx, input }) => {
-      if (!ctx.orgId) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Organização ativa não definida",
-        });
-      }
-
       const abilities = await ctx.getPermissions();
       if (!abilities.has("customer:edit")) {
         throw new TRPCError({ code: "FORBIDDEN" });
@@ -191,16 +162,9 @@ export const customersRouter = router({
 
   // DELETE
   // Delete a customer by id, ensuring org scoping
-  delete: protectedProcedure
+  delete: orgProcedure
     .input(getCustomerByIdInput)
     .mutation(async ({ ctx, input }) => {
-      if (!ctx.orgId) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Organização ativa não definida",
-        });
-      }
-
       const abilities = await ctx.getPermissions();
       if (!abilities.has("customer:delete")) {
         throw new TRPCError({ code: "FORBIDDEN" });

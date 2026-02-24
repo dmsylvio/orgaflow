@@ -1,17 +1,16 @@
-import { assertOrgMembership } from "../../iam/guards/requireMember";
-import { assertOrgResolved } from "../../iam/guards/requireOrg";
-import { protectedProcedure, router } from "../../trpc";
 import { TRPCError } from "@trpc/server";
+import { assertOrgMembership } from "@/server/iam/guards/requireMember";
 import {
   createOrganizationInput,
-  switchOrganizationInput,
   deleteOrganizationInput,
+  switchOrganizationInput,
 } from "@/validations/organization.schema";
+import { orgProcedure, protectedProcedure, router } from "@/server/api/trpc";
 
 export const orgRouter = router({
   // Return the currently active organization for the session user
-  current: protectedProcedure.query(async ({ ctx }) => {
-    const orgId = assertOrgResolved(ctx.orgId);
+  current: orgProcedure.query(async ({ ctx }) => {
+    const orgId = ctx.orgId;
     await assertOrgMembership(orgId, ctx.session!.user.id);
 
     const org = await ctx.prisma.organization.findUnique({

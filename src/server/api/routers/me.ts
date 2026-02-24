@@ -1,6 +1,7 @@
 // src/server/trpc/routers/me.ts
-import { router, protectedProcedure } from "../../trpc";
+
 import { TRPCError } from "@trpc/server";
+import { protectedProcedure, router } from "@/server/api/trpc";
 
 export const meRouter = router({
   profile: protectedProcedure.query(async ({ ctx }) => {

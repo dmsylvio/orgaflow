@@ -1,10 +1,10 @@
 // src/server/trpc/routers/dashboard.ts
-import { router, protectedProcedure } from "../../trpc";
+import { orgProcedure, router } from "@/server/api/trpc";
 
 export const dashboardRouter = router({
-  counters: protectedProcedure.query(async ({ ctx }) => {
+  counters: orgProcedure.query(async ({ ctx }) => {
     // Exemplo: dê números reais quando tiver modelos
-    const orgId = ctx.orgId!;
+    const orgId = ctx.orgId;
     const [customers] = await Promise.all([
       ctx.prisma.customer.count({ where: { orgId } }),
       // adicione outros contadores quando tiver

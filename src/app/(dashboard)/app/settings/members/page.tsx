@@ -1,7 +1,7 @@
 "use client";
 
-import { trpc } from "@/lib/trpc/client";
 import { useEffect, useMemo, useState } from "react";
+import { trpc } from "@/lib/trpc/client";
 
 type OrgOption = { id: string; name: string; isOwner?: boolean };
 

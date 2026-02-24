@@ -1,9 +1,9 @@
 // src/server/iam/ability/resolver.ts
 import { prisma } from "@/lib/prisma";
 import {
+  type Ability,
   PERMISSIONS,
   type PermissionKey,
-  type Ability,
 } from "../permissions/catalog";
 import { expandPermissionKeysToAbilities } from "./expand";
 

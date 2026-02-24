@@ -1,11 +1,20 @@
 import { hash } from "bcryptjs";
 import { prisma } from "@/lib/prisma";
-import { expandAbilities } from "@/server/iam/ability/expand";
-// IMPORTA O CATÁLOGO COMO CÓDIGO (uma fonte da verdade)
 import {
-  type AbilityKey,
   PERMISSIONS,
-} from "../src/server/iam/permissions/catalog";
+  type PermissionKey,
+} from "@/server/iam/permissions/catalog";
+
+/** Permissions da role "manager" (ajuste conforme o catálogo) */
+const MANAGER_PERMISSION_KEYS: PermissionKey[] = [
+  "customer:manage",
+  "item:manage",
+  "estimate:manage",
+  "invoice:manage",
+  "member:invite",
+  "member:manage",
+  "role:manage",
+];
 
 async function main() {
   // --- (Opcional para DEV) reset IAM inteiro ---
@@ -20,7 +29,7 @@ async function main() {
     data: PERMISSIONS.map((p) => ({
       key: p.key,
       name: p.name,
-      description: p.description,
+      description: p.description ?? undefined,
     })),
     skipDuplicates: true,
   });
@@ -79,23 +88,9 @@ async function main() {
     update: {},
   });
 
-  // 6) Define abilities da role "manager" (usando curingas + expander)
-  //    Ajuste livre conforme seu gosto (ex.: adicionar/remover módulos).
-  const managerAbilities = expandAbilities([
-    "customer:*",
-    "item:*",
-    "estimate:*",
-    "invoice:*",
-    "payment:view",
-    "expense:view",
-    "report:financial:view",
-  ]).values();
-
-  const managerKeys = Array.from(managerAbilities) as AbilityKey[];
-
-  // Busca IDs das permissions e evita duplicar vínculos
+  // 6) Define permissions da role "manager"
   const allPerms = await prisma.permission.findMany({
-    where: { key: { in: managerKeys } },
+    where: { key: { in: MANAGER_PERMISSION_KEYS } },
     select: { id: true, key: true },
   });
 
@@ -128,7 +123,7 @@ async function main() {
     owner: { email: owner.email, activeOrgId: owner.activeOrgId },
     member: { email: member.email, activeOrgId: member.activeOrgId },
     role: { id: role.id, key: role.key },
-    managerPermissions: managerKeys.length,
+    managerPermissions: allPerms.length,
   });
 }
 

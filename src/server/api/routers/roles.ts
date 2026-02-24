@@ -1,13 +1,14 @@
 // src/server/trpc/routers/roles.ts
-import { router, protectedProcedure } from "../../trpc";
+
 import { TRPCError } from "@trpc/server";
 import {
-  orgScopeInput,
   createRoleInput,
-  updateRoleInput,
   deleteRoleInput,
+  orgScopeInput,
   setRolePermsInput,
+  updateRoleInput,
 } from "@/validations/role.schema";
+import { orgProcedure, protectedProcedure, router } from "@/server/api/trpc";
 
 function slugify(s: string) {
   return s
@@ -22,31 +23,35 @@ function slugify(s: string) {
 
 export const rolesRouter = router({
   // List roles for an organization the user belongs to
-  listByOrg: protectedProcedure
-    .input(orgScopeInput)
-    .query(async ({ ctx, input }) => {
-      const member = await ctx.prisma.organizationMember.findUnique({
-        where: {
-          organization_member_unique: {
-            orgId: input.orgId,
-            userId: ctx.session!.user.id,
-          },
+  listByOrg: orgProcedure.input(orgScopeInput).query(async ({ ctx, input }) => {
+    if (input.orgId !== ctx.orgId) {
+      throw new TRPCError({ code: "FORBIDDEN" });
+    }
+    const member = await ctx.prisma.organizationMember.findUnique({
+      where: {
+        organization_member_unique: {
+          orgId: input.orgId,
+          userId: ctx.session!.user.id,
         },
-        select: { id: true },
-      });
-      if (!member) throw new TRPCError({ code: "FORBIDDEN" });
+      },
+      select: { id: true },
+    });
+    if (!member) throw new TRPCError({ code: "FORBIDDEN" });
 
-      return ctx.prisma.role.findMany({
-        where: { orgId: input.orgId },
-        select: { id: true, name: true, key: true },
-        orderBy: [{ name: "asc" }, { key: "asc" }],
-      });
-    }),
+    return ctx.prisma.role.findMany({
+      where: { orgId: input.orgId },
+      select: { id: true, name: true, key: true },
+      orderBy: [{ name: "asc" }, { key: "asc" }],
+    });
+  }),
 
   // Create a role under an organization; owners or users with role:manage
-  create: protectedProcedure
+  create: orgProcedure
     .input(createRoleInput)
     .mutation(async ({ ctx, input }) => {
+      if (input.orgId !== ctx.orgId) {
+        throw new TRPCError({ code: "FORBIDDEN" });
+      }
       const membership = await ctx.prisma.organizationMember.findUnique({
         where: {
           organization_member_unique: {

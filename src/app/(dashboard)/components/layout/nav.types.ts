@@ -8,7 +8,9 @@ export type IconType = ComponentType<{ className?: string }>;
  * Item de navegação individual
  */
 export type MenuItem = {
-  /** Rótulo visível no menu */
+  /** Chave de tradução i18n (ex.: "navigation.dashboard") */
+  tKey?: string;
+  /** Rótulo visível no menu (fallback quando tKey não é usado) */
   name: string;
   /** Link absoluto dentro do app (ex.: "/app", "/app/customers") */
   href: string;
@@ -28,6 +30,11 @@ export type MenuItem = {
   ability?: string;
 
   /**
+   * Chave para contador no badge (ex.: "invoicesDue")
+   */
+  counterKey?: string;
+
+  /**
    * Flags de recurso necessárias para exibir o item para qualquer usuário.
    * Se alguma flag listada for false, o item não aparece nem para owners.
    */
@@ -41,6 +48,8 @@ export type MenuItem = {
 export type MenuSection = {
   /** Identificador ou ordem do grupo na UI */
   group: number | string;
+  /** Chave de tradução do título do grupo (ex.: "navigation.group.general") */
+  title?: string;
   /** Itens pertencentes a esse grupo */
   items: MenuItem[];
 };

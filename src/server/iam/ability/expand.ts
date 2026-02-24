@@ -1,8 +1,8 @@
 // src/server/iam/ability/expand.ts
 import {
+  type Ability,
   PERMISSION_BY_KEY,
   type PermissionKey,
-  type Ability,
 } from "../permissions/catalog";
 
 /**

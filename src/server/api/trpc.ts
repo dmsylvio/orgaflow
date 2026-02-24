@@ -18,3 +18,13 @@ export const protectedProcedure = t.procedure.use(async ({ ctx, next }) => {
   }
   return next({ ctx });
 });
+
+export const orgProcedure = protectedProcedure.use(async ({ ctx, next }) => {
+  if (!ctx.orgId) {
+    throw new TRPCError({
+      code: "PRECONDITION_FAILED",
+      message: "Organization não definida",
+    });
+  }
+  return next({ ctx: { ...ctx, orgId: ctx.orgId } });
+});

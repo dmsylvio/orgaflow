@@ -1,7 +1,6 @@
-import { router, protectedProcedure, publicProcedure } from "../../trpc";
 import { TRPCError } from "@trpc/server";
-import { prisma } from "@/lib/prisma";
 import { randomUUID } from "crypto";
+import { prisma } from "@/lib/prisma";
 import { canInviteToOrg } from "@/server/iam/guards/canInvite";
 import {
   inviteCreateInput,
@@ -9,6 +8,12 @@ import {
   listPendingInvitesInput,
   revokeInviteInput,
 } from "@/validations/invitation.schema";
+import {
+  orgProcedure,
+  protectedProcedure,
+  publicProcedure,
+  router,
+} from "@/server/api/trpc";
 
 function addDays(d: Date, days: number) {
   const n = new Date(d);
@@ -72,9 +77,12 @@ export const invitationsRouter = router({
   //     return invite;
   //   }),
   // Create a new organization invitation
-  create: protectedProcedure
+  create: orgProcedure
     .input(inviteCreateInput)
     .mutation(async ({ ctx, input }) => {
+      if (input.orgId !== ctx.orgId) {
+        throw new TRPCError({ code: "FORBIDDEN" });
+      }
       const userId = ctx.session?.user.id;
       if (!userId)
         throw new TRPCError({
@@ -270,9 +278,12 @@ export const invitationsRouter = router({
     }),
 
   // List active, non-accepted invitations for an organization
-  listPendingByOrg: protectedProcedure
+  listPendingByOrg: orgProcedure
     .input(listPendingInvitesInput)
     .query(async ({ ctx, input }) => {
+      if (input.orgId !== ctx.orgId) {
+        throw new TRPCError({ code: "FORBIDDEN" });
+      }
       const userId = ctx.session?.user.id;
       if (!userId)
         throw new TRPCError({
@@ -308,7 +319,7 @@ export const invitationsRouter = router({
     }),
 
   // Revoke a pending invitation
-  revoke: protectedProcedure
+  revoke: orgProcedure
     .input(revokeInviteInput)
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session?.user.id;
@@ -318,12 +329,14 @@ export const invitationsRouter = router({
           message: "Usuário não autenticado",
         });
 
-      // só owner ou quem tenha member:invite
       const inv = await ctx.prisma.invitation.findUnique({
         where: { id: input.inviteId },
         select: { orgId: true, acceptedAt: true },
       });
       if (!inv) throw new TRPCError({ code: "NOT_FOUND" });
+      if (inv.orgId !== ctx.orgId) {
+        throw new TRPCError({ code: "FORBIDDEN" });
+      }
       if (inv.acceptedAt)
         throw new TRPCError({
           code: "BAD_REQUEST",

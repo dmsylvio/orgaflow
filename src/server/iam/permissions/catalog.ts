@@ -506,6 +506,11 @@ export const PERMISSIONS: PermissionDef[] = [
     abilities: A("member:manage"),
   },
   { key: "role:manage", name: "Gerenciar Roles", abilities: A("role:manage") },
+  {
+    key: "permission:override:manage",
+    name: "Gerenciar Overrides de Permissões",
+    abilities: A("permission:override:manage"),
+  },
 ];
 
 /** Índices auxiliares */

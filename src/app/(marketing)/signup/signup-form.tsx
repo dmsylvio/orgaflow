@@ -1,16 +1,16 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
-import { z } from "zod";
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { signupAccountSchema, signupOrgSchema } from "@/validations/auth";
-import { trpc } from "@/lib/trpc/client";
+import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
+import { useMemo, useState } from "react";
+import { useForm } from "react-hook-form";
+import type { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { trpc } from "@/lib/trpc/client";
+import { signupAccountSchema, signupOrgSchema } from "@/validations/auth";
 
 function slugify(input: string) {
   return input

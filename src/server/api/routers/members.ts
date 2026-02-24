@@ -1,17 +1,20 @@
-import { router, protectedProcedure } from "../../trpc";
+import { TRPCError } from "@trpc/server";
 import {
-  listMembersByOrgInput,
   assignRolesInput,
+  listMembersByOrgInput,
   removeMemberInput,
   transferOwnershipInput,
 } from "@/validations/member.schema";
-import { TRPCError } from "@trpc/server";
+import { orgProcedure, router } from "@/server/api/trpc";
 
 export const membersRouter = router({
   // List organization members with roles
-  listByOrg: protectedProcedure
+  listByOrg: orgProcedure
     .input(listMembersByOrgInput)
     .query(async ({ ctx, input }) => {
+      if (input.orgId !== ctx.orgId) {
+        throw new TRPCError({ code: "FORBIDDEN" });
+      }
       const membership = await ctx.prisma.organizationMember.findUnique({
         where: {
           organization_member_unique: {
@@ -93,9 +96,12 @@ export const membersRouter = router({
   //     return { ok: true };
   //   }),
   // Assign roles to a member (replace set)
-  assignRoles: protectedProcedure
+  assignRoles: orgProcedure
     .input(assignRolesInput)
     .mutation(async ({ ctx, input }) => {
+      if (input.orgId !== ctx.orgId) {
+        throw new TRPCError({ code: "FORBIDDEN" });
+      }
       // precisa ser owner ou ter role:manage
       const membership = await ctx.prisma.organizationMember.findUnique({
         where: {
@@ -160,9 +166,12 @@ export const membersRouter = router({
     }),
 
   // Remove a member from organization
-  removeMember: protectedProcedure
+  removeMember: orgProcedure
     .input(removeMemberInput)
     .mutation(async ({ ctx, input }) => {
+      if (input.orgId !== ctx.orgId) {
+        throw new TRPCError({ code: "FORBIDDEN" });
+      }
       // apenas owner; não pode remover a si próprio se for único owner
       const acting = await ctx.prisma.organizationMember.findUnique({
         where: {
@@ -221,9 +230,12 @@ export const membersRouter = router({
     }),
 
   // Transfer organization ownership to another member
-  transferOwnership: protectedProcedure
+  transferOwnership: orgProcedure
     .input(transferOwnershipInput)
     .mutation(async ({ ctx, input }) => {
+      if (input.orgId !== ctx.orgId) {
+        throw new TRPCError({ code: "FORBIDDEN" });
+      }
       // somente owner atual pode transferir
       const acting = await ctx.prisma.organizationMember.findUnique({
         where: {

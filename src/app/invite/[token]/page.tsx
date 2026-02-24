@@ -1,8 +1,9 @@
 // src/app/invite/[token]/page.tsx
-import { redirect } from "next/navigation";
+
 import Link from "next/link";
-import { getServerSessionSafe } from "@/server/auth/session";
+import { redirect } from "next/navigation";
 import { getServerCaller } from "@/server/api/caller";
+import { getServerSessionSafe } from "@/server/auth/session";
 
 type PageParams = Promise<{ token: string }>;
 
