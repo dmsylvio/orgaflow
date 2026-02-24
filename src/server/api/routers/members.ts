@@ -28,7 +28,7 @@ export const membersRouter = router({
         .where(
           and(
             eq(schema.organizationMember.orgId, input.orgId),
-            eq(schema.organizationMember.userId, ctx.session?.user.id),
+            eq(schema.organizationMember.userId, ctx.session!.user.id),
           ),
         )
         .limit(1);
@@ -99,7 +99,7 @@ export const membersRouter = router({
         .where(
           and(
             eq(schema.organizationMember.orgId, input.orgId),
-            eq(schema.organizationMember.userId, ctx.session?.user.id),
+            eq(schema.organizationMember.userId, ctx.session!.user.id),
           ),
         )
         .limit(1);
@@ -190,7 +190,7 @@ export const membersRouter = router({
         .where(
           and(
             eq(schema.organizationMember.orgId, input.orgId),
-            eq(schema.organizationMember.userId, ctx.session?.user.id),
+            eq(schema.organizationMember.userId, ctx.session!.user.id),
           ),
         )
         .limit(1);
@@ -285,7 +285,7 @@ export const membersRouter = router({
         .where(
           and(
             eq(schema.organizationMember.orgId, input.orgId),
-            eq(schema.organizationMember.userId, ctx.session?.user.id),
+            eq(schema.organizationMember.userId, ctx.session!.user.id),
           ),
         )
         .limit(1);
@@ -327,7 +327,7 @@ export const membersRouter = router({
           .where(
             and(
               eq(schema.organizationMember.orgId, input.orgId),
-              eq(schema.organizationMember.userId, ctx.session?.user.id),
+              eq(schema.organizationMember.userId, ctx.session!.user.id),
             ),
           );
       });

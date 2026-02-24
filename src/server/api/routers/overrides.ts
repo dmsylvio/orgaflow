@@ -27,7 +27,7 @@ export const overridesRouter = router({
         .where(
           and(
             eq(schema.organizationMember.orgId, input.orgId),
-            eq(schema.organizationMember.userId, ctx.session?.user.id),
+            eq(schema.organizationMember.userId, ctx.session!.user.id),
           ),
         )
         .limit(1);
@@ -90,7 +90,7 @@ export const overridesRouter = router({
         .where(
           and(
             eq(schema.organizationMember.orgId, input.orgId),
-            eq(schema.organizationMember.userId, ctx.session?.user.id),
+            eq(schema.organizationMember.userId, ctx.session!.user.id),
           ),
         )
         .limit(1);
@@ -174,7 +174,7 @@ export const overridesRouter = router({
         .where(
           and(
             eq(schema.organizationMember.orgId, row[0].orgId),
-            eq(schema.organizationMember.userId, ctx.session?.user.id),
+            eq(schema.organizationMember.userId, ctx.session!.user.id),
           ),
         )
         .limit(1);
@@ -225,7 +225,7 @@ export const overridesRouter = router({
         .where(
           and(
             eq(schema.organizationMember.orgId, row[0].orgId),
-            eq(schema.organizationMember.userId, ctx.session?.user.id),
+            eq(schema.organizationMember.userId, ctx.session!.user.id),
           ),
         )
         .limit(1);

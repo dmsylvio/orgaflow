@@ -229,7 +229,7 @@ export default function MembersSettingsPage() {
                   <div className="text-sm">
                     <div className="font-medium">{inv.email}</div>
                     <div className="text-gray-500">
-                      {inv.role?.name ? `Role: ${inv.role.name} · ` : ""}
+                      {inv.roleName ? `Role: ${inv.roleName} · ` : ""}
                       Expira: {new Date(inv.expiresAt).toLocaleString()}
                     </div>
                   </div>

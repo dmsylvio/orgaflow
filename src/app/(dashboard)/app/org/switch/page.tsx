@@ -3,6 +3,20 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+
+function slugify(input: string) {
+  return (
+    input
+      .toLowerCase()
+      .trim()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9\s-]/g, "")
+      .replace(/\s+/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "") || "org"
+  );
+}
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -39,7 +53,12 @@ export default function OrgSwitchPage() {
 
   const onCreate = async () => {
     if (!orgName.trim()) return;
-    await createMut.mutateAsync({ name: orgName.trim() });
+    const name = orgName.trim();
+    const slug = slugify(name);
+    await createMut.mutateAsync({
+      name,
+      slug: slug.length >= 2 ? slug : "org",
+    });
     setOpenCreate(false);
     setOrgName("");
     router.push("/app"); // activeOrgId já foi salvo no server

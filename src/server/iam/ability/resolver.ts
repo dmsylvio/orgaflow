@@ -83,7 +83,7 @@ export async function getUserAbilitiesForOrg(
   const denyKeys: PermissionKey[] = [];
 
   for (const ov of overrides) {
-    const k = ov.permission.key as PermissionKey;
+    const k = ov.key as PermissionKey;
     if (ov.mode === "allow") allowKeys.push(k);
     else denyKeys.push(k);
   }
