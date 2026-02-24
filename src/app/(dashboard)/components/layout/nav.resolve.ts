@@ -18,16 +18,16 @@ function canSee(
     features?: string[];
   },
 ) {
-  // 1) Gate de ownerOnly
+  // 1) ownerOnly gate
   if (item.ownerOnly && !isOwner) return false;
 
-  // 2) Gate de features (sempre respeitado)
+  // 2) features gate (always enforced)
   if (item.features?.some((f) => !features?.[f])) return false;
 
-  // 3) Owners veem tudo que passou pelos gates acima
+  // 3) Owners can see everything that passed the gates above
   if (isOwner) return true;
 
-  // 4) Não-owner: precisa da ability quando definida
+  // 4) Non-owner: requires ability when defined
   if (item.ability && !permissions.has(item.ability)) return false;
 
   return true;

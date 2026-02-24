@@ -11,7 +11,7 @@ import { resolveMenu } from "./nav.resolve";
 export function Sidebar() {
   const pathname = usePathname();
 
-  // Dados do usuário na org ativa
+  // User data in the active org
   const me = trpc.me.profile.useQuery(undefined, {
     refetchOnWindowFocus: false,
   });

@@ -6,7 +6,7 @@ import { trpc } from "@/lib/trpc/client";
 type OrgOption = { id: string; name: string; isOwner?: boolean };
 
 export default function MembersSettingsPage() {
-  // ORGS DO USUÁRIO
+  // USER ORGS
   const orgsQ = trpc.org.listMine.useQuery(undefined, {
     refetchOnWindowFocus: false,
   });
@@ -28,7 +28,7 @@ export default function MembersSettingsPage() {
     [orgsQ.data],
   );
 
-  // QUERIES DA ORG ATUAL
+  // QUERIES FOR CURRENT ORG
   const rolesQ = trpc.roles.listByOrg.useQuery(
     { orgId },
     { enabled: !!orgId, refetchOnWindowFocus: false },
@@ -59,7 +59,7 @@ export default function MembersSettingsPage() {
     onSuccess: () => membersQ.refetch(),
   });
 
-  // FORM DE CONVITE
+  // INVITE FORM
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRoleId, setInviteRoleId] = useState<string>("");
 
@@ -76,7 +76,7 @@ export default function MembersSettingsPage() {
     setInviteRoleId("");
   };
 
-  // DETALHE DO MEMBRO (drawer simples)
+  // MEMBER DETAILS (simple drawer)
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const selectedMember = useMemo(
     () => membersQ.data?.find((m) => m.id === selectedUserId) ?? null,
@@ -109,7 +109,7 @@ export default function MembersSettingsPage() {
 
   const removeMember = async () => {
     if (!orgId || !selectedUserId) return;
-    if (!confirm("Remover este membro da organização?")) return;
+    if (!confirm("Remove this member from the organization?")) return;
     await removeMemberM.mutateAsync({ orgId, userId: selectedUserId });
     setSelectedUserId(null);
   };
@@ -118,7 +118,7 @@ export default function MembersSettingsPage() {
     if (!orgId) return;
     if (
       !confirm(
-        "Transferir ownership para este usuário? Você perderá o status de owner.",
+        "Transfer ownership to this user? You will lose owner status.",
       )
     )
       return;
@@ -128,13 +128,13 @@ export default function MembersSettingsPage() {
   // UI
   return (
     <div className="space-y-10">
-      {/* Seleção de Organização */}
+      {/* Organization selection */}
       <section className="space-y-2">
         <h1 className="text-xl font-semibold">Members</h1>
         <div className="flex items-end gap-4">
           <div>
             <label htmlFor="org-select" className="block text-sm font-medium">
-              Organização
+              Organization
             </label>
             <select
               id="org-select"
@@ -143,7 +143,7 @@ export default function MembersSettingsPage() {
               onChange={(e) => setOrgId(e.target.value)}
             >
               <option value="" disabled>
-                Selecione…
+                Select…
               </option>
               {orgOptions.map((o) => (
                 <option key={o.id} value={o.id}>
@@ -156,9 +156,9 @@ export default function MembersSettingsPage() {
         </div>
       </section>
 
-      {/* Convites */}
+      {/* Invitations */}
       <section className="space-y-4">
-        <h2 className="text-lg font-semibold">Convites</h2>
+        <h2 className="text-lg font-semibold">Invitations</h2>
 
         <form
           className="flex flex-wrap items-end gap-3"
@@ -166,20 +166,20 @@ export default function MembersSettingsPage() {
         >
           <div>
             <label htmlFor="invite-email" className="block text-sm font-medium">
-              E-mail do convidado
+              Invitee email
             </label>
             <input
               id="invite-email"
               className="mt-1 w-72 border rounded px-3 py-2"
               value={inviteEmail}
               onChange={(e) => setInviteEmail(e.target.value)}
-              placeholder="pessoa@empresa.com"
+              placeholder="person@company.com"
               type="email"
             />
           </div>
           <div>
             <label htmlFor="invite-role" className="block text-sm font-medium">
-              Role (opcional)
+              Role (optional)
             </label>
             <select
               id="invite-role"
@@ -187,7 +187,7 @@ export default function MembersSettingsPage() {
               value={inviteRoleId}
               onChange={(e) => setInviteRoleId(e.target.value)}
             >
-              <option value="">Sem role específica</option>
+              <option value="">No specific role</option>
               {rolesQ.data?.map((r) => (
                 <option key={r.id} value={r.id}>
                   {r.name}
@@ -200,7 +200,7 @@ export default function MembersSettingsPage() {
             disabled={inviteM.isPending || !inviteEmail || !orgId}
             className="rounded bg-red-700 text-white px-4 py-2"
           >
-            {inviteM.isPending ? "Gerando…" : "Gerar convite"}
+            {inviteM.isPending ? "Generating…" : "Generate invite"}
           </button>
           {inviteM.error && (
             <p className="text-sm text-red-600">{inviteM.error.message}</p>
@@ -218,7 +218,7 @@ export default function MembersSettingsPage() {
         </form>
 
         <div className="rounded border">
-          <div className="px-4 py-2 border-b font-medium">Pendentes</div>
+          <div className="px-4 py-2 border-b font-medium">Pending</div>
           <div className="divide-y">
             {pendingQ.data?.length ? (
               pendingQ.data.map((inv) => (
@@ -230,7 +230,7 @@ export default function MembersSettingsPage() {
                     <div className="font-medium">{inv.email}</div>
                     <div className="text-gray-500">
                       {inv.roleName ? `Role: ${inv.roleName} · ` : ""}
-                      Expira: {new Date(inv.expiresAt).toLocaleString()}
+                      Expires: {new Date(inv.expiresAt).toLocaleString()}
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
@@ -243,32 +243,32 @@ export default function MembersSettingsPage() {
                       }
                       className="rounded border px-3 py-1 text-sm"
                     >
-                      Copiar link
+                      Copy link
                     </button>
                     <button
                       type="button"
                       onClick={() => revokeInviteM.mutate({ inviteId: inv.id })}
                       className="rounded border px-3 py-1 text-sm"
                     >
-                      Revogar
+                      Revoke
                     </button>
                   </div>
                 </div>
               ))
             ) : (
               <div className="px-4 py-6 text-sm text-gray-500">
-                Sem convites pendentes.
+                No pending invitations.
               </div>
             )}
           </div>
         </div>
       </section>
 
-      {/* Membros */}
+      {/* Members */}
       <section className="space-y-4">
-        <h2 className="text-lg font-semibold">Membros</h2>
+        <h2 className="text-lg font-semibold">Members</h2>
         <div className="rounded border">
-          <div className="px-4 py-2 border-b font-medium">Equipe</div>
+          <div className="px-4 py-2 border-b font-medium">Team</div>
           <div className="divide-y">
             {membersQ.data?.length ? (
               membersQ.data.map((m) => (
@@ -287,7 +287,7 @@ export default function MembersSettingsPage() {
                         {m.email} ·{" "}
                         {m.isOwner
                           ? "Owner"
-                          : m.roles.map((r) => r.name).join(", ") || "Sem role"}
+                          : m.roles.map((r) => r.name).join(", ") || "No role"}
                       </div>
                     </div>
                   </button>
@@ -297,34 +297,34 @@ export default function MembersSettingsPage() {
                       onClick={() => transferOwnership(m.id)}
                       className="rounded border px-3 py-1 text-sm"
                     >
-                      Tornar Owner
+                      Make Owner
                     </button>
                   )}
                 </div>
               ))
             ) : (
               <div className="px-4 py-6 text-sm text-gray-500">
-                Nenhum membro.
+                No members.
               </div>
             )}
           </div>
         </div>
       </section>
 
-      {/* Drawer simples: editar membro */}
+      {/* Simple drawer: edit member */}
       {selectedMember && (
         <section className="space-y-3">
           <div className="rounded border p-4 bg-white">
             <div className="flex items-center justify-between mb-3">
               <h3 className="font-medium">
-                Editar membro: {selectedMember.name || selectedMember.email}
+                Edit member: {selectedMember.name || selectedMember.email}
               </h3>
               <button
                 type="button"
                 onClick={() => setSelectedUserId(null)}
                 className="rounded border px-3 py-1 text-sm"
               >
-                Fechar
+                Close
               </button>
             </div>
 
@@ -353,7 +353,7 @@ export default function MembersSettingsPage() {
                     disabled={assignRolesM.isPending}
                     className="rounded bg-red-700 text-white px-4 py-2"
                   >
-                    {assignRolesM.isPending ? "Salvando…" : "Salvar roles"}
+                    {assignRolesM.isPending ? "Saving…" : "Save roles"}
                   </button>
                   {!selectedMember.isOwner && (
                     <button
@@ -363,8 +363,8 @@ export default function MembersSettingsPage() {
                       className="rounded border px-4 py-2"
                     >
                       {removeMemberM.isPending
-                        ? "Removendo…"
-                        : "Remover da org"}
+                        ? "Removing…"
+                        : "Remove from org"}
                     </button>
                   )}
                 </div>

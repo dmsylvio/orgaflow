@@ -61,24 +61,23 @@ export default function OrgSwitchPage() {
     });
     setOpenCreate(false);
     setOrgName("");
-    router.push("/app"); // activeOrgId já foi salvo no server
+    router.push("/app"); // activeOrgId has already been saved on the server
   };
 
   return (
     <div className="max-w-2xl mx-auto p-6 space-y-6">
       <div>
-        <h1 className="text-xl font-semibold">Selecionar organização</h1>
+        <h1 className="text-xl font-semibold">Select organization</h1>
         <p className="text-sm text-muted-foreground">
-          Escolha uma organização para continuar. Você também pode criar uma
-          nova.
+          Choose an organization to continue. You can also create a new one.
         </p>
       </div>
 
       <div className="grid gap-3">
-        {myOrgs.isLoading ? <p>Carregando...</p> : null}
+        {myOrgs.isLoading ? <p>Loading...</p> : null}
         {myOrgs.error ? (
           <div className="text-sm text-red-600">
-            Erro: {myOrgs.error.message}
+            Error: {myOrgs.error.message}
           </div>
         ) : null}
 
@@ -111,32 +110,32 @@ export default function OrgSwitchPage() {
         <div className="pt-2">
           <Dialog open={openCreate} onOpenChange={setOpenCreate}>
             <DialogTrigger asChild>
-              <Button variant="outline">Criar nova organização</Button>
+              <Button variant="outline">Create new organization</Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Nova organização</DialogTitle>
+                <DialogTitle>New organization</DialogTitle>
               </DialogHeader>
               <div className="grid gap-2">
                 <label htmlFor="org-name" className="text-sm font-medium">
-                  Nome
+                  Name
                 </label>
                 <Input
                   id="org-name"
                   value={orgName}
                   onChange={(e) => setOrgName(e.target.value)}
-                  placeholder="Ex.: Minha Empresa LTDA"
+                  placeholder="e.g. Acme LLC"
                 />
               </div>
               <DialogFooter>
                 <Button variant="ghost" onClick={() => setOpenCreate(false)}>
-                  Cancelar
+                  Cancel
                 </Button>
                 <Button
                   onClick={onCreate}
                   disabled={createMut.isPending || !orgName.trim()}
                 >
-                  {createMut.isPending ? "Criando..." : "Criar"}
+                  {createMut.isPending ? "Creating..." : "Create"}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -145,7 +144,7 @@ export default function OrgSwitchPage() {
 
         <div className="flex gap-2">
           <Button variant="ghost" onClick={() => router.push("/app")}>
-            Voltar ao app
+            Back to app
           </Button>
         </div>
       </div>

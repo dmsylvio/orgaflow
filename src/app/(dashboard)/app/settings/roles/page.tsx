@@ -15,7 +15,7 @@ function slugify(s: string) {
 }
 
 export default function RolesSettingsPage() {
-  // 1) Organizações do usuário
+  // 1) User organizations
   const orgsQ = trpc.org.listMine.useQuery(undefined, {
     refetchOnWindowFocus: false,
   });
@@ -27,18 +27,18 @@ export default function RolesSettingsPage() {
     }
   }, [orgsQ.data, orgId]);
 
-  // 2) Roles da organização
+  // 2) Organization roles
   const rolesQ = trpc.roles.listByOrg.useQuery(
     { orgId },
     { enabled: !!orgId, refetchOnWindowFocus: false },
   );
 
-  // 3) Catálogo de permissões
+  // 3) Permissions catalog
   const catalogQ = trpc.permissions.catalog.useQuery(undefined, {
     refetchOnWindowFocus: false,
   });
 
-  // 4) Mutations principais
+  // 4) Main mutations
   const createM = trpc.roles.create.useMutation({
     onSuccess: () => rolesQ.refetch(),
   });
@@ -52,7 +52,7 @@ export default function RolesSettingsPage() {
     onSuccess: () => rolePermsQ.refetch(),
   });
 
-  // 5) Criação de role
+  // 5) Role creation
   const [name, setName] = useState("");
   const [key, setKey] = useState("");
   useEffect(() => {
@@ -67,7 +67,7 @@ export default function RolesSettingsPage() {
     setKey("");
   };
 
-  // 6) Editor de permissões por role (usa QUERY com enabled condicional)
+  // 6) Role permissions editor (uses QUERY with conditional enabled)
   const roles = rolesQ.data ?? [];
   const [editingRoleId, setEditingRoleId] = useState<string | null>(null);
   const [selectedPermIds, setSelectedPermIds] = useState<string[]>([]);
@@ -90,10 +90,38 @@ export default function RolesSettingsPage() {
 
   const openEditor = (roleId: string) => setEditingRoleId(roleId);
 
-  const togglePerm = (pid: string) => {
-    setSelectedPermIds((old) =>
-      old.includes(pid) ? old.filter((x) => x !== pid) : [...old, pid],
+  /** Coleta a permissão e todas as dependências transitivas (keys) */
+  const collectKeysWithDeps = (key: string): Set<string> => {
+    const catalog = catalogQ.data ?? [];
+    const keyToDependsOn = new Map(
+      catalog.map((c) => [c.key, ((c as { dependsOn?: string[] }).dependsOn) ?? []]),
     );
+    const seen = new Set<string>();
+    const visit = (k: string) => {
+      if (seen.has(k)) return;
+      seen.add(k);
+      for (const d of keyToDependsOn.get(k) ?? []) visit(d);
+    };
+    visit(key);
+    return seen;
+  };
+
+  const togglePerm = (pid: string) => {
+    const catalog = catalogQ.data ?? [];
+    const perm = catalog.find((p) => p.id === pid);
+    if (!perm) return;
+
+    setSelectedPermIds((old) => {
+      const isAdding = !old.includes(pid);
+      if (isAdding) {
+        const keysToAdd = collectKeysWithDeps(perm.key);
+        const idsToAdd = catalog
+          .filter((p) => keysToAdd.has(p.key))
+          .map((p) => p.id);
+        return [...new Set([...old, ...idsToAdd])];
+      }
+      return old.filter((x) => x !== pid);
+    });
   };
 
   const savePerms = async () => {
@@ -104,7 +132,7 @@ export default function RolesSettingsPage() {
     });
   };
 
-  // 7) Busy e erros
+  // 7) Busy and errors
   const isBusy =
     rolesQ.isLoading ||
     orgsQ.isLoading ||
@@ -117,13 +145,13 @@ export default function RolesSettingsPage() {
 
   return (
     <div className="space-y-8">
-      {/* Seleção de organização */}
+      {/* Organization selection */}
       <section className="space-y-2">
         <h1 className="text-xl font-semibold">Roles</h1>
         <div className="flex items-end gap-4">
           <div>
             <label htmlFor="role-org" className="block text-sm font-medium">
-              Organização
+              Organization
             </label>
             <select
               id="role-org"
@@ -133,7 +161,7 @@ export default function RolesSettingsPage() {
               disabled={!orgsQ.data?.length}
             >
               <option value="" disabled>
-                Selecione…
+                Select…
               </option>
               {orgsQ.data?.map((o) => (
                 <option key={o.id} value={o.id}>
@@ -146,13 +174,13 @@ export default function RolesSettingsPage() {
         </div>
       </section>
 
-      {/* Criar role */}
+      {/* Create role */}
       <section className="space-y-3">
-        <h2 className="text-lg font-semibold">Criar role</h2>
+        <h2 className="text-lg font-semibold">Create role</h2>
         <form className="flex flex-wrap items-end gap-3" onSubmit={onCreate}>
           <div>
             <label htmlFor="role-name" className="block text-sm font-medium">
-              Nome
+              Name
             </label>
             <input
               id="role-name"
@@ -171,7 +199,7 @@ export default function RolesSettingsPage() {
               className="mt-1 w-64 border rounded px-3 py-2"
               value={key}
               onChange={(e) => setKey(e.target.value)}
-              placeholder="auto-gerada a partir do nome"
+              placeholder="auto-generated from the name"
             />
           </div>
           <button
@@ -179,18 +207,18 @@ export default function RolesSettingsPage() {
             className="rounded bg-red-700 text-white px-4 py-2"
             disabled={!name || !orgId || isBusy}
           >
-            Criar
+            Create
           </button>
         </form>
       </section>
 
-      {/* Lista de roles */}
+      {/* Roles list */}
       <section className="space-y-3">
-        <h2 className="text-lg font-semibold">Roles da organização</h2>
+        <h2 className="text-lg font-semibold">Organization roles</h2>
 
         {rolesQ.error ? (
           <div className="rounded border border-red-200 bg-red-50 p-3 text-red-700 text-sm">
-            <div className="font-medium">Erro</div>
+            <div className="font-medium">Error</div>
             <div>{rolesQ.error.message}</div>
           </div>
         ) : null}
@@ -213,12 +241,12 @@ export default function RolesSettingsPage() {
                     className="rounded border px-3 py-1 text-sm"
                     disabled={isBusy}
                   >
-                    Permissões
+                    Permissions
                   </button>
                   <button
                     type="button"
                     onClick={() => {
-                      const newName = prompt("Novo nome da role:", r.name);
+                      const newName = prompt("New role name:", r.name);
                       if (newName?.trim()) {
                         updateM.mutate({
                           roleId: r.id,
@@ -229,7 +257,7 @@ export default function RolesSettingsPage() {
                     className="rounded border px-3 py-1 text-sm"
                     disabled={isBusy}
                   >
-                    Renomear
+                    Rename
                   </button>
                   <button
                     type="button"
@@ -237,27 +265,27 @@ export default function RolesSettingsPage() {
                     className="rounded border px-3 py-1 text-sm"
                     disabled={isBusy}
                   >
-                    Excluir
+                    Delete
                   </button>
                 </div>
               </div>
             ))
           ) : (
-            <div className="px-4 py-6 text-sm text-gray-500">Nenhuma role.</div>
+            <div className="px-4 py-6 text-sm text-gray-500">No roles.</div>
           )}
         </div>
       </section>
 
-      {/* Editor de permissões */}
+      {/* Permissions editor */}
       {editingRoleId && (
         <section className="space-y-3">
           <h2 className="text-lg font-semibold">
-            Permissões de {currentRole?.name ?? "…"}
+            Permissions for {currentRole?.name ?? "…"}
           </h2>
 
           {catalogQ.error ? (
             <div className="rounded border border-red-200 bg-red-50 p-3 text-red-700 text-sm">
-              <div className="font-medium">Erro</div>
+              <div className="font-medium">Error</div>
               <div>{catalogQ.error.message}</div>
             </div>
           ) : null}
@@ -276,7 +304,7 @@ export default function RolesSettingsPage() {
                 </label>
               ))}
               {!catalogQ.data?.length && (
-                <div className="text-sm text-gray-500">Catálogo vazio.</div>
+                <div className="text-sm text-gray-500">Empty catalog.</div>
               )}
             </div>
             <div className="p-3 border-t flex gap-2">
@@ -286,7 +314,7 @@ export default function RolesSettingsPage() {
                 className="rounded bg-red-700 text-white px-4 py-2"
                 disabled={isBusy}
               >
-                Salvar permissões
+                Save permissions
               </button>
               <button
                 type="button"
@@ -294,7 +322,7 @@ export default function RolesSettingsPage() {
                 className="rounded border px-4 py-2"
                 disabled={isBusy}
               >
-                Fechar
+                Close
               </button>
             </div>
           </div>
@@ -302,7 +330,7 @@ export default function RolesSettingsPage() {
       )}
 
       {isBusy ? (
-        <div className="text-sm text-gray-500">Processando…</div>
+        <div className="text-sm text-gray-500">Processing…</div>
       ) : null}
     </div>
   );

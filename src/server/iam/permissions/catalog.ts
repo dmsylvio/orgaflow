@@ -379,6 +379,8 @@ export type PermissionDef = {
   name: string; // rótulo amigável
   description?: string;
   abilities: Ability[]; // abilities concedidas por esta permission
+  /** Chaves de permissões que devem ser marcadas junto (ex.: customer:delete depende de customer:view) */
+  dependsOn?: string[];
 };
 
 function A(...abilities: Ability[]): Ability[] {
@@ -405,16 +407,19 @@ export const PERMISSIONS: PermissionDef[] = [
     key: "customer:create",
     name: "Criar Clientes",
     abilities: A("customer:create"),
+    dependsOn: ["customer:view"],
   },
   {
     key: "customer:edit",
     name: "Editar Clientes",
     abilities: A("customer:edit"),
+    dependsOn: ["customer:view"],
   },
   {
     key: "customer:delete",
     name: "Excluir Clientes",
     abilities: A("customer:delete"),
+    dependsOn: ["customer:view"],
   },
   {
     key: "customer:manage",
@@ -425,17 +430,34 @@ export const PERMISSIONS: PermissionDef[] = [
       "customer:edit",
       "customer:delete",
     ),
+    dependsOn: ["customer:view", "customer:create", "customer:edit", "customer:delete"],
   },
 
   // Items
   { key: "item:view", name: "Ver Itens", abilities: A("item:view") },
-  { key: "item:create", name: "Criar Itens", abilities: A("item:create") },
-  { key: "item:edit", name: "Editar Itens", abilities: A("item:edit") },
-  { key: "item:delete", name: "Excluir Itens", abilities: A("item:delete") },
+  {
+    key: "item:create",
+    name: "Criar Itens",
+    abilities: A("item:create"),
+    dependsOn: ["item:view"],
+  },
+  {
+    key: "item:edit",
+    name: "Editar Itens",
+    abilities: A("item:edit"),
+    dependsOn: ["item:view"],
+  },
+  {
+    key: "item:delete",
+    name: "Excluir Itens",
+    abilities: A("item:delete"),
+    dependsOn: ["item:view"],
+  },
   {
     key: "item:manage",
     name: "Gerenciar Itens",
     abilities: A("item:view", "item:create", "item:edit", "item:delete"),
+    dependsOn: ["item:view", "item:create", "item:edit", "item:delete"],
   },
 
   // Estimates
@@ -448,16 +470,19 @@ export const PERMISSIONS: PermissionDef[] = [
     key: "estimate:create",
     name: "Criar Orçamentos",
     abilities: A("estimate:create"),
+    dependsOn: ["estimate:view", "customer:view", "item:view"],
   },
   {
     key: "estimate:edit",
     name: "Editar Orçamentos",
     abilities: A("estimate:edit"),
+    dependsOn: ["estimate:view"],
   },
   {
     key: "estimate:delete",
     name: "Excluir Orçamentos",
     abilities: A("estimate:delete"),
+    dependsOn: ["estimate:view"],
   },
   {
     key: "estimate:manage",
@@ -468,6 +493,7 @@ export const PERMISSIONS: PermissionDef[] = [
       "estimate:edit",
       "estimate:delete",
     ),
+    dependsOn: ["estimate:view", "estimate:create", "estimate:edit", "estimate:delete"],
   },
 
   // Invoices
@@ -476,12 +502,19 @@ export const PERMISSIONS: PermissionDef[] = [
     key: "invoice:create",
     name: "Criar Faturas",
     abilities: A("invoice:create"),
+    dependsOn: ["invoice:view", "customer:view", "item:view"],
   },
-  { key: "invoice:edit", name: "Editar Faturas", abilities: A("invoice:edit") },
+  {
+    key: "invoice:edit",
+    name: "Editar Faturas",
+    abilities: A("invoice:edit"),
+    dependsOn: ["invoice:view"],
+  },
   {
     key: "invoice:delete",
     name: "Excluir Faturas",
     abilities: A("invoice:delete"),
+    dependsOn: ["invoice:view"],
   },
   {
     key: "invoice:manage",
@@ -492,6 +525,7 @@ export const PERMISSIONS: PermissionDef[] = [
       "invoice:edit",
       "invoice:delete",
     ),
+    dependsOn: ["invoice:view", "invoice:create", "invoice:edit", "invoice:delete"],
   },
 
   // Members / IAM

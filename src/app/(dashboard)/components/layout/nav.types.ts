@@ -1,61 +1,61 @@
 // src/components/layout/nav.types.ts
 import type { ComponentType } from "react";
 
-// Ícone deve ser um componente React (ex.: lucide-react)
+// Icon must be a React component (e.g., lucide-react)
 export type IconType = ComponentType<{ className?: string }>;
 
 /**
- * Item de navegação individual
+ * Individual navigation item
  */
 export type MenuItem = {
-  /** Chave de tradução i18n (ex.: "navigation.dashboard") */
+  /** i18n translation key (e.g., "navigation.dashboard") */
   tKey?: string;
-  /** Rótulo visível no menu (fallback quando tKey não é usado) */
+  /** Visible label in the menu (fallback when tKey is not used) */
   name: string;
-  /** Link absoluto dentro do app (ex.: "/app", "/app/customers") */
+  /** Absolute link within the app (e.g., "/app", "/app/customers") */
   href: string;
-  /** Ícone obrigatório (componente) */
+  /** Required icon (component) */
   icon: IconType;
 
   /**
-   * Se true, apenas owners veem este item.
-   * A verificação de owner é feita no resolveMenu.
+   * If true, only owners can see this item.
+   * The owner check is done in resolveMenu.
    */
   ownerOnly?: boolean;
 
   /**
-   * Ability necessária para usuários que NÃO são owners.
-   * Para owners, ability é ignorada (desde que passe no ownerOnly).
+   * Ability required for users who are NOT owners.
+   * For owners, ability is ignored (as long as it passes ownerOnly).
    */
   ability?: string;
 
   /**
-   * Chave para contador no badge (ex.: "invoicesDue")
+   * Key for badge counter (e.g., "invoicesDue")
    */
   counterKey?: string;
 
   /**
-   * Flags de recurso necessárias para exibir o item para qualquer usuário.
-   * Se alguma flag listada for false, o item não aparece nem para owners.
+   * Feature flags required to display the item for any user.
+   * If any listed flag is false, the item is hidden even for owners.
    */
   features?: string[];
 };
 
 /**
- * Agrupador de itens (ex.: "Sales", "Setup", etc.)
- * `group` é apenas um identificador numérico/ordem usado na UI se desejar
+ * Item grouping (e.g., "Sales", "Setup", etc.)
+ * `group` is just a numeric/order identifier used in the UI if desired
  */
 export type MenuSection = {
-  /** Identificador ou ordem do grupo na UI */
+  /** Group identifier or order in the UI */
   group: number | string;
-  /** Chave de tradução do título do grupo (ex.: "navigation.group.general") */
+  /** Translation key for the group title (e.g., "navigation.group.general") */
   title?: string;
-  /** Itens pertencentes a esse grupo */
+  /** Items belonging to this group */
   items: MenuItem[];
 };
 
 /**
- * Configuração completa do menu (main e settings)
+ * Full menu configuration (main and settings)
  */
 export type MenuConfig = {
   main: MenuSection[];
@@ -63,7 +63,7 @@ export type MenuConfig = {
 };
 
 /**
- * Estrutura resultante após aplicar regras de visibilidade (owner, ability, features)
+ * Resulting structure after applying visibility rules (owner, ability, features)
  */
 export type ResolvedMenu = {
   main: MenuSection[];
@@ -71,13 +71,13 @@ export type ResolvedMenu = {
 };
 
 /**
- * Parâmetros de resolução usados pelo resolveMenu
- * (mantido aqui para referência de tipos compartilhados)
+ * Resolution parameters used by resolveMenu
+ * (kept here for shared type reference)
  */
 export type ResolveMenuInput = {
   config: MenuConfig;
   isOwner: boolean;
   permissions: Set<string>;
-  /** Flags de recurso ativas no tenant/usuário (ex.: { reports: true }) */
+  /** Feature flags active for the tenant/user (e.g., { reports: true }) */
   features?: Record<string, boolean>;
 };
