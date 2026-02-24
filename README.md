@@ -28,11 +28,12 @@ Orgaflow helps organizations manage customers, estimates, invoices, payments, ex
 - **Roles & Permissions** — Granular RBAC with roles, permissions, and ability-based guards
 - **Permission overrides** — Per-user allow/deny overrides for fine-grained control
 
-### Authentication
+### Authentication & Billing
 
-- **NextAuth** — Credentials and OAuth support
+- **Better Auth** — Email + password authentication
 - **Sign up / Sign in** — Email + password authentication
 - **Password recovery** — Forgot password flow
+- **Stripe Billing** — Checkout + Customer Portal
 
 ## Tech Stack
 
@@ -41,7 +42,7 @@ Orgaflow helps organizations manage customers, estimates, invoices, payments, ex
 | Framework  | Next.js 16 (App Router, Turbopack) |
 | UI         | React 19, Radix UI, Tailwind CSS   |
 | API        | tRPC v11 with React Query          |
-| Auth       | NextAuth v4                        |
+| Auth       | Better Auth                        |
 | Database   | PostgreSQL                         |
 | ORM        | Drizzle                            |
 | Validation | Zod v4                             |
@@ -52,9 +53,9 @@ Orgaflow helps organizations manage customers, estimates, invoices, payments, ex
 ```
 src/
 ├── app/                    # Next.js App Router
-│   ├── (marketing)/        # Public pages (signin, signup, pricing)
+│   ├── (marketing)/        # Public pages (auth, pricing, choose-plan)
 │   ├── (dashboard)/        # Protected app (customers, invoices, settings)
-│   └── api/                # API routes (tRPC, NextAuth)
+│   └── api/                # API routes (tRPC, auth, billing)
 ├── components/             # Shared UI components
 ├── lib/                    # Utilities, auth, tenant resolution
 ├── server/
@@ -65,6 +66,17 @@ src/
 ```
 
 ## Getting Started
+
+### Auth & Pricing Flow
+
+- **Sign up**: `/auth/sign-up`
+- **Choose plan**: `/choose-plan`
+- **Sign in**: `/auth/sign-in`
+- **Forgot password**: `/auth/forgot-password`
+- **Reset password**: `/auth/reset-password`
+
+Paid plans use Stripe Checkout. After signup, users are redirected to **Choose plan** to start a subscription.
+
 
 ### Prerequisites
 
@@ -80,12 +92,21 @@ pnpm install
 
 ### Environment
 
-Create a `.env` file:
+Create a `.env` file (or `.env.local` for dev):
 
 ```env
 DATABASE_URL="postgresql://user:password@localhost:5432/orgaflow"
-NEXTAUTH_SECRET="your-secret"
-NEXTAUTH_URL="http://localhost:3000"
+BETTER_AUTH_SECRET="your-secret"
+BETTER_AUTH_URL="http://localhost:3000"
+
+# Stripe (test or live)
+STRIPE_SECRET_KEY="sk_test_..."
+STRIPE_WEBHOOK_SECRET="whsec_..."
+STRIPE_PUBLIC_KEY="pk_test_..."
+STRIPE_PRICE_GROWTH_MONTHLY="price_..."
+STRIPE_PRICE_GROWTH_ANNUAL="price_..."
+STRIPE_PRICE_ENTERPRISE_MONTHLY="price_..."
+STRIPE_PRICE_ENTERPRISE_ANNUAL="price_..."
 ```
 
 ### Database
@@ -108,6 +129,14 @@ pnpm dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
+
+### Stripe Webhooks (Dev)
+
+```bash
+stripe listen --forward-to localhost:3000/api/billing/webhook
+```
+
+Copy the `whsec_...` into `STRIPE_WEBHOOK_SECRET` and restart the dev server.
 
 ### Seed Data (optional)
 
