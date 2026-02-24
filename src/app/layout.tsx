@@ -4,6 +4,7 @@ import { ThemeProvider } from "@/components/providers/theme-provider";
 import { TRPCProvider } from "@/components/providers/trpc-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { openSans, poppins } from "@/lib/fonts";
+import { Analytics } from "@vercel/analytics/next";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -29,6 +30,7 @@ export default function RootLayout({
         >
           <TRPCProvider>{children}</TRPCProvider>
           <Toaster />
+          <Analytics />
         </ThemeProvider>
       </body>
     </html>

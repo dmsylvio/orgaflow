@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useMemo, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 
 const plans = [
   {
@@ -57,7 +57,7 @@ const plans = [
   },
 ];
 
-export default function ChoosePlanPage() {
+function ChoosePlanContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const orgId = searchParams.get("orgId") ?? "";
@@ -221,5 +221,19 @@ export default function ChoosePlanPage() {
         ))}
       </section>
     </div>
+  );
+}
+
+export default function ChoosePlanPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-[400px] items-center justify-center">
+          <div className="text-sm text-neutral-500">Loading…</div>
+        </div>
+      }
+    >
+      <ChoosePlanContent />
+    </Suspense>
   );
 }
