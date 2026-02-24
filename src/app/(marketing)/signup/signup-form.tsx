@@ -1,14 +1,16 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { signIn } from "next-auth/react";
 import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import type { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { authClient } from "@/lib/auth-client";
 import { trpc } from "@/lib/trpc/client";
 import { signupAccountSchema, signupOrgSchema } from "@/validations/auth";
 
@@ -25,8 +27,9 @@ type Step = "account" | "org";
 
 export default function SignupForm() {
   const [step, setStep] = useState<Step>("account");
+  const [signingUp, setSigningUp] = useState(false);
   const router = useRouter();
-  const m = trpc.auth.signup.useMutation();
+  const createOrg = trpc.org.create.useMutation();
 
   const accountForm = useForm<z.infer<typeof signupAccountSchema>>({
     resolver: zodResolver(signupAccountSchema),
@@ -48,36 +51,55 @@ export default function SignupForm() {
   };
 
   const submit = async () => {
-    // se não digitou slug manualmente, sugere
-    const currentSlug = orgForm.getValues("slug") || suggestedSlug;
+    const manualSlug = orgForm.getValues("slug")?.trim();
+    const currentSlug =
+      manualSlug || (suggestedSlug.length >= 2 ? suggestedSlug : "org");
     orgForm.setValue("slug", currentSlug);
 
     const ok = await orgForm.trigger();
     if (!ok) return;
 
-    const payload = {
-      ...accountForm.getValues(),
-      ...orgForm.getValues(),
-      slug: currentSlug,
-    };
+    const account = accountForm.getValues();
+    setSigningUp(true);
 
-    await m.mutateAsync(payload);
+    try {
+      const signUp = await authClient.signUp.email({
+        name: account.name,
+        email: account.email,
+        password: account.password,
+        callbackURL: "/app",
+      });
 
-    // autentica e direciona ao app
-    const res = await signIn("credentials", {
-      email: accountForm.getValues("email"),
-      password: accountForm.getValues("password"),
-      redirect: false,
-    });
+      if (signUp.error) {
+        toast.error(signUp.error.message ?? "Sign up failed", {
+          description: "Please check your details and try again.",
+        });
+        return;
+      }
 
-    if (res?.ok) router.replace("/app");
+      await createOrg.mutateAsync({
+        name: orgForm.getValues("orgName"),
+        slug: currentSlug,
+      });
+
+      toast.success("Account created", {
+        description: "Redirecting to your dashboard...",
+      });
+      router.replace("/app");
+    } catch (error) {
+      toast.error("Unexpected error", {
+        description: "Please try again in a few moments.",
+      });
+    } finally {
+      setSigningUp(false);
+    }
   };
 
   return (
     <div className="rounded border p-6 shadow-sm bg-white">
       <h1 className="text-xl font-semibold mb-1">Create your account</h1>
       <p className="text-sm text-neutral-500 mb-6">
-        Acesse sua conta para continuar.
+        Create your account to get started.
       </p>
       {step === "account" && (
         <form
@@ -128,12 +150,12 @@ export default function SignupForm() {
           </div>
 
           <div className="pt-4">
-            <button
+            <Button
               type="submit"
-              className="rounded bg-red-700 text-white px-4 py-2"
+              className="w-full rounded-md bg-black text-white py-2"
             >
               Continue
-            </button>
+            </Button>
           </div>
         </form>
       )}
@@ -152,7 +174,7 @@ export default function SignupForm() {
             </Label>
             <Input
               className="mt-1 w-full border rounded px-3 py-2"
-              placeholder="Minha Empresa"
+              placeholder="Acme Inc."
               {...orgForm.register("orgName")}
             />
             {orgForm.formState.errors.orgName && (
@@ -168,7 +190,7 @@ export default function SignupForm() {
             </Label>
             <Input
               className="mt-1 w-full border rounded px-3 py-2"
-              placeholder={suggestedSlug || "minha-empresa"}
+              placeholder={suggestedSlug || "acme-inc"}
               {...orgForm.register("slug")}
             />
             {orgForm.formState.errors.slug && (
@@ -177,11 +199,13 @@ export default function SignupForm() {
               </p>
             )}
             <p className="text-xs text-gray-500 mt-1">
-              Use apenas minúsculas, números e hífen.
+              Use lowercase letters, numbers, and hyphens only.
             </p>
           </div>
 
-          {m.error && <p className="text-sm text-red-600">{m.error.message}</p>}
+          {createOrg.error && (
+            <p className="text-sm text-red-600">{createOrg.error.message}</p>
+          )}
 
           <div className="flex items-center gap-2 pt-4">
             <Button
@@ -194,14 +218,22 @@ export default function SignupForm() {
 
             <Button
               type="submit"
-              disabled={m.isPending}
-              className="rounded bg-red-700 text-white px-4 py-2"
+              disabled={createOrg.isPending || signingUp}
+              className="rounded bg-black text-white px-4 py-2"
             >
-              {m.isPending ? "Creating..." : "Create account"}
+              {createOrg.isPending || signingUp
+                ? "Creating..."
+                : "Create account"}
             </Button>
           </div>
         </form>
       )}
+
+      <div className="mt-4 text-sm text-neutral-600">
+        <Link href="/signin" className="hover:underline">
+          Already have an account? Sign in
+        </Link>
+      </div>
     </div>
   );
 }

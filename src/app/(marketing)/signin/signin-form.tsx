@@ -3,7 +3,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { signIn } from "next-auth/react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -14,8 +13,10 @@ import {
   FormField,
   FormItem,
   FormLabel,
+  FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { authClient } from "@/lib/auth-client";
 import { type SignInInput, signInSchema } from "@/validations/signin.schema";
 
 export default function SigninForm() {
@@ -33,30 +34,29 @@ export default function SigninForm() {
   const onSubmit = async (data: SignInInput) => {
     setLoading(true);
     try {
-      signIn("credentials", {
+      const res = await authClient.signIn.email({
         email: data.email,
         password: data.password,
-        redirect: false,
-        callbackUrl: "/app",
-      }).then((res) => {
-        if (res?.ok) {
-          toast.success("Login realizado com sucesso!", {
-            description: "Você será redirecionado para página inicial...",
-          });
-          setTimeout(() => {
-            router.push("/app");
-          }, 3000);
-        } else {
-          toast.error(res?.error, {
-            description:
-              "Por favor, verifique suas credenciais e tente novamente.",
-          });
-        }
+        callbackURL: "/app",
       });
+
+      if (res.error) {
+        toast.error(res.error.message ?? "Sign in failed", {
+          description: "Please check your credentials and try again.",
+        });
+        return;
+      }
+
+      toast.success("Signed in successfully", {
+        description: "Redirecting you to your dashboard...",
+      });
+      setTimeout(() => {
+        router.push("/app");
+      }, 800);
     } catch (error) {
       console.log(error);
-      toast.error("Ocorreu um erro inesperado.", {
-        description: "Por favor, tente novamente em alguns instantes.",
+      toast.error("Unexpected error", {
+        description: "Please try again in a few moments.",
       });
     } finally {
       setLoading(false);
@@ -65,9 +65,9 @@ export default function SigninForm() {
 
   return (
     <div className="rounded border p-6 shadow-sm bg-white">
-      <h1 className="text-xl font-semibold mb-1">Entrar</h1>
+      <h1 className="text-xl font-semibold mb-1">Sign in</h1>
       <p className="text-sm text-neutral-500 mb-6">
-        Acesse sua conta para continuar.
+        Access your account to continue.
       </p>
 
       <Form {...form}>
@@ -77,10 +77,11 @@ export default function SigninForm() {
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel htmlFor="email">E-mail</FormLabel>
+                <FormLabel>Email</FormLabel>
                 <FormControl>
                   <Input type="email" {...field} disabled={loading} />
                 </FormControl>
+                <FormMessage />
               </FormItem>
             )}
           />
@@ -90,10 +91,11 @@ export default function SigninForm() {
             name="password"
             render={({ field }) => (
               <FormItem>
-                <FormLabel htmlFor="password">Senha</FormLabel>
+                <FormLabel>Password</FormLabel>
                 <FormControl>
                   <Input type="password" {...field} disabled={loading} />
                 </FormControl>
+                <FormMessage />
               </FormItem>
             )}
           />
@@ -103,17 +105,17 @@ export default function SigninForm() {
             disabled={loading}
             className="w-full rounded-md bg-black text-white py-2 disabled:opacity-60"
           >
-            {loading ? "Entrando..." : "Entrar"}
+            {loading ? "Signing in..." : "Sign in"}
           </Button>
         </form>
       </Form>
 
       <div className="mt-4 text-sm text-neutral-600 flex items-center justify-between">
         <Link href="/forgot" className="hover:underline">
-          Esqueceu a senha?
+          Forgot password?
         </Link>
         <Link href="/signup" className="hover:underline">
-          Criar conta
+          Create account
         </Link>
       </div>
     </div>

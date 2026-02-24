@@ -122,8 +122,11 @@ export default function RolesSettingsPage() {
         <h1 className="text-xl font-semibold">Roles</h1>
         <div className="flex items-end gap-4">
           <div>
-            <label className="block text-sm font-medium">Organização</label>
+            <label htmlFor="role-org" className="block text-sm font-medium">
+              Organização
+            </label>
             <select
+              id="role-org"
               className="mt-1 w-72 border rounded px-3 py-2 bg-white"
               value={orgId}
               onChange={(e) => setOrgId(e.target.value)}
@@ -148,8 +151,11 @@ export default function RolesSettingsPage() {
         <h2 className="text-lg font-semibold">Criar role</h2>
         <form className="flex flex-wrap items-end gap-3" onSubmit={onCreate}>
           <div>
-            <label className="block text-sm font-medium">Nome</label>
+            <label htmlFor="role-name" className="block text-sm font-medium">
+              Nome
+            </label>
             <input
+              id="role-name"
               className="mt-1 w-64 border rounded px-3 py-2"
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -157,8 +163,11 @@ export default function RolesSettingsPage() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium">Key</label>
+            <label htmlFor="role-key" className="block text-sm font-medium">
+              Key
+            </label>
             <input
+              id="role-key"
               className="mt-1 w-64 border rounded px-3 py-2"
               value={key}
               onChange={(e) => setKey(e.target.value)}
@@ -199,6 +208,7 @@ export default function RolesSettingsPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <button
+                    type="button"
                     onClick={() => openEditor(r.id)}
                     className="rounded border px-3 py-1 text-sm"
                     disabled={isBusy}
@@ -206,9 +216,10 @@ export default function RolesSettingsPage() {
                     Permissões
                   </button>
                   <button
+                    type="button"
                     onClick={() => {
                       const newName = prompt("Novo nome da role:", r.name);
-                      if (newName && newName.trim()) {
+                      if (newName?.trim()) {
                         updateM.mutate({
                           roleId: r.id,
                           name: newName.trim(),
@@ -221,6 +232,7 @@ export default function RolesSettingsPage() {
                     Renomear
                   </button>
                   <button
+                    type="button"
                     onClick={() => deleteM.mutate({ roleId: r.id })}
                     className="rounded border px-3 py-1 text-sm"
                     disabled={isBusy}
@@ -269,6 +281,7 @@ export default function RolesSettingsPage() {
             </div>
             <div className="p-3 border-t flex gap-2">
               <button
+                type="button"
                 onClick={savePerms}
                 className="rounded bg-red-700 text-white px-4 py-2"
                 disabled={isBusy}
@@ -276,6 +289,7 @@ export default function RolesSettingsPage() {
                 Salvar permissões
               </button>
               <button
+                type="button"
                 onClick={() => setEditingRoleId(null)}
                 className="rounded border px-4 py-2"
                 disabled={isBusy}

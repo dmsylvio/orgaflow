@@ -1,4 +1,6 @@
-import { prisma } from "@/lib/prisma";
+import { and, eq } from "drizzle-orm";
+import { db } from "@/server/db/client";
+import * as schema from "@/server/db/schema";
 
 export async function canInviteToOrg(
   userId: string,
@@ -6,10 +8,17 @@ export async function canInviteToOrg(
   getPermissions: () => Promise<Set<string>>,
 ) {
   // owner bypass
-  const membership = await prisma.organizationMember.findUnique({
-    where: { organization_member_unique: { orgId, userId } },
-    select: { isOwner: true },
-  });
+  const rows = await db
+    .select({ isOwner: schema.organizationMember.isOwner })
+    .from(schema.organizationMember)
+    .where(
+      and(
+        eq(schema.organizationMember.orgId, orgId),
+        eq(schema.organizationMember.userId, userId),
+      ),
+    )
+    .limit(1);
+  const membership = rows[0];
   if (!membership) return false;
   if (membership.isOwner) return true;
 

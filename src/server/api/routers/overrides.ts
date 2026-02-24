@@ -1,171 +1,251 @@
+import { randomUUID } from "node:crypto";
 import { TRPCError } from "@trpc/server";
+import { and, eq } from "drizzle-orm";
+import { orgProcedure, router } from "@/server/api/trpc";
+import * as schema from "@/server/db/schema";
 import {
   createOverrideInput,
   deleteOverrideInput,
   listOverridesByUserInput,
   updateOverrideInput,
 } from "@/validations/override.schema";
-import { orgProcedure, protectedProcedure, router } from "@/server/api/trpc";
 
 export const overridesRouter = router({
   // List permission overrides for a user within an organization
   listByUser: orgProcedure
     .input(listOverridesByUserInput)
     .query(async ({ ctx, input }) => {
-      if (input.orgId !== ctx.orgId) {
-        throw new TRPCError({ code: "FORBIDDEN" });
-      }
-      const membership = await ctx.prisma.organizationMember.findUnique({
-        where: {
-          organization_member_unique: {
-            orgId: input.orgId,
-            userId: ctx.session!.user.id,
-          },
-        },
-        select: { isOwner: true },
-      });
-      if (!membership) throw new TRPCError({ code: "FORBIDDEN" });
+      if (input.orgId !== ctx.orgId)
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You do not have permission to perform this action",
+        });
 
-      if (!membership.isOwner) {
+      const membership = await ctx.db
+        .select({ isOwner: schema.organizationMember.isOwner })
+        .from(schema.organizationMember)
+        .where(
+          and(
+            eq(schema.organizationMember.orgId, input.orgId),
+            eq(schema.organizationMember.userId, ctx.session?.user.id),
+          ),
+        )
+        .limit(1);
+      if (!membership[0])
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You do not have permission to perform this action",
+        });
+
+      if (!membership[0].isOwner) {
         const ab = await ctx.getPermissions();
         if (!ab.has("permission:override:manage"))
-          throw new TRPCError({ code: "FORBIDDEN" });
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "You do not have permission to perform this action",
+          });
       }
 
-      return ctx.prisma.userPermissionOverride.findMany({
-        where: { orgId: input.orgId, userId: input.userId },
-        select: {
-          id: true,
-          mode: true,
-          permission: { select: { id: true, key: true, name: true } },
-        },
-        orderBy: { createdAt: "asc" },
-      });
+      const rows = await ctx.db
+        .select({
+          id: schema.userPermissionOverride.id,
+          mode: schema.userPermissionOverride.mode,
+          permissionId: schema.permission.id,
+          key: schema.permission.key,
+          name: schema.permission.name,
+        })
+        .from(schema.userPermissionOverride)
+        .innerJoin(
+          schema.permission,
+          eq(schema.userPermissionOverride.permissionId, schema.permission.id),
+        )
+        .where(
+          and(
+            eq(schema.userPermissionOverride.orgId, input.orgId),
+            eq(schema.userPermissionOverride.userId, input.userId),
+          ),
+        )
+        .orderBy(schema.userPermissionOverride.createdAt);
+
+      return rows.map((r) => ({
+        id: r.id,
+        mode: r.mode,
+        permission: { id: r.permissionId, key: r.key, name: r.name },
+      }));
     }),
 
   // Create a new override for a user in an organization
   create: orgProcedure
     .input(createOverrideInput)
     .mutation(async ({ ctx, input }) => {
-      if (input.orgId !== ctx.orgId) {
-        throw new TRPCError({ code: "FORBIDDEN" });
-      }
-      const membership = await ctx.prisma.organizationMember.findUnique({
-        where: {
-          organization_member_unique: {
-            orgId: input.orgId,
-            userId: ctx.session!.user.id,
-          },
-        },
-        select: { isOwner: true },
-      });
-      if (!membership) throw new TRPCError({ code: "FORBIDDEN" });
-      if (!membership.isOwner) {
+      if (input.orgId !== ctx.orgId)
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You do not have permission to perform this action",
+        });
+
+      const membership = await ctx.db
+        .select({ isOwner: schema.organizationMember.isOwner })
+        .from(schema.organizationMember)
+        .where(
+          and(
+            eq(schema.organizationMember.orgId, input.orgId),
+            eq(schema.organizationMember.userId, ctx.session?.user.id),
+          ),
+        )
+        .limit(1);
+      if (!membership[0])
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You do not have permission to perform this action",
+        });
+      if (!membership[0].isOwner) {
         const ab = await ctx.getPermissions();
         if (!ab.has("permission:override:manage"))
-          throw new TRPCError({ code: "FORBIDDEN" });
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "You do not have permission to perform this action",
+          });
       }
 
-      // validate target membership and permission existence
-      const isMember = await ctx.prisma.organizationMember.findUnique({
-        where: {
-          organization_member_unique: {
-            orgId: input.orgId,
-            userId: input.userId,
-          },
-        },
-        select: { id: true },
-      });
-      if (!isMember)
+      const isMember = await ctx.db
+        .select({ id: schema.organizationMember.id })
+        .from(schema.organizationMember)
+        .where(
+          and(
+            eq(schema.organizationMember.orgId, input.orgId),
+            eq(schema.organizationMember.userId, input.userId),
+          ),
+        )
+        .limit(1);
+      if (!isMember[0])
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: "Usuário não é membro",
+          message: "User is not a member of the organization",
         });
 
-      const perm = await ctx.prisma.permission.findUnique({
-        where: { id: input.permissionId },
-        select: { id: true },
-      });
-      if (!perm)
+      const perm = await ctx.db
+        .select({ id: schema.permission.id })
+        .from(schema.permission)
+        .where(eq(schema.permission.id, input.permissionId))
+        .limit(1);
+      if (!perm[0])
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: "Permissão inválida",
+          message: "Invalid permission",
         });
 
-      const created = await ctx.prisma.userPermissionOverride.create({
-        data: {
-          orgId: input.orgId,
-          userId: input.userId,
-          permissionId: input.permissionId,
-          mode: input.mode,
-        },
-        select: { id: true },
+      const id = randomUUID();
+      await ctx.db.insert(schema.userPermissionOverride).values({
+        id,
+        orgId: input.orgId,
+        userId: input.userId,
+        permissionId: input.permissionId,
+        mode: input.mode,
       });
-      return created;
+
+      return { id };
     }),
 
   // Update override mode
-  update: protectedProcedure
+  update: orgProcedure
     .input(updateOverrideInput)
     .mutation(async ({ ctx, input }) => {
-      const row = await ctx.prisma.userPermissionOverride.findUnique({
-        where: { id: input.id },
-        select: { orgId: true },
-      });
-      if (!row) throw new TRPCError({ code: "NOT_FOUND" });
+      const row = await ctx.db
+        .select({ orgId: schema.userPermissionOverride.orgId })
+        .from(schema.userPermissionOverride)
+        .where(eq(schema.userPermissionOverride.id, input.id))
+        .limit(1);
+      if (!row[0])
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Override not found",
+        });
 
-      const membership = await ctx.prisma.organizationMember.findUnique({
-        where: {
-          organization_member_unique: {
-            orgId: row.orgId,
-            userId: ctx.session!.user.id,
-          },
-        },
-        select: { isOwner: true },
-      });
-      if (!membership) throw new TRPCError({ code: "FORBIDDEN" });
-      if (!membership.isOwner) {
+      if (row[0].orgId !== ctx.orgId)
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You do not have permission to perform this action",
+        });
+
+      const membership = await ctx.db
+        .select({ isOwner: schema.organizationMember.isOwner })
+        .from(schema.organizationMember)
+        .where(
+          and(
+            eq(schema.organizationMember.orgId, row[0].orgId),
+            eq(schema.organizationMember.userId, ctx.session?.user.id),
+          ),
+        )
+        .limit(1);
+      if (!membership[0])
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You do not have permission to perform this action",
+        });
+      if (!membership[0].isOwner) {
         const ab = await ctx.getPermissions();
         if (!ab.has("permission:override:manage"))
-          throw new TRPCError({ code: "FORBIDDEN" });
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "You do not have permission to perform this action",
+          });
       }
 
-      await ctx.prisma.userPermissionOverride.update({
-        where: { id: input.id },
-        data: { mode: input.mode },
-      });
+      await ctx.db
+        .update(schema.userPermissionOverride)
+        .set({ mode: input.mode })
+        .where(eq(schema.userPermissionOverride.id, input.id));
       return { ok: true };
     }),
 
   // Delete an override
-  delete: protectedProcedure
+  delete: orgProcedure
     .input(deleteOverrideInput)
     .mutation(async ({ ctx, input }) => {
-      const row = await ctx.prisma.userPermissionOverride.findUnique({
-        where: { id: input.id },
-        select: { orgId: true },
-      });
-      if (!row) throw new TRPCError({ code: "NOT_FOUND" });
+      const row = await ctx.db
+        .select({ orgId: schema.userPermissionOverride.orgId })
+        .from(schema.userPermissionOverride)
+        .where(eq(schema.userPermissionOverride.id, input.id))
+        .limit(1);
+      if (!row[0])
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Override not found",
+        });
+      if (row[0].orgId !== ctx.orgId)
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You do not have permission to perform this action",
+        });
 
-      const membership = await ctx.prisma.organizationMember.findUnique({
-        where: {
-          organization_member_unique: {
-            orgId: row.orgId,
-            userId: ctx.session!.user.id,
-          },
-        },
-        select: { isOwner: true },
-      });
-      if (!membership) throw new TRPCError({ code: "FORBIDDEN" });
-      if (!membership.isOwner) {
+      const membership = await ctx.db
+        .select({ isOwner: schema.organizationMember.isOwner })
+        .from(schema.organizationMember)
+        .where(
+          and(
+            eq(schema.organizationMember.orgId, row[0].orgId),
+            eq(schema.organizationMember.userId, ctx.session?.user.id),
+          ),
+        )
+        .limit(1);
+      if (!membership[0])
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You do not have permission to perform this action",
+        });
+      if (!membership[0].isOwner) {
         const ab = await ctx.getPermissions();
         if (!ab.has("permission:override:manage"))
-          throw new TRPCError({ code: "FORBIDDEN" });
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "You do not have permission to perform this action",
+          });
       }
 
-      await ctx.prisma.userPermissionOverride.delete({
-        where: { id: input.id },
-      });
+      await ctx.db
+        .delete(schema.userPermissionOverride)
+        .where(eq(schema.userPermissionOverride.id, input.id));
       return { ok: true };
     }),
 });

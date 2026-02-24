@@ -1,20 +1,9 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Open_Sans, Poppins } from "next/font/google";
 import "@/styles/globals.css";
-import { ThemeProvider } from "@/components/theme-provider";
+import { ThemeProvider } from "@/components/providers/theme-provider";
+import { TRPCProvider } from "@/components/providers/trpc-provider";
 import { Toaster } from "@/components/ui/sonner";
-import { Providers } from "./providers";
-
-const poppins = Poppins({
-  subsets: ["latin"],
-  variable: "--font-poppins",
-  weight: ["400", "500", "600", "700", "800"],
-});
-
-const openSans = Open_Sans({
-  subsets: ["latin"],
-  variable: "--font-open-sans",
-});
+import { openSans, poppins } from "@/lib/fonts";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -38,7 +27,7 @@ export default function RootLayout({
           disableTransitionOnChange
           storageKey="orgaflow-theme"
         >
-          <Providers>{children}</Providers>
+          <TRPCProvider>{children}</TRPCProvider>
           <Toaster />
         </ThemeProvider>
       </body>

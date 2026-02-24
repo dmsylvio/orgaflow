@@ -1,51 +1,64 @@
+import { randomUUID } from "node:crypto";
 import { TRPCError } from "@trpc/server";
-import { assertOrgMembership } from "@/server/iam/guards/requireMember";
+import { and, asc, eq } from "drizzle-orm";
+import { orgProcedure, protectedProcedure, router } from "@/server/api/trpc";
+import * as schema from "@/server/db/schema";
 import {
   createOrganizationInput,
   deleteOrganizationInput,
   switchOrganizationInput,
 } from "@/validations/organization.schema";
-import { orgProcedure, protectedProcedure, router } from "@/server/api/trpc";
 
 export const orgRouter = router({
   // Return the currently active organization for the session user
   current: orgProcedure.query(async ({ ctx }) => {
     const orgId = ctx.orgId;
-    await assertOrgMembership(orgId, ctx.session!.user.id);
 
-    const org = await ctx.prisma.organization.findUnique({
-      where: { id: orgId },
-      select: {
-        id: true,
-        name: true,
-        slug: true,
-      },
-    });
+    const rows = await ctx.db
+      .select({
+        id: schema.organization.id,
+        name: schema.organization.name,
+        slug: schema.organization.slug,
+      })
+      .from(schema.organization)
+      .where(eq(schema.organization.id, orgId))
+      .limit(1);
 
+    const org = rows[0];
+    if (!org)
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: "Organization not found",
+      });
     return org;
   }),
 
   // List organizations the user belongs to, with owner flag
   listMine: protectedProcedure.query(async ({ ctx }) => {
-    const rows = await ctx.prisma.organizationMember.findMany({
-      where: { userId: ctx.session!.user.id },
-      select: {
-        isOwner: true,
-        org: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-          },
-        },
-      },
-      orderBy: {
-        createdAt: "asc",
-      },
-    });
+    const userId = ctx.session?.user.id;
+    if (!userId) {
+      throw new TRPCError({ code: "UNAUTHORIZED" });
+    }
+
+    const rows = await ctx.db
+      .select({
+        isOwner: schema.organizationMember.isOwner,
+        orgId: schema.organization.id,
+        name: schema.organization.name,
+        slug: schema.organization.slug,
+      })
+      .from(schema.organizationMember)
+      .innerJoin(
+        schema.organization,
+        eq(schema.organizationMember.orgId, schema.organization.id),
+      )
+      .where(eq(schema.organizationMember.userId, userId))
+      .orderBy(asc(schema.organizationMember.createdAt));
 
     return rows.map((row) => ({
-      ...row.org,
+      id: row.orgId,
+      name: row.name,
+      slug: row.slug,
       isOwner: row.isOwner,
     }));
   }),
@@ -54,66 +67,86 @@ export const orgRouter = router({
   switch: protectedProcedure
     .input(switchOrganizationInput)
     .mutation(async ({ ctx, input }) => {
-      await assertOrgMembership(input.orgId, ctx.session!.user.id);
-      await ctx.prisma.user.update({
-        where: { id: ctx.session!.user.id },
-        data: { activeOrgId: input.orgId },
-      });
+      const userId = ctx.session?.user.id;
+      if (!userId) {
+        throw new TRPCError({ code: "UNAUTHORIZED" });
+      }
+
+      const membership = await ctx.db
+        .select({ id: schema.organizationMember.id })
+        .from(schema.organizationMember)
+        .where(
+          and(
+            eq(schema.organizationMember.orgId, input.orgId),
+            eq(schema.organizationMember.userId, userId),
+          ),
+        )
+        .limit(1);
+      if (!membership[0])
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You do not have permission to perform this action",
+        });
+
+      await ctx.db
+        .update(schema.user)
+        .set({ activeOrgId: input.orgId })
+        .where(eq(schema.user.id, userId));
       return { ok: true };
     }),
 
   // Create a new organization and make current user owner
   create: protectedProcedure
-    .input(createOrganizationInput.pick({ name: true }))
+    .input(createOrganizationInput)
     .mutation(async ({ ctx, input }) => {
-      const base = input.name
-        .toLowerCase()
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .replace(/[^a-z0-9]/g, "-")
-        .replace(/-+/g, "-")
-        .replace(/^-|-$/g, "");
+      const base = input.slug
+        ? input.slug
+        : input.name
+            .toLowerCase()
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .replace(/[^a-z0-9]/g, "-")
+            .replace(/-+/g, "-")
+            .replace(/^-|-$/g, "");
       let slug = base || "org";
       for (
         let i = 2;
-        await ctx.prisma.organization.findUnique({ where: { slug } });
+        (
+          await ctx.db
+            .select({ id: schema.organization.id })
+            .from(schema.organization)
+            .where(eq(schema.organization.slug, slug))
+            .limit(1)
+        )[0];
         i++
       )
         slug = `${base}-${i}`;
 
-      const userId = ctx.session!.user.id;
+      const userId = ctx.session?.user.id;
+      if (!userId) {
+        throw new TRPCError({ code: "UNAUTHORIZED" });
+      }
+      const orgId = randomUUID();
 
-      const org = await ctx.prisma.$transaction(async (tx) => {
-        const org = await tx.organization.create({
-          data: {
-            name: input.name,
-            slug,
-          },
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-          },
+      await ctx.db.transaction(async (tx) => {
+        await tx.insert(schema.organization).values({
+          id: orgId,
+          name: input.name,
+          slug,
         });
-        await tx.organizationMember.create({
-          data: {
-            orgId: org.id,
-            userId,
-            isOwner: true,
-          },
+        await tx.insert(schema.organizationMember).values({
+          id: randomUUID(),
+          orgId,
+          userId,
+          isOwner: true,
         });
-        await tx.user.update({
-          where: {
-            id: userId,
-          },
-          data: {
-            activeOrgId: org.id,
-          },
-        });
-        return org;
+        await tx
+          .update(schema.user)
+          .set({ activeOrgId: orgId })
+          .where(eq(schema.user.id, userId));
       });
 
-      return { org };
+      return { org: { id: orgId, name: input.name, slug } };
     }),
 
   // Update organization name and slug (owner only)
@@ -124,49 +157,78 @@ export const orgRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const membership = await ctx.prisma.organizationMember.findUnique({
-        where: {
-          organization_member_unique: {
-            orgId: input.orgId,
-            userId: ctx.session!.user.id,
-          },
-        },
-        select: { isOwner: true },
-      });
-      if (!membership?.isOwner) throw new TRPCError({ code: "FORBIDDEN" });
-
-      const conflict = await ctx.prisma.organization.findUnique({
-        where: { slug: input.slug },
-        select: { id: true },
-      });
-      if (conflict && conflict.id !== input.orgId) {
-        throw new TRPCError({ code: "CONFLICT", message: "Slug já em uso" });
+      const userId = ctx.session?.user.id;
+      if (!userId) {
+        throw new TRPCError({ code: "UNAUTHORIZED" });
       }
 
-      const org = await ctx.prisma.organization.update({
-        where: { id: input.orgId },
-        data: { name: input.name, slug: input.slug },
-        select: { id: true, name: true, slug: true },
-      });
-      return { org };
+      const membership = await ctx.db
+        .select({ isOwner: schema.organizationMember.isOwner })
+        .from(schema.organizationMember)
+        .where(
+          and(
+            eq(schema.organizationMember.orgId, input.orgId),
+            eq(schema.organizationMember.userId, userId),
+          ),
+        )
+        .limit(1);
+      if (!membership[0]?.isOwner)
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You do not have permission to perform this action",
+        });
+
+      const conflict = await ctx.db
+        .select({ id: schema.organization.id })
+        .from(schema.organization)
+        .where(eq(schema.organization.slug, input.slug))
+        .limit(1);
+      if (conflict[0] && conflict[0].id !== input.orgId) {
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: "Slug already in use",
+        });
+      }
+
+      await ctx.db
+        .update(schema.organization)
+        .set({ name: input.name, slug: input.slug })
+        .where(eq(schema.organization.id, input.orgId));
+
+      return { org: { id: input.orgId, name: input.name, slug: input.slug } };
     }),
 
   // Delete organization (owner only)
   delete: protectedProcedure
     .input(deleteOrganizationInput)
     .mutation(async ({ ctx, input }) => {
-      const membership = await ctx.prisma.organizationMember.findUnique({
-        where: {
-          organization_member_unique: {
-            orgId: input.orgId,
-            userId: ctx.session!.user.id,
-          },
-        },
-        select: { isOwner: true },
-      });
-      if (!membership?.isOwner) throw new TRPCError({ code: "FORBIDDEN" });
+      const userId = ctx.session?.user.id;
+      if (!userId) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "User not authenticated",
+        });
+      }
 
-      await ctx.prisma.organization.delete({ where: { id: input.orgId } });
+      const membership = await ctx.db
+        .select({ isOwner: schema.organizationMember.isOwner })
+        .from(schema.organizationMember)
+        .where(
+          and(
+            eq(schema.organizationMember.orgId, input.orgId),
+            eq(schema.organizationMember.userId, userId),
+          ),
+        )
+        .limit(1);
+      if (!membership[0]?.isOwner)
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You do not have permission to perform this action",
+        });
+
+      await ctx.db
+        .delete(schema.organization)
+        .where(eq(schema.organization.id, input.orgId));
       return { ok: true };
     }),
 });

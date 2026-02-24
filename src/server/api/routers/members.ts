@@ -1,11 +1,14 @@
+import { randomUUID } from "node:crypto";
 import { TRPCError } from "@trpc/server";
+import { and, asc, desc, eq, inArray } from "drizzle-orm";
+import { orgProcedure, router } from "@/server/api/trpc";
+import * as schema from "@/server/db/schema";
 import {
   assignRolesInput,
   listMembersByOrgInput,
   removeMemberInput,
   transferOwnershipInput,
 } from "@/validations/member.schema";
-import { orgProcedure, router } from "@/server/api/trpc";
 
 export const membersRouter = router({
   // List organization members with roles
@@ -13,154 +16,159 @@ export const membersRouter = router({
     .input(listMembersByOrgInput)
     .query(async ({ ctx, input }) => {
       if (input.orgId !== ctx.orgId) {
-        throw new TRPCError({ code: "FORBIDDEN" });
-      }
-      const membership = await ctx.prisma.organizationMember.findUnique({
-        where: {
-          organization_member_unique: {
-            orgId: input.orgId,
-            userId: ctx.session!.user.id,
-          },
-        },
-        select: { id: true },
-      });
-      if (!membership)
         throw new TRPCError({
           code: "FORBIDDEN",
-          message: "Usuário não é membro da organização",
+          message: "You do not have permission to perform this action",
+        });
+      }
+
+      const membership = await ctx.db
+        .select({ id: schema.organizationMember.id })
+        .from(schema.organizationMember)
+        .where(
+          and(
+            eq(schema.organizationMember.orgId, input.orgId),
+            eq(schema.organizationMember.userId, ctx.session?.user.id),
+          ),
+        )
+        .limit(1);
+      if (!membership[0])
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "User is not a member of the organization",
         });
 
-      const rows = await ctx.prisma.organizationMember.findMany({
-        where: { orgId: input.orgId },
-        select: {
-          user: { select: { id: true, name: true, email: true } },
-          isOwner: true,
-        },
-        orderBy: [{ isOwner: "desc" }, { user: { name: "asc" } }],
-      });
+      const rows = await ctx.db
+        .select({
+          userId: schema.user.id,
+          name: schema.user.name,
+          email: schema.user.email,
+          isOwner: schema.organizationMember.isOwner,
+        })
+        .from(schema.organizationMember)
+        .innerJoin(
+          schema.user,
+          eq(schema.organizationMember.userId, schema.user.id),
+        )
+        .where(eq(schema.organizationMember.orgId, input.orgId))
+        .orderBy(
+          desc(schema.organizationMember.isOwner),
+          asc(schema.user.name),
+        );
 
-      // roles por usuário (opcional, leve)
-      const roles = await ctx.prisma.userRole.findMany({
-        where: { orgId: input.orgId },
-        select: { userId: true, role: { select: { id: true, name: true } } },
-      });
+      const roleRows = await ctx.db
+        .select({
+          userId: schema.userRole.userId,
+          roleId: schema.role.id,
+          roleName: schema.role.name,
+        })
+        .from(schema.userRole)
+        .innerJoin(schema.role, eq(schema.userRole.roleId, schema.role.id))
+        .where(eq(schema.userRole.orgId, input.orgId));
+
       const map = new Map<string, { id: string; name: string }[]>();
-      roles.forEach((r) => {
+      for (const r of roleRows) {
         const arr = map.get(r.userId) ?? [];
-        arr.push(r.role);
+        arr.push({ id: r.roleId, name: r.roleName });
         map.set(r.userId, arr);
-      });
+      }
 
       return rows.map((r) => ({
-        id: r.user.id,
-        name: r.user.name,
-        email: r.user.email,
+        id: r.userId,
+        name: r.name,
+        email: r.email,
         isOwner: r.isOwner,
-        roles: map.get(r.user.id) ?? [],
+        roles: map.get(r.userId) ?? [],
       }));
     }),
 
-  // assignRoles: protectedProcedure
-  //   .input(z.object({
-  //     orgId: z.uuid(),
-  //     userId: z.uuid(),
-  //     roleIds: z.array(z.uuid()),
-  //   }))
-  //   .mutation(async ({ ctx, input }) => {
-  //     // precisa ser owner ou ter role:manage
-  //     const membership = await ctx.prisma.organizationMember.findUnique({
-  //       where: { organization_member_unique: { orgId: input.orgId, userId: ctx.session.user.id } },
-  //       select: { isOwner: true },
-  //     });
-  //     if (!membership) throw new TRPCError({ code: "FORBIDDEN" });
-  //     if (!membership.isOwner) {
-  //       const perms = await ctx.getPermissions();
-  //       if (!perms.has("role:manage")) throw new TRPCError({ code: "FORBIDDEN" });
-  //     }
-
-  //     // valida se alvo é membro
-  //     const isMember = await ctx.prisma.organizationMember.findUnique({
-  //       where: { organization_member_unique: { orgId: input.orgId, userId: input.userId } },
-  //       select: { id: true },
-  //     });
-  //     if (!isMember) throw new TRPCError({ code: "BAD_REQUEST", message: "Usuário não é membro" });
-
-  //     // limpa e recria vínculos
-  //     await ctx.prisma.userRole.deleteMany({ where: { orgId: input.orgId, userId: input.userId } });
-  //     if (input.roleIds.length) {
-  //       await ctx.prisma.userRole.createMany({
-  //         data: input.roleIds.map(rid => ({ orgId: input.orgId, userId: input.userId, roleId: rid })),
-  //         skipDuplicates: true,
-  //       });
-  //     }
-  //     return { ok: true };
-  //   }),
   // Assign roles to a member (replace set)
   assignRoles: orgProcedure
     .input(assignRolesInput)
     .mutation(async ({ ctx, input }) => {
       if (input.orgId !== ctx.orgId) {
-        throw new TRPCError({ code: "FORBIDDEN" });
-      }
-      // precisa ser owner ou ter role:manage
-      const membership = await ctx.prisma.organizationMember.findUnique({
-        where: {
-          organization_member_unique: {
-            orgId: input.orgId,
-            userId: ctx.session!.user.id,
-          },
-        },
-        select: { isOwner: true },
-      });
-      if (!membership) throw new TRPCError({ code: "FORBIDDEN" });
-      if (!membership.isOwner) {
-        const perms = await ctx.getPermissions();
-        if (!perms.has("role:manage"))
-          throw new TRPCError({ code: "FORBIDDEN" });
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You do not have permission to perform this action",
+        });
       }
 
-      // usuário alvo deve ser membro
-      const isMember = await ctx.prisma.organizationMember.findUnique({
-        where: {
-          organization_member_unique: {
-            orgId: input.orgId,
-            userId: input.userId,
-          },
-        },
-        select: { id: true },
-      });
-      if (!isMember)
+      const membership = await ctx.db
+        .select({ isOwner: schema.organizationMember.isOwner })
+        .from(schema.organizationMember)
+        .where(
+          and(
+            eq(schema.organizationMember.orgId, input.orgId),
+            eq(schema.organizationMember.userId, ctx.session?.user.id),
+          ),
+        )
+        .limit(1);
+      if (!membership[0])
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You do not have permission to perform this action",
+        });
+      if (!membership[0].isOwner) {
+        const perms = await ctx.getPermissions();
+        if (!perms.has("role:manage"))
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "You do not have permission to perform this action",
+          });
+      }
+
+      const isMember = await ctx.db
+        .select({ id: schema.organizationMember.id })
+        .from(schema.organizationMember)
+        .where(
+          and(
+            eq(schema.organizationMember.orgId, input.orgId),
+            eq(schema.organizationMember.userId, input.userId),
+          ),
+        )
+        .limit(1);
+      if (!isMember[0])
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: "Usuário não é membro",
+          message: "User is not a member of the organization",
         });
 
       if (input.roleIds.length) {
-        // verifique que todas as roles existem e pertencem à org
-        const roles = await ctx.prisma.role.findMany({
-          where: { id: { in: input.roleIds }, orgId: input.orgId },
-          select: { id: true },
-        });
+        const roles = await ctx.db
+          .select({ id: schema.role.id })
+          .from(schema.role)
+          .where(
+            and(
+              eq(schema.role.orgId, input.orgId),
+              inArray(schema.role.id, input.roleIds),
+            ),
+          );
         if (roles.length !== input.roleIds.length) {
           throw new TRPCError({
             code: "BAD_REQUEST",
-            message: "Uma ou mais roles inválidas para esta organização",
+            message: "One or more invalid roles for this organization",
           });
         }
       }
 
-      await ctx.prisma.userRole.deleteMany({
-        where: { orgId: input.orgId, userId: input.userId },
-      });
+      await ctx.db
+        .delete(schema.userRole)
+        .where(
+          and(
+            eq(schema.userRole.orgId, input.orgId),
+            eq(schema.userRole.userId, input.userId),
+          ),
+        );
+
       if (input.roleIds.length) {
-        await ctx.prisma.userRole.createMany({
-          data: input.roleIds.map((rid) => ({
+        await ctx.db.insert(schema.userRole).values(
+          input.roleIds.map((roleId) => ({
+            id: randomUUID(),
             orgId: input.orgId,
             userId: input.userId,
-            roleId: rid,
+            roleId,
           })),
-          skipDuplicates: true,
-        });
+        );
       }
       return { ok: true };
     }),
@@ -170,61 +178,92 @@ export const membersRouter = router({
     .input(removeMemberInput)
     .mutation(async ({ ctx, input }) => {
       if (input.orgId !== ctx.orgId) {
-        throw new TRPCError({ code: "FORBIDDEN" });
-      }
-      // apenas owner; não pode remover a si próprio se for único owner
-      const acting = await ctx.prisma.organizationMember.findUnique({
-        where: {
-          organization_member_unique: {
-            orgId: input.orgId,
-            userId: ctx.session!.user.id,
-          },
-        },
-        select: { isOwner: true },
-      });
-      if (!acting?.isOwner) throw new TRPCError({ code: "FORBIDDEN" });
-
-      const target = await ctx.prisma.organizationMember.findUnique({
-        where: {
-          organization_member_unique: {
-            orgId: input.orgId,
-            userId: input.userId,
-          },
-        },
-        select: { isOwner: true, userId: true },
-      });
-      if (!target) throw new TRPCError({ code: "NOT_FOUND" });
-
-      // se for owner, garanta que não é o último owner
-      if (target.isOwner) {
-        const owners = await ctx.prisma.organizationMember.count({
-          where: { orgId: input.orgId, isOwner: true },
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You do not have permission to perform this action",
         });
-        if (owners <= 1) {
+      }
+
+      const acting = await ctx.db
+        .select({ isOwner: schema.organizationMember.isOwner })
+        .from(schema.organizationMember)
+        .where(
+          and(
+            eq(schema.organizationMember.orgId, input.orgId),
+            eq(schema.organizationMember.userId, ctx.session?.user.id),
+          ),
+        )
+        .limit(1);
+      if (!acting[0]?.isOwner)
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You do not have permission to perform this action",
+        });
+
+      const target = await ctx.db
+        .select({
+          isOwner: schema.organizationMember.isOwner,
+          userId: schema.organizationMember.userId,
+        })
+        .from(schema.organizationMember)
+        .where(
+          and(
+            eq(schema.organizationMember.orgId, input.orgId),
+            eq(schema.organizationMember.userId, input.userId),
+          ),
+        )
+        .limit(1);
+      if (!target[0])
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Member not found",
+        });
+
+      if (target[0].isOwner) {
+        const owners = await ctx.db
+          .select({ id: schema.organizationMember.id })
+          .from(schema.organizationMember)
+          .where(
+            and(
+              eq(schema.organizationMember.orgId, input.orgId),
+              eq(schema.organizationMember.isOwner, true),
+            ),
+          );
+        if (owners.length <= 1) {
           throw new TRPCError({
             code: "BAD_REQUEST",
-            message: "Não é possível remover o único owner",
+            message: "Cannot remove the only owner",
           });
         }
       }
 
-      await ctx.prisma.userRole.deleteMany({
-        where: { orgId: input.orgId, userId: input.userId },
-      });
-      await ctx.prisma.organizationMember.delete({
-        where: {
-          organization_member_unique: {
-            orgId: input.orgId,
-            userId: input.userId,
-          },
-        },
-      });
+      await ctx.db
+        .delete(schema.userRole)
+        .where(
+          and(
+            eq(schema.userRole.orgId, input.orgId),
+            eq(schema.userRole.userId, input.userId),
+          ),
+        );
 
-      // opcional: limpar activeOrgId se a org removida era a ativa do usuário removido
-      await ctx.prisma.user.updateMany({
-        where: { id: input.userId, activeOrgId: input.orgId },
-        data: { activeOrgId: null },
-      });
+      await ctx.db
+        .delete(schema.organizationMember)
+        .where(
+          and(
+            eq(schema.organizationMember.orgId, input.orgId),
+            eq(schema.organizationMember.userId, input.userId),
+          ),
+        );
+
+      await ctx.db
+        .update(schema.user)
+        .set({ activeOrgId: null })
+        .where(
+          and(
+            eq(schema.user.id, input.userId),
+            eq(schema.user.activeOrgId, input.orgId),
+          ),
+        );
 
       return { ok: true };
     }),
@@ -234,56 +273,64 @@ export const membersRouter = router({
     .input(transferOwnershipInput)
     .mutation(async ({ ctx, input }) => {
       if (input.orgId !== ctx.orgId) {
-        throw new TRPCError({ code: "FORBIDDEN" });
-      }
-      // somente owner atual pode transferir
-      const acting = await ctx.prisma.organizationMember.findUnique({
-        where: {
-          organization_member_unique: {
-            orgId: input.orgId,
-            userId: ctx.session!.user.id,
-          },
-        },
-        select: { isOwner: true },
-      });
-      if (!acting?.isOwner) throw new TRPCError({ code: "FORBIDDEN" });
-
-      const toMember = await ctx.prisma.organizationMember.findUnique({
-        where: {
-          organization_member_unique: {
-            orgId: input.orgId,
-            userId: input.toUserId,
-          },
-        },
-        select: { isOwner: true },
-      });
-      if (!toMember)
         throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Usuário não é membro",
+          code: "FORBIDDEN",
+          message: "You do not have permission to perform this action",
+        });
+      }
+
+      const acting = await ctx.db
+        .select({ isOwner: schema.organizationMember.isOwner })
+        .from(schema.organizationMember)
+        .where(
+          and(
+            eq(schema.organizationMember.orgId, input.orgId),
+            eq(schema.organizationMember.userId, ctx.session?.user.id),
+          ),
+        )
+        .limit(1);
+      if (!acting[0]?.isOwner)
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You do not have permission to perform this action",
         });
 
-      // marca target como owner e acting como não-owner
-      await ctx.prisma.$transaction([
-        ctx.prisma.organizationMember.update({
-          where: {
-            organization_member_unique: {
-              orgId: input.orgId,
-              userId: input.toUserId,
-            },
-          },
-          data: { isOwner: true },
-        }),
-        ctx.prisma.organizationMember.update({
-          where: {
-            organization_member_unique: {
-              orgId: input.orgId,
-              userId: ctx.session!.user.id,
-            },
-          },
-          data: { isOwner: false },
-        }),
-      ]);
+      const toMember = await ctx.db
+        .select({ isOwner: schema.organizationMember.isOwner })
+        .from(schema.organizationMember)
+        .where(
+          and(
+            eq(schema.organizationMember.orgId, input.orgId),
+            eq(schema.organizationMember.userId, input.toUserId),
+          ),
+        )
+        .limit(1);
+      if (!toMember[0])
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "User is not a member of the organization",
+        });
+
+      await ctx.db.transaction(async (tx) => {
+        await tx
+          .update(schema.organizationMember)
+          .set({ isOwner: true })
+          .where(
+            and(
+              eq(schema.organizationMember.orgId, input.orgId),
+              eq(schema.organizationMember.userId, input.toUserId),
+            ),
+          );
+        await tx
+          .update(schema.organizationMember)
+          .set({ isOwner: false })
+          .where(
+            and(
+              eq(schema.organizationMember.orgId, input.orgId),
+              eq(schema.organizationMember.userId, ctx.session?.user.id),
+            ),
+          );
+      });
 
       return { ok: true };
     }),

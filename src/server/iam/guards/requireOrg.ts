@@ -8,7 +8,7 @@ export function assertOrgResolved(orgId: string | null | undefined) {
   if (!orgId) {
     throw new TRPCError({
       code: "PRECONDITION_FAILED",
-      message: "Organization não definida.",
+      message: "Organization not set",
     });
   }
 

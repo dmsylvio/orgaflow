@@ -1,183 +1,175 @@
-// src/server/trpc/routers/customers.ts
-
 import { TRPCError } from "@trpc/server";
+import { and, desc, eq, ilike, lt, or } from "drizzle-orm/sql/expressions";
+import { orgProcedure, router } from "@/server/api/trpc";
+import * as schema from "@/server/db/schema";
 import {
   createCustomerInput,
   getCustomerByIdInput,
   listCustomersInput,
   updateCustomerInput,
 } from "@/validations/customer.schema";
-import { orgProcedure, router } from "@/server/api/trpc";
+
+const customerFields = {
+  id: schema.customer.id,
+  name: schema.customer.name,
+  email: schema.customer.email,
+  phone: schema.customer.phone,
+  notes: schema.customer.notes,
+  createdAt: schema.customer.createdAt,
+  updatedAt: schema.customer.updatedAt,
+} as const;
+
+function requireAbility(abilities: Set<string>, ability: string) {
+  if (!abilities.has(ability))
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "You do not have permission to perform this action",
+    });
+}
 
 export const customersRouter = router({
-  // LIST
-  // List customers for the active organization with cursor pagination
   list: orgProcedure.input(listCustomersInput).query(async ({ ctx, input }) => {
     const abilities = await ctx.getPermissions();
-    if (!abilities.has("customer:view")) {
-      throw new TRPCError({ code: "FORBIDDEN" });
-    }
+    requireAbility(abilities, "customer:view");
 
-    const where = {
-      orgId: ctx.orgId,
-      ...(input.q
-        ? {
-            OR: [
-              { name: { contains: input.q, mode: "insensitive" as const } },
-              { email: { contains: input.q, mode: "insensitive" as const } },
-              { phone: { contains: input.q, mode: "insensitive" as const } },
-            ],
-          }
-        : {}),
-    };
+    const base = eq(schema.customer.orgId, ctx.orgId);
+    const q = input.q?.trim();
+    const where = q
+      ? and(
+          base,
+          or(
+            ilike(schema.customer.name, `%${q}%`),
+            ilike(schema.customer.email, `%${q}%`),
+            ilike(schema.customer.phone, `%${q}%`),
+          ),
+        )
+      : base;
 
-    // paginação com cursor simples pelo id
     const take = input.limit + 1;
-    const rows = await ctx.prisma.customer.findMany({
-      where,
-      orderBy: { createdAt: "desc" },
-      take,
-      ...(input.cursor ? { cursor: { id: input.cursor }, skip: 1 } : {}),
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        phone: true,
-        notes: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    });
+    const cursorWhere = input.cursor
+      ? and(where, lt(schema.customer.id, input.cursor))
+      : where;
 
-    let nextCursor: string | undefined;
-    if (rows.length > input.limit) {
-      const last = rows.pop();
-      if (last) nextCursor = last.id;
-    }
+    const rows = await ctx.db
+      .select(customerFields)
+      .from(schema.customer)
+      .where(cursorWhere)
+      .orderBy(desc(schema.customer.createdAt))
+      .limit(take);
 
-    return {
-      items: rows,
-      nextCursor,
-    };
+    const items = rows.slice(0, input.limit);
+    const nextCursor =
+      rows.length > input.limit ? rows[input.limit]?.id : undefined;
+
+    return { items, nextCursor };
   }),
 
-  // GET BY ID
-  // Get a single customer by id scoped to the active organization
   getById: orgProcedure
     .input(getCustomerByIdInput)
     .query(async ({ ctx, input }) => {
       const abilities = await ctx.getPermissions();
-      if (!abilities.has("customer:view")) {
-        throw new TRPCError({ code: "FORBIDDEN" });
-      }
+      requireAbility(abilities, "customer:view");
 
-      const row = await ctx.prisma.customer.findFirst({
-        where: { id: input.id, orgId: ctx.orgId },
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          phone: true,
-          notes: true,
-          createdAt: true,
-          updatedAt: true,
-        },
-      });
+      const [row] = await ctx.db
+        .select(customerFields)
+        .from(schema.customer)
+        .where(
+          and(
+            eq(schema.customer.id, input.id),
+            eq(schema.customer.orgId, ctx.orgId),
+          ),
+        )
+        .limit(1);
 
-      if (!row) throw new TRPCError({ code: "NOT_FOUND" });
+      if (!row)
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Customer not found",
+        });
       return row;
     }),
 
-  // CREATE
-  // Create a new customer for the active organization
   create: orgProcedure
     .input(createCustomerInput)
     .mutation(async ({ ctx, input }) => {
       const abilities = await ctx.getPermissions();
-      if (!abilities.has("customer:create")) {
-        throw new TRPCError({ code: "FORBIDDEN" });
-      }
+      requireAbility(abilities, "customer:create");
 
-      // email é único global no seu schema. Se preferir único por org, ajuste no Prisma depois.
-      const created = await ctx.prisma.customer.create({
-        data: {
+      const [created] = await ctx.db
+        .insert(schema.customer)
+        .values({
           orgId: ctx.orgId,
           name: input.name,
-          email: input.email,
-          phone: input.phone,
-          notes: input.notes,
-        },
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          phone: true,
-          notes: true,
-          createdAt: true,
-          updatedAt: true,
-        },
-      });
+          email: input.email ?? null,
+          phone: input.phone ?? null,
+          notes: input.notes ?? null,
+        })
+        .returning(customerFields);
 
+      if (!created)
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to create customer",
+        });
       return created;
     }),
 
-  // UPDATE
-  // Update a customer fields, ensuring org scoping
   update: orgProcedure
     .input(updateCustomerInput)
     .mutation(async ({ ctx, input }) => {
       const abilities = await ctx.getPermissions();
-      if (!abilities.has("customer:edit")) {
-        throw new TRPCError({ code: "FORBIDDEN" });
-      }
+      requireAbility(abilities, "customer:edit");
 
-      // garante que pertence à org
-      const exists = await ctx.prisma.customer.findFirst({
-        where: { id: input.id, orgId: ctx.orgId },
-        select: { id: true },
-      });
-      if (!exists) throw new TRPCError({ code: "NOT_FOUND" });
-
-      const updated = await ctx.prisma.customer.update({
-        where: { id: input.id },
-        data: {
+      const [updated] = await ctx.db
+        .update(schema.customer)
+        .set({
           name: input.name,
-          email: input.email,
-          phone: input.phone,
-          notes: input.notes,
-        },
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          phone: true,
-          notes: true,
-          createdAt: true,
-          updatedAt: true,
-        },
-      });
+          email: input.email ?? null,
+          phone: input.phone ?? null,
+          notes: input.notes ?? null,
+        })
+        .where(
+          and(
+            eq(schema.customer.id, input.id),
+            eq(schema.customer.orgId, ctx.orgId),
+          ),
+        )
+        .returning(customerFields);
 
+      if (!updated)
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Customer not found",
+        });
       return updated;
     }),
 
-  // DELETE
-  // Delete a customer by id, ensuring org scoping
   delete: orgProcedure
     .input(getCustomerByIdInput)
     .mutation(async ({ ctx, input }) => {
       const abilities = await ctx.getPermissions();
-      if (!abilities.has("customer:delete")) {
-        throw new TRPCError({ code: "FORBIDDEN" });
-      }
+      requireAbility(abilities, "customer:delete");
 
-      // garante que pertence à org
-      const exists = await ctx.prisma.customer.findFirst({
-        where: { id: input.id, orgId: ctx.orgId },
-        select: { id: true },
-      });
-      if (!exists) throw new TRPCError({ code: "NOT_FOUND" });
+      const [row] = await ctx.db
+        .select({ id: schema.customer.id })
+        .from(schema.customer)
+        .where(
+          and(
+            eq(schema.customer.id, input.id),
+            eq(schema.customer.orgId, ctx.orgId),
+          ),
+        )
+        .limit(1);
 
-      await ctx.prisma.customer.delete({ where: { id: input.id } });
+      if (!row)
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Customer not found",
+        });
+
+      await ctx.db
+        .delete(schema.customer)
+        .where(eq(schema.customer.id, input.id));
       return { ok: true };
     }),
 });

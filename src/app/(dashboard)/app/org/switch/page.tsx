@@ -39,7 +39,7 @@ export default function OrgSwitchPage() {
 
   const onCreate = async () => {
     if (!orgName.trim()) return;
-    const { org } = await createMut.mutateAsync({ name: orgName.trim() });
+    await createMut.mutateAsync({ name: orgName.trim() });
     setOpenCreate(false);
     setOrgName("");
     router.push("/app"); // activeOrgId já foi salvo no server
@@ -65,8 +65,9 @@ export default function OrgSwitchPage() {
 
         <div className="grid sm:grid-cols-2 gap-3">
           {(myOrgs.data ?? []).map((o) => (
-            <span
+            <button
               key={o.id}
+              type="button"
               onClick={() => onSwitch(o.id)}
               className={cn(
                 "rounded-lg border p-4 text-left hover:bg-accent",
@@ -84,7 +85,7 @@ export default function OrgSwitchPage() {
                   Member
                 </div>
               )}
-            </span>
+            </button>
           ))}
         </div>
 
@@ -98,8 +99,11 @@ export default function OrgSwitchPage() {
                 <DialogTitle>Nova organização</DialogTitle>
               </DialogHeader>
               <div className="grid gap-2">
-                <label className="text-sm font-medium">Nome</label>
+                <label htmlFor="org-name" className="text-sm font-medium">
+                  Nome
+                </label>
                 <Input
+                  id="org-name"
                   value={orgName}
                   onChange={(e) => setOrgName(e.target.value)}
                   placeholder="Ex.: Minha Empresa LTDA"

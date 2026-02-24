@@ -1,5 +1,8 @@
 // src/server/iam/ability/resolver.ts
-import { prisma } from "@/lib/prisma";
+
+import { and, eq, inArray } from "drizzle-orm";
+import { db } from "@/server/db/client";
+import * as schema from "@/server/db/schema";
 import {
   type Ability,
   PERMISSIONS,
@@ -18,10 +21,17 @@ export async function getUserAbilitiesForOrg(
   userId: string,
 ): Promise<Set<Ability>> {
   // 1) membership
-  const membership = await prisma.organizationMember.findUnique({
-    where: { organization_member_unique: { orgId, userId } },
-    select: { isOwner: true },
-  });
+  const membershipRows = await db
+    .select({ isOwner: schema.organizationMember.isOwner })
+    .from(schema.organizationMember)
+    .where(
+      and(
+        eq(schema.organizationMember.orgId, orgId),
+        eq(schema.organizationMember.userId, userId),
+      ),
+    )
+    .limit(1);
+  const membership = membershipRows[0];
   if (!membership) return new Set<Ability>();
 
   // 2) base: se owner => todas
@@ -30,19 +40,44 @@ export async function getUserAbilitiesForOrg(
   }
 
   // 3) permissions via roles
-  const rolePerms = await prisma.rolePermission.findMany({
-    where: { role: { UserRole: { some: { orgId, userId } } } },
-    select: { permission: { select: { key: true } } },
-  });
-  const rolePermissionKeys = rolePerms.map(
-    (rp) => rp.permission.key as PermissionKey,
-  );
+  const userRoles = await db
+    .select({ roleId: schema.userRole.roleId })
+    .from(schema.userRole)
+    .where(
+      and(eq(schema.userRole.orgId, orgId), eq(schema.userRole.userId, userId)),
+    );
+  const roleIds = userRoles.map((r) => r.roleId);
+
+  let rolePermissionKeys: PermissionKey[] = [];
+  if (roleIds.length) {
+    const rolePerms = await db
+      .select({ key: schema.permission.key })
+      .from(schema.rolePermission)
+      .innerJoin(
+        schema.permission,
+        eq(schema.rolePermission.permissionId, schema.permission.id),
+      )
+      .where(inArray(schema.rolePermission.roleId, roleIds));
+    rolePermissionKeys = rolePerms.map((rp) => rp.key as PermissionKey);
+  }
 
   // 4) overrides do usuário
-  const overrides = await prisma.userPermissionOverride.findMany({
-    where: { orgId, userId },
-    select: { permission: { select: { key: true } }, mode: true },
-  });
+  const overrides = await db
+    .select({
+      key: schema.permission.key,
+      mode: schema.userPermissionOverride.mode,
+    })
+    .from(schema.userPermissionOverride)
+    .innerJoin(
+      schema.permission,
+      eq(schema.userPermissionOverride.permissionId, schema.permission.id),
+    )
+    .where(
+      and(
+        eq(schema.userPermissionOverride.orgId, orgId),
+        eq(schema.userPermissionOverride.userId, userId),
+      ),
+    );
 
   const allowKeys: PermissionKey[] = [];
   const denyKeys: PermissionKey[] = [];

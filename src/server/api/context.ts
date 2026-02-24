@@ -1,59 +1,76 @@
+import { and, eq } from "drizzle-orm";
 import { headers } from "next/headers";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { auth } from "@/lib/auth";
 import { getOrgFromHost } from "@/lib/tenant";
+import { db } from "@/server/db/client";
+import * as schema from "@/server/db/schema";
 import { getUserAbilitiesForOrg } from "@/server/iam/ability/resolver";
 
+const getRootDomain = () =>
+  process.env.NEXT_PUBLIC_ROOT_DOMAIN ?? process.env.ROOT_DOMAIN ?? null;
+
+const getOrgIdFromSlug = async (orgSlug: string | null) => {
+  if (!orgSlug) return null;
+  const rows = await db
+    .select({ id: schema.organization.id })
+    .from(schema.organization)
+    .where(eq(schema.organization.slug, orgSlug))
+    .limit(1);
+  return rows[0]?.id ?? null;
+};
+
+const getOrgIdFromUser = async (userId?: string) => {
+  if (!userId) return null;
+  const rows = await db
+    .select({ activeOrgId: schema.user.activeOrgId })
+    .from(schema.user)
+    .where(eq(schema.user.id, userId))
+    .limit(1);
+  return rows[0]?.activeOrgId ?? null;
+};
+
+const isMemberOfOrg = async (orgId: string, userId?: string) => {
+  if (!userId) return false;
+  const rows = await db
+    .select({ id: schema.organizationMember.id })
+    .from(schema.organizationMember)
+    .where(
+      and(
+        eq(schema.organizationMember.orgId, orgId),
+        eq(schema.organizationMember.userId, userId),
+      ),
+    )
+    .limit(1);
+  return Boolean(rows[0]);
+};
+
 export async function createTRPCContext() {
-  // getServerSession no App Router lê automaticamente do contexto do Next.js
-  // Mas no tRPC fetchRequestHandler, precisamos passar explicitamente
-  // A forma mais simples é usar os headers do request para cookies
-  const session = await getServerSession(authOptions);
-
-  let orgId: string | null = null;
-
   const hdrs = await headers();
+  const session = await auth.api.getSession({ headers: hdrs });
+
   const host = hdrs.get("x-forwarded-host") ?? hdrs.get("host");
-  const rootDomain =
-    process.env.NEXT_PUBLIC_ROOT_DOMAIN ?? process.env.ROOT_DOMAIN ?? null;
-  const orgSlug = getOrgFromHost(host, rootDomain);
+  const orgSlug = getOrgFromHost(host, getRootDomain());
 
-  if (orgSlug) {
-    const org = await prisma.organization.findUnique({
-      where: { slug: orgSlug },
-      select: { id: true },
-    });
-    orgId = org?.id ?? null;
+  const userId = session?.user?.id;
+  let orgId = await getOrgIdFromSlug(orgSlug);
+
+  if (!orgId) {
+    orgId = await getOrgIdFromUser(userId);
   }
 
-  if (!orgId && session?.user?.id) {
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { activeOrgId: true },
-    });
-    orgId = user?.activeOrgId ?? null;
-  }
-
-  // se orgId resolvida, valida membership do usuário (evita leak cross-tenant)
-  if (orgId && session?.user?.id) {
-    const membership = await prisma.organizationMember.findUnique({
-      where: {
-        organization_member_unique: { orgId, userId: session.user.id },
-      },
-      select: { id: true },
-    });
-    if (!membership) orgId = null;
+  if (orgId && !(await isMemberOfOrg(orgId, userId))) {
+    orgId = null;
   }
 
   return {
     session,
-    prisma,
+    db,
     orgId,
     getPermissions: async () => {
-      if (!session?.user?.id || !orgId) return new Set<string>();
-      return getUserAbilitiesForOrg(orgId, (session.user as any).id);
+      if (!userId || !orgId) return new Set<string>();
+      return getUserAbilitiesForOrg(orgId, userId);
     },
   };
 }
+
 export type TRPCContext = Awaited<ReturnType<typeof createTRPCContext>>;

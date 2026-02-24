@@ -1,6 +1,6 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { headers } from "next/headers";
+import { auth } from "@/lib/auth";
 
 export async function getServerSessionSafe() {
-  return await getServerSession(authOptions);
+  return await auth.api.getSession({ headers: await headers() });
 }

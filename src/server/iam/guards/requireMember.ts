@@ -9,6 +9,6 @@ export async function assertOrgMembership(orgId: string, userId: string) {
   if (ok) return true;
   throw new TRPCError({
     code: "FORBIDDEN",
-    message: "Usuário não é membro da organização",
+    message: "User is not a member of the organization",
   });
 }

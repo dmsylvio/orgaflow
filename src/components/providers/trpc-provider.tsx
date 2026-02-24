@@ -5,19 +5,17 @@ import { httpBatchLink, loggerLink } from "@trpc/client";
 import { type ReactNode, useState } from "react";
 import superjson from "superjson";
 import { trpc } from "@/lib/trpc/client";
+import { getBaseUrl } from "@/lib/trpc/get-base-url";
 
-export function Providers({ children }: { children: ReactNode }) {
+export function TRPCProvider({ children }: { children: ReactNode }) {
   const [queryClient] = useState(() => new QueryClient());
+
   const [trpcClient] = useState(() =>
     trpc.createClient({
       links: [
-        loggerLink({
-          enabled: (opts) =>
-            process.env.NODE_ENV === "development" ||
-            (opts.direction === "down" && opts.result instanceof Error),
-        }),
+        loggerLink(),
         httpBatchLink({
-          url: "/api/trpc",
+          url: `${getBaseUrl()}/api/trpc`,
           transformer: superjson,
         }),
       ],

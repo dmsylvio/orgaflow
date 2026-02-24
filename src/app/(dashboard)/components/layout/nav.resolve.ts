@@ -1,5 +1,5 @@
 // src/components/layout/nav.resolve.ts
-import type { MenuConfig, ResolvedMenu } from "./nav.types";
+import type { MenuConfig, MenuItem, ResolvedMenu } from "./nav.types";
 
 type ResolveInput = {
   config: MenuConfig;
@@ -22,7 +22,7 @@ function canSee(
   if (item.ownerOnly && !isOwner) return false;
 
   // 2) Gate de features (sempre respeitado)
-  if (item.features && item.features.some((f) => !features?.[f])) return false;
+  if (item.features?.some((f) => !features?.[f])) return false;
 
   // 3) Owners veem tudo que passou pelos gates acima
   if (isOwner) return true;
@@ -39,7 +39,7 @@ export function resolveMenu({
   permissions,
   features,
 }: ResolveInput): ResolvedMenu {
-  const filterSection = <T extends { items: any[] }>(section: T) => ({
+  const filterSection = <T extends { items: MenuItem[] }>(section: T) => ({
     ...section,
     items: section.items.filter((it) =>
       canSee(isOwner, permissions, features, it),

@@ -1,4 +1,6 @@
-import { prisma } from "@/lib/prisma";
+import { eq, inArray } from "drizzle-orm";
+import { db } from "@/server/db/client";
+import * as schema from "@/server/db/schema";
 import { PERMISSIONS } from "./catalog";
 
 type DiffResult = {
@@ -11,10 +13,14 @@ type DiffResult = {
  * Compara catálogo (código) vs banco.
  */
 export async function diffCatalogWithDatabase(): Promise<DiffResult> {
-  const db = await prisma.permission.findMany({
-    select: { key: true, name: true, description: true },
-  });
-  const dbMap = new Map(db.map((p) => [p.key, p]));
+  const rows = await db
+    .select({
+      key: schema.permission.key,
+      name: schema.permission.name,
+      description: schema.permission.description,
+    })
+    .from(schema.permission);
+  const dbMap = new Map(rows.map((p) => [p.key, p]));
   const codeKeys = new Set<string>(PERMISSIONS.map((p) => p.key));
 
   const toCreate = PERMISSIONS.filter((p) => !dbMap.has(p.key)).map((p) => ({
@@ -23,7 +29,7 @@ export async function diffCatalogWithDatabase(): Promise<DiffResult> {
     description: p.description,
   }));
 
-  const toRemove = db.map((p) => p.key).filter((k) => !codeKeys.has(k));
+  const toRemove = rows.map((p) => p.key).filter((k) => !codeKeys.has(k));
 
   // itens que existem nas duas pontas mas mudaram rótulo/descrição
   const toUpdate = PERMISSIONS.filter((p) => {
@@ -50,27 +56,27 @@ export async function syncPermissionsCatalogToDatabase(opts?: {
 }) {
   const { toCreate, toRemove, toUpdate } = await diffCatalogWithDatabase();
 
-  await prisma.$transaction(async (tx) => {
+  await db.transaction(async (tx) => {
     if (toCreate.length) {
-      await tx.permission.createMany({
-        data: toCreate,
-        skipDuplicates: true, // segurança extra
-      });
+      await tx
+        .insert(schema.permission)
+        .values(toCreate)
+        .onConflictDoNothing({ target: schema.permission.key });
     }
 
     if (opts?.updateLabels && toUpdate.length) {
-      // Prisma não tem updateMany por campos diferentes; faça em loop (poucos itens, ok)
       for (const p of toUpdate) {
-        await tx.permission.update({
-          where: { key: p.key },
-          data: { name: p.name, description: p.description },
-        });
+        await tx
+          .update(schema.permission)
+          .set({ name: p.name, description: p.description })
+          .where(eq(schema.permission.key, p.key));
       }
     }
 
     if (opts?.removeObsolete && toRemove.length) {
-      // cuidado: pode falhar se houver FKs (RolePermission/UserPermissionOverride)
-      await tx.permission.deleteMany({ where: { key: { in: toRemove } } });
+      await tx
+        .delete(schema.permission)
+        .where(inArray(schema.permission.key, toRemove));
     }
   });
 
