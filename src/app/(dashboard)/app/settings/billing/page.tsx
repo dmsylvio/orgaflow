@@ -12,6 +12,9 @@ export default function BillingPage() {
   const billing = trpc.billing.current.useQuery(undefined, {
     refetchOnWindowFocus: false,
   });
+  const org = trpc.org.current.useQuery(undefined, {
+    refetchOnWindowFocus: false,
+  });
   const [loading, setLoading] = useState(false);
 
   const onManage = async () => {
@@ -73,7 +76,11 @@ export default function BillingPage() {
             </button>
           ) : (
             <a
-              href="/pricing"
+              href={
+                org.data
+                  ? `/choose-plan?orgId=${org.data.id}&orgName=${encodeURIComponent(org.data.name)}`
+                  : "/pricing"
+              }
               className="rounded bg-black px-4 py-2 text-sm font-medium text-white"
             >
               Upgrade plan

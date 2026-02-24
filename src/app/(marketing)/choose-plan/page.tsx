@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 
 const plans = [
@@ -11,7 +12,6 @@ const plans = [
     annualNote: "Free forever",
     description: "For solo users and early evaluation.",
     cta: "Get started",
-    href: "/auth/sign-up",
     highlight: false,
     features: [
       "1 company",
@@ -19,7 +19,6 @@ const plans = [
       "100 estimates",
       "2 users",
       "Basic reports",
-      "Email support (48–72h)",
     ],
   },
   {
@@ -29,7 +28,6 @@ const plans = [
     annualNote: "$276 billed yearly (40% off)",
     description: "Best value for growing teams.",
     cta: "Start Growth",
-    href: "/auth/sign-up",
     highlight: true,
     features: [
       "Up to 5 companies",
@@ -38,7 +36,6 @@ const plans = [
       "Unlimited users",
       "Recurring billing",
       "Standard reports",
-      "Email support (24h)",
     ],
   },
   {
@@ -48,7 +45,6 @@ const plans = [
     annualNote: "$708 billed yearly (40% off)",
     description: "Advanced governance and reporting.",
     cta: "Contact sales",
-    href: "/auth/sign-up",
     highlight: false,
     features: [
       "Up to 10 companies",
@@ -57,13 +53,17 @@ const plans = [
       "Unlimited users",
       "Advanced reports",
       "Custom fields",
-      "Priority support + SLA",
     ],
   },
 ];
 
-export default function PricingClient() {
+export default function ChoosePlanPage() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const orgId = searchParams.get("orgId") ?? "";
+  const orgName = searchParams.get("orgName") ?? "";
   const [interval, setInterval] = useState<"month" | "year">("month");
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
 
   const pricing = useMemo(
     () =>
@@ -78,16 +78,65 @@ export default function PricingClient() {
     [interval],
   );
 
+  const handleSelect = async (planName: string) => {
+    if (!orgId || !orgName) {
+      router.push("/auth/sign-up");
+      return;
+    }
+
+    if (planName === "free") {
+      router.replace("/app");
+      return;
+    }
+
+    setLoadingPlan(planName);
+    try {
+      const res = await fetch("/api/billing/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          plan: planName,
+          interval,
+          orgName,
+          orgId,
+        }),
+      });
+      const payload = (await res.json()) as { url?: string };
+      if (!res.ok || !payload.url) {
+        throw new Error("Checkout failed");
+      }
+      window.location.href = payload.url;
+    } finally {
+      setLoadingPlan(null);
+    }
+  };
+
+  if (!orgId || !orgName) {
+    return (
+      <div className="rounded-2xl border bg-white p-8 shadow-sm text-center">
+        <h1 className="text-2xl font-semibold">Choose your plan</h1>
+        <p className="mt-2 text-sm text-neutral-600">
+          Create an account first to select a plan.
+        </p>
+        <Link
+          href="/auth/sign-up"
+          className="mt-6 inline-flex rounded-md bg-black px-4 py-2 text-sm font-medium text-white"
+        >
+          Go to sign up
+        </Link>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-14">
+    <div className="space-y-10">
       <section className="space-y-6 text-center">
-        <h1 className="text-3xl font-semibold md:text-4xl">Pricing</h1>
-        <p className="text-sm text-neutral-600">
-          Start free, then scale with a plan built for your organization.
-        </p>
-        <p className="text-xs text-neutral-500">
-          Annual billing includes a 40% discount while we are in early access.
-        </p>
+        <div>
+          <h1 className="text-3xl font-semibold md:text-4xl">Choose your plan</h1>
+          <p className="mt-2 text-sm text-neutral-600">
+            Start with a plan that fits your organization.
+          </p>
+        </div>
         <div className="flex flex-wrap items-center justify-center gap-2 text-sm">
           <button
             type="button"
@@ -154,51 +203,22 @@ export default function PricingClient() {
               ))}
             </ul>
 
-            <Link
-              href={plan.href}
+            <button
+              type="button"
+              onClick={() => handleSelect(plan.name.toLowerCase())}
+              disabled={loadingPlan === plan.name.toLowerCase()}
               className={`mt-6 inline-flex w-full items-center justify-center rounded-md px-4 py-2 text-sm font-medium ${
                 plan.highlight
                   ? "bg-black text-white"
                   : "border border-neutral-200 text-neutral-900"
               }`}
             >
-              {plan.cta}
-            </Link>
+              {loadingPlan === plan.name.toLowerCase()
+                ? "Redirecting..."
+                : plan.cta}
+            </button>
           </div>
         ))}
-      </section>
-
-      <section className="rounded-2xl border bg-neutral-50 p-6">
-        <div className="grid gap-4 md:grid-cols-3">
-          <div>
-            <div className="text-sm font-semibold">Included in all plans</div>
-            <p className="mt-2 text-sm text-neutral-600">
-              Dashboard, customers, items, estimates, invoices, payments, and
-              expenses.
-            </p>
-          </div>
-          <div>
-            <div className="text-sm font-semibold">Need help deciding?</div>
-            <p className="mt-2 text-sm text-neutral-600">
-              We can map the right plan to your number of companies and billing
-              volume.
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <Link
-              href="/auth/sign-in"
-              className="rounded-md border px-4 py-2 text-sm font-medium"
-            >
-              Talk to sales
-            </Link>
-            <Link
-              href="/auth/sign-up"
-              className="rounded-md bg-black px-4 py-2 text-sm font-medium text-white"
-            >
-              Start free
-            </Link>
-          </div>
-        </div>
       </section>
     </div>
   );

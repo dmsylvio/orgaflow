@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -13,7 +13,6 @@ import { Label } from "@/components/ui/label";
 import { authClient } from "@/lib/auth-client";
 import { trpc } from "@/lib/trpc/client";
 import { signupAccountSchema, signupOrgSchema } from "@/validations/auth";
-import PlanSelector from "./plan-selector";
 
 function slugify(input: string) {
   return input
@@ -24,23 +23,14 @@ function slugify(input: string) {
     .replace(/-+/g, "-");
 }
 
-type Step = "account" | "org" | "plan";
+type Step = "account" | "org";
 
-type PlanKey = "free" | "growth" | "enterprise";
-type Interval = "month" | "year";
 
 export default function SignupForm() {
-  const searchParams = useSearchParams();
   const [step, setStep] = useState<Step>("account");
   const [signingUp, setSigningUp] = useState(false);
   const router = useRouter();
   const createOrg = trpc.org.create.useMutation();
-
-  const initialPlan = (searchParams.get("plan") as PlanKey) || "free";
-  const initialInterval =
-    (searchParams.get("interval") as Interval) || "month";
-  const [plan, setPlan] = useState<PlanKey>(initialPlan);
-  const [interval, setInterval] = useState<Interval>(initialInterval);
 
   const accountForm = useForm<z.infer<typeof signupAccountSchema>>({
     resolver: zodResolver(signupAccountSchema),
@@ -59,11 +49,6 @@ export default function SignupForm() {
   const goNext = async () => {
     const ok = await accountForm.trigger();
     if (ok) setStep("org");
-  };
-
-  const goPlan = async () => {
-    const ok = await orgForm.trigger();
-    if (ok) setStep("plan");
   };
 
   const submit = async () => {
@@ -98,31 +83,15 @@ export default function SignupForm() {
         slug: currentSlug,
       });
 
-      if (plan === "free") {
-        toast.success("Account created", {
-          description: "Redirecting to your dashboard...",
-        });
-        router.replace("/app");
-        return;
-      }
-
-      const checkoutRes = await fetch("/api/billing/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          plan,
-          interval,
-          orgName: orgForm.getValues("orgName"),
-          orgId: org.org.id,
-        }),
+      toast.success("Account created", {
+        description: "Choose a plan to continue.",
       });
 
-      const payload = (await checkoutRes.json()) as { url?: string };
-      if (!checkoutRes.ok || !payload.url) {
-        throw new Error("Checkout failed");
-      }
-
-      window.location.href = payload.url;
+      const params = new URLSearchParams({
+        orgId: org.org.id,
+        orgName: orgForm.getValues("orgName"),
+      });
+      router.replace(`/choose-plan?${params.toString()}`);
     } catch (error) {
       toast.error("Unexpected error", {
         description: "Please try again in a few moments.",
@@ -131,61 +100,10 @@ export default function SignupForm() {
       setSigningUp(false);
     }
   };
-
-  if (step === "plan") {
-    return (
-      <div className="space-y-8">
-        <div className="text-center">
-          <div className="text-xs text-neutral-500">Step 3 of 3</div>
-          <h1 className="mt-2 text-2xl font-semibold">Choose your plan</h1>
-          <p className="mt-2 text-sm text-neutral-500">
-            Pick the plan that fits your organization.
-          </p>
-        </div>
-
-        <PlanSelector
-          plan={plan}
-          interval={interval}
-          onPlanChange={setPlan}
-          onIntervalChange={setInterval}
-        />
-
-        <div className="flex items-center justify-center gap-3">
-          <Button
-            type="button"
-            onClick={() => setStep("org")}
-            className="rounded border px-4 py-2"
-          >
-            Back
-          </Button>
-
-          <Button
-            type="button"
-            onClick={() => void submit()}
-            disabled={createOrg.isPending || signingUp}
-            className="rounded bg-black text-white px-6 py-2"
-          >
-            {createOrg.isPending || signingUp
-              ? "Processing..."
-              : plan === "free"
-                ? "Create account"
-                : "Continue to payment"}
-          </Button>
-        </div>
-
-        <div className="text-center text-sm text-neutral-600">
-          <Link href="/auth/sign-in" className="hover:underline">
-            Already have an account? Sign in
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="rounded-2xl border bg-white p-8 shadow-sm">
       <div className="flex items-center justify-between text-xs text-neutral-500">
-        <span>Step {step === "account" ? 1 : step === "org" ? 2 : 3} of 3</span>
+        <span>Step {step === "account" ? 1 : 2} of 2</span>
         <span>Orgaflow setup</span>
       </div>
       <h1 className="mt-4 text-2xl font-semibold">Create your account</h1>
@@ -256,7 +174,7 @@ export default function SignupForm() {
           className="space-y-4"
           onSubmit={(e) => {
             e.preventDefault();
-            void goPlan();
+            void submit();
           }}
         >
           <div>
@@ -309,9 +227,12 @@ export default function SignupForm() {
 
             <Button
               type="submit"
+              disabled={createOrg.isPending || signingUp}
               className="rounded bg-black text-white px-4 py-2"
             >
-              Continue
+              {createOrg.isPending || signingUp
+                ? "Processing..."
+                : "Continue to choose plan"}
             </Button>
           </div>
         </form>
