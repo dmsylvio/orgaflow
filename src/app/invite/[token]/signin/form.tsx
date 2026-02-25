@@ -1,7 +1,6 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -19,20 +18,13 @@ import { Input } from "@/components/ui/input";
 import { authClient } from "@/lib/auth-client";
 import { type SignInInput, signInSchema } from "@/validations/signin.schema";
 
-export default function SigninForm({
-  callbackUrl = "/app",
-}: {
-  callbackUrl?: string;
-}) {
-  const [loading, setLoading] = useState<boolean>(false);
+export default function InviteSigninForm({ token }: { token: string }) {
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   const form = useForm<SignInInput>({
     resolver: zodResolver(signInSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-    },
+    defaultValues: { email: "", password: "" },
   });
 
   const onSubmit = async (data: SignInInput) => {
@@ -41,7 +33,7 @@ export default function SigninForm({
       const res = await authClient.signIn.email({
         email: data.email,
         password: data.password,
-        callbackURL: callbackUrl,
+        callbackURL: `/invite/${token}/accept`,
       });
 
       if (res.error) {
@@ -52,13 +44,12 @@ export default function SigninForm({
       }
 
       toast.success("Signed in successfully", {
-        description: "Redirecting you to your dashboard...",
+        description: "Redirecting to accept the invite...",
       });
       setTimeout(() => {
-        router.push("/app");
-      }, 800);
-    } catch (error) {
-      console.log(error);
+        router.push(`/invite/${token}/accept`);
+      }, 500);
+    } catch {
       toast.error("Unexpected error", {
         description: "Please try again in a few moments.",
       });
@@ -69,13 +60,13 @@ export default function SigninForm({
 
   return (
     <div className="rounded-2xl border bg-white p-8 shadow-sm">
-      <h1 className="text-2xl font-semibold">Sign in</h1>
-      <p className="mt-2 text-sm text-neutral-500">
-        Access your account to continue.
+      <h1 className="text-2xl font-semibold">Sign in to accept invite</h1>
+      <p className="mt-2 text-sm text-neutral-600">
+        Use your existing account to join the organization.
       </p>
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="mt-6 space-y-4">
           <FormField
             control={form.control}
             name="email"
@@ -109,19 +100,10 @@ export default function SigninForm({
             disabled={loading}
             className="w-full rounded-md bg-black text-white py-2 disabled:opacity-60"
           >
-            {loading ? "Signing in..." : "Sign in"}
+            {loading ? "Signing in..." : "Sign in and accept"}
           </Button>
         </form>
       </Form>
-
-      <div className="mt-6 text-sm text-neutral-600 flex items-center justify-between">
-        <Link href="/auth/forgot-password" className="hover:underline">
-          Forgot password?
-        </Link>
-        <Link href="/auth/sign-up" className="hover:underline">
-          Create account
-        </Link>
-      </div>
     </div>
   );
 }

@@ -110,6 +110,7 @@ export const invitationsRouter = router({
 
       const token = randomUUID();
       const expiresAt = addDays(new Date(), input.expiresInDays);
+
       const id = randomUUID();
 
       await ctx.db.insert(schema.invitation).values({

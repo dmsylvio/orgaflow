@@ -31,7 +31,7 @@ export const menuConfig: MenuConfig = {
           name: "Dashboard",
           href: "/app",
           icon: Home,
-          ability: "dashboard",
+          ability: "dashboard:access",
         },
         {
           tKey: "navigation.customers",

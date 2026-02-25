@@ -117,9 +117,7 @@ export default function MembersSettingsPage() {
   const transferOwnership = async (userId: string) => {
     if (!orgId) return;
     if (
-      !confirm(
-        "Transfer ownership to this user? You will lose owner status.",
-      )
+      !confirm("Transfer ownership to this user? You will lose owner status.")
     )
       return;
     await transferOwnerM.mutateAsync({ orgId, toUserId: userId });
@@ -230,7 +228,11 @@ export default function MembersSettingsPage() {
                     <div className="font-medium">{inv.email}</div>
                     <div className="text-gray-500">
                       {inv.roleName ? `Role: ${inv.roleName} · ` : ""}
-                      Expires: {new Date(inv.expiresAt).toLocaleString()}
+                      Expires:{" "}
+                      {new Date(inv.expiresAt).toLocaleString("en-US", {
+                        dateStyle: "long",
+                        timeStyle: "medium",
+                      })}
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
@@ -303,9 +305,7 @@ export default function MembersSettingsPage() {
                 </div>
               ))
             ) : (
-              <div className="px-4 py-6 text-sm text-gray-500">
-                No members.
-              </div>
+              <div className="px-4 py-6 text-sm text-gray-500">No members.</div>
             )}
           </div>
         </div>

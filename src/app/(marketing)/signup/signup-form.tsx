@@ -2,8 +2,8 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import type { z } from "zod";
@@ -27,10 +27,17 @@ type Step = "account" | "org";
 
 
 export default function SignupForm() {
+  const searchParams = useSearchParams();
+  const inviteToken = searchParams.get("invite") ?? "";
   const [step, setStep] = useState<Step>("account");
   const [signingUp, setSigningUp] = useState(false);
   const router = useRouter();
   const createOrg = trpc.org.create.useMutation();
+  const acceptInvite = trpc.invitations.accept.useMutation();
+  const inviteInfo = trpc.invitations.getByToken.useQuery(
+    { token: inviteToken },
+    { enabled: !!inviteToken },
+  );
 
   const accountForm = useForm<z.infer<typeof signupAccountSchema>>({
     resolver: zodResolver(signupAccountSchema),
@@ -46,19 +53,25 @@ export default function SignupForm() {
   const orgName = orgForm.watch("orgName");
   const suggestedSlug = useMemo(() => slugify(orgName || ""), [orgName]);
 
+  useEffect(() => {
+    orgForm.setValue("slug", suggestedSlug);
+  }, [suggestedSlug, orgForm.setValue]);
+
   const goNext = async () => {
     const ok = await accountForm.trigger();
-    if (ok) setStep("org");
+    if (ok) setStep(inviteToken ? "account" : "org");
   };
 
   const submit = async () => {
-    const manualSlug = orgForm.getValues("slug")?.trim();
-    const currentSlug =
-      manualSlug || (suggestedSlug.length >= 2 ? suggestedSlug : "org");
-    orgForm.setValue("slug", currentSlug);
+    if (!inviteToken) {
+      const manualSlug = orgForm.getValues("slug")?.trim();
+      const currentSlug =
+        manualSlug || (suggestedSlug.length >= 2 ? suggestedSlug : "org");
+      orgForm.setValue("slug", currentSlug);
 
-    const ok = await orgForm.trigger();
-    if (!ok) return;
+      const ok = await orgForm.trigger();
+      if (!ok) return;
+    }
 
     const account = accountForm.getValues();
     setSigningUp(true);
@@ -78,6 +91,18 @@ export default function SignupForm() {
         return;
       }
 
+      if (inviteToken) {
+        await acceptInvite.mutateAsync({ token: inviteToken });
+        toast.success("Invitation accepted", {
+          description: "Redirecting to the organization...",
+        });
+        router.replace("/app");
+        return;
+      }
+
+      const manualSlug = orgForm.getValues("slug")?.trim();
+      const currentSlug =
+        manualSlug || (suggestedSlug.length >= 2 ? suggestedSlug : "org");
       const org = await createOrg.mutateAsync({
         name: orgForm.getValues("orgName"),
         slug: currentSlug,
@@ -103,18 +128,24 @@ export default function SignupForm() {
   return (
     <div className="rounded-2xl border bg-white p-8 shadow-sm">
       <div className="flex items-center justify-between text-xs text-neutral-500">
-        <span>Step {step === "account" ? 1 : 2} of 2</span>
+        <span>Step {inviteToken ? 1 : step === "account" ? 1 : 2} of {inviteToken ? 1 : 2}</span>
         <span>Orgaflow setup</span>
       </div>
       <h1 className="mt-4 text-2xl font-semibold">Create your account</h1>
       <p className="mt-2 text-sm text-neutral-500">
-        Set up your workspace in just a few steps.
+        {inviteToken && inviteInfo.data?.org?.name
+          ? `You’re invited to join ${inviteInfo.data.org.name}.`
+          : "Set up your workspace in just a few steps."}
       </p>
       {step === "account" && (
         <form
           className="space-y-4"
           onSubmit={(e) => {
             e.preventDefault();
+            if (inviteToken) {
+              void submit();
+              return;
+            }
             void goNext();
           }}
         >
@@ -169,7 +200,7 @@ export default function SignupForm() {
         </form>
       )}
 
-      {step === "org" && (
+      {!inviteToken && step === "org" && (
         <form
           className="space-y-4"
           onSubmit={(e) => {

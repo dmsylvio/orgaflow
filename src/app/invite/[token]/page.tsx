@@ -4,15 +4,18 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getServerCaller } from "@/server/api/caller";
 import { getServerSessionSafe } from "@/server/auth/session";
+import { db } from "@/server/db/client";
+import * as schema from "@/server/db/schema";
+import { eq } from "drizzle-orm";
 
-type PageParams = Promise<{ token: string }>;
+type PageParams = { token: string };
 
 // SERVER ACTIONS — com "use server" e bind do token
 async function acceptInvite(token: string, _formData: FormData) {
   "use server";
   const session = await getServerSessionSafe();
   if (!session?.user?.id) {
-    redirect(`/auth/sign-in?callbackUrl=${encodeURIComponent(`/invite/${token}`)}`);
+    redirect(`/invite/${encodeURIComponent(token)}/signup`);
   }
   const caller = await getServerCaller();
   await caller.invitations.accept({ token });
@@ -23,17 +26,22 @@ async function rejectInvite(token: string, _formData: FormData) {
   "use server";
   const session = await getServerSessionSafe();
   if (!session?.user?.id) {
-    redirect(`/auth/sign-in?callbackUrl=${encodeURIComponent(`/invite/${token}`)}`);
+    redirect(`/invite/${encodeURIComponent(token)}/signup`);
   }
   const caller = await getServerCaller();
   await caller.invitations.reject({ token });
   redirect("/");
 }
 
-export default async function InvitePage({ params }: { params: PageParams }) {
+export default async function InvitePage({
+  params,
+}: {
+  params: Promise<PageParams>;
+}) {
   const { token } = await params;
 
   const caller = await getServerCaller();
+  const session = await getServerSessionSafe();
 
   // carrega convite no servidor
   let invite: Awaited<ReturnType<typeof caller.invitations.getByToken>>;
@@ -72,6 +80,13 @@ export default async function InvitePage({ params }: { params: PageParams }) {
     );
   }
 
+  const existingUser = await db
+    .select({ id: schema.user.id })
+    .from(schema.user)
+    .where(eq(schema.user.email, invite.email))
+    .limit(1);
+  const hasAccount = Boolean(existingUser[0]);
+
   // bind do token nas server actions
   const accept = acceptInvite.bind(null, token);
   const reject = rejectInvite.bind(null, token);
@@ -93,25 +108,47 @@ export default async function InvitePage({ params }: { params: PageParams }) {
         .
       </p>
 
-      <form action={accept} className="inline">
-        <button
-          type="submit"
-          className="rounded bg-red-700 text-white px-4 py-2"
-        >
-          Aceitar convite
-        </button>
-      </form>
+      {session?.user?.id ? (
+        <>
+          <form action={accept} className="inline">
+            <button
+              type="submit"
+              className="rounded bg-red-700 text-white px-4 py-2"
+            >
+              Aceitar convite
+            </button>
+          </form>
 
-      <form action={reject} className="inline ml-2">
-        <button type="submit" className="rounded border px-4 py-2">
-          Rejeitar
-        </button>
-      </form>
+          <form action={reject} className="inline ml-2">
+            <button type="submit" className="rounded border px-4 py-2">
+              Rejeitar
+            </button>
+          </form>
+        </>
+      ) : (
+        <div className="flex flex-wrap gap-2">
+          {hasAccount ? (
+            <Link
+              href={`/invite/${token}/signin`}
+              className="inline-flex rounded bg-red-700 text-white px-4 py-2"
+            >
+              Entrar para aceitar
+            </Link>
+          ) : (
+            <Link
+              href={`/invite/${token}/signup`}
+              className="inline-flex rounded bg-red-700 text-white px-4 py-2"
+            >
+              Criar conta
+            </Link>
+          )}
+        </div>
+      )}
 
       <div className="pt-4">
         <p className="text-xs text-gray-500">
-          Se você não estiver autenticado, enviaremos você para o login e depois
-          voltaremos a esta página.
+          Se você não estiver autenticado, o sistema vai escolher o caminho
+          correto (criar conta ou entrar) com base no seu email.
         </p>
       </div>
     </div>

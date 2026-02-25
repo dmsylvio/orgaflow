@@ -39,9 +39,9 @@ export const invitation = pgTable(
       .notNull(),
   },
   (table) => [
-    uniqueIndex("invitation_org_email_unique").on(table.orgId, table.email),
     uniqueIndex("invitation_token_unique").on(table.token),
     index("invitation_org_idx").on(table.orgId),
+    index("invitation_org_email_idx").on(table.orgId, table.email),
   ],
 );
 

@@ -11,7 +11,7 @@ const plans = [
     priceAnnual: "$0",
     annualNote: "Free forever",
     description: "For solo users and early evaluation.",
-    cta: "Get started",
+    cta: "Start Free",
     highlight: false,
     features: [
       "1 company",
@@ -44,7 +44,7 @@ const plans = [
     priceAnnual: "$59",
     annualNote: "$708 billed yearly (40% off)",
     description: "Advanced governance and reporting.",
-    cta: "Contact sales",
+    cta: "Start Enterprise",
     highlight: false,
     features: [
       "Up to 10 companies",
@@ -69,7 +69,8 @@ function ChoosePlanContent() {
     () =>
       plans.map((plan) => ({
         ...plan,
-        displayPrice: interval === "month" ? plan.priceMonthly : plan.priceAnnual,
+        displayPrice:
+          interval === "month" ? plan.priceMonthly : plan.priceAnnual,
         displayNote:
           interval === "month"
             ? "Billed monthly"
@@ -132,7 +133,9 @@ function ChoosePlanContent() {
     <div className="space-y-10">
       <section className="space-y-6 text-center">
         <div>
-          <h1 className="text-3xl font-semibold md:text-4xl">Choose your plan</h1>
+          <h1 className="text-3xl font-semibold md:text-4xl">
+            Choose your plan
+          </h1>
           <p className="mt-2 text-sm text-neutral-600">
             Start with a plan that fits your organization.
           </p>
@@ -210,7 +213,7 @@ function ChoosePlanContent() {
               className={`mt-6 inline-flex w-full items-center justify-center rounded-md px-4 py-2 text-sm font-medium ${
                 plan.highlight
                   ? "bg-black text-white"
-                  : "border border-neutral-200 text-neutral-900"
+                  : "border border-neutral-200 text-neutral-900 hover:bg-neutral-100"
               }`}
             >
               {loadingPlan === plan.name.toLowerCase()

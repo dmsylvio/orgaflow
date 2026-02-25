@@ -56,8 +56,8 @@ export default function RolesSettingsPage() {
   const [name, setName] = useState("");
   const [key, setKey] = useState("");
   useEffect(() => {
-    if (!key && name) setKey(slugify(name));
-  }, [name, key]);
+    if (name) setKey(slugify(name));
+  }, [name]);
 
   const onCreate = (e: React.FormEvent) => {
     e.preventDefault();
@@ -94,7 +94,10 @@ export default function RolesSettingsPage() {
   const collectKeysWithDeps = (key: string): Set<string> => {
     const catalog = catalogQ.data ?? [];
     const keyToDependsOn = new Map(
-      catalog.map((c) => [c.key, ((c as { dependsOn?: string[] }).dependsOn) ?? []]),
+      catalog.map((c) => [
+        c.key,
+        (c as { dependsOn?: string[] }).dependsOn ?? [],
+      ]),
     );
     const seen = new Set<string>();
     const visit = (k: string) => {
@@ -329,9 +332,7 @@ export default function RolesSettingsPage() {
         </section>
       )}
 
-      {isBusy ? (
-        <div className="text-sm text-gray-500">Processing…</div>
-      ) : null}
+      {isBusy ? <div className="text-sm text-gray-500">Processing…</div> : null}
     </div>
   );
 }
