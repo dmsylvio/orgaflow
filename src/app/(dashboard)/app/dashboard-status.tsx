@@ -41,8 +41,8 @@ export default function DashboardStatus() {
           </span>
         </div>
         <div className="flex items-center">
-          <div className="h-12 w-12 flex items-center justify-center rounded-full bg-mauve-100">
-            <UsersIcon className="h-5 w-5 text-mauve-500" />
+          <div className="h-12 w-12 flex items-center justify-center rounded-full bg-black/10">
+            <UsersIcon className="h-5 w-5 text-black" />
           </div>
         </div>
       </Link>
@@ -59,8 +59,8 @@ export default function DashboardStatus() {
           </span>
         </div>
         <div className="flex items-center">
-          <div className="h-12 w-12 flex items-center justify-center rounded-full bg-mauve-100">
-            <FileTextIcon className="h-5 w-5 text-mauve-500" />
+          <div className="h-12 w-12 flex items-center justify-center rounded-full bg-black/10">
+            <FileTextIcon className="h-5 w-5 text-text-black" />
           </div>
         </div>
       </Link>
@@ -77,8 +77,8 @@ export default function DashboardStatus() {
           </span>
         </div>
         <div className="flex items-center">
-          <div className="h-12 w-12 flex items-center justify-center rounded-full bg-mauve-100">
-            <FileIcon className="h-5 w-5 text-mauve-500" />
+          <div className="h-12 w-12 flex items-center justify-center rounded-full bg-black/10">
+            <FileIcon className="h-5 w-5 text-black" />
           </div>
         </div>
       </Link>

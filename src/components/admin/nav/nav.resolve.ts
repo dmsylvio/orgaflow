@@ -1,4 +1,4 @@
-// src/components/layout/nav.resolve.ts
+// src/components/admin/nav/nav.resolve.ts
 import type { MenuConfig, MenuItem, ResolvedMenu } from "./nav.types";
 
 type ResolveInput = {

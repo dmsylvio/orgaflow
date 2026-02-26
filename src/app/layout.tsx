@@ -19,7 +19,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${openSans.variable} ${poppins.variable}  bg-gray-100 font-base antialiased`}
+        className={`${openSans.variable} ${poppins.variable}  bg-gray-100 font-base`}
       >
         <ThemeProvider
           attribute="class"

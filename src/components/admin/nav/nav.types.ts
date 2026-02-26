@@ -1,4 +1,4 @@
-// src/components/layout/nav.types.ts
+// src/components/admin/nav/nav.types.ts
 import type { ComponentType } from "react";
 
 // Icon must be a React component (e.g., lucide-react)

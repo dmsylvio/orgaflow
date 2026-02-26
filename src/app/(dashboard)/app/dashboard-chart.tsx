@@ -24,7 +24,7 @@ export default function DashboardChart() {
           </div>
           <div className="col-span-3 p-6 border-t border-gray-200 border-solid lg:col-span-1">
             <span className="text-xs leading-5 lg:text-sm">Net Income</span>
-            <span className="block mt-1 text-xl font-semibold leading-8 lg:text-2xl text-mauve-700">
+            <span className="block mt-1 text-xl font-semibold leading-8 lg:text-2xl text-black">
               $ 0.00
             </span>
           </div>
