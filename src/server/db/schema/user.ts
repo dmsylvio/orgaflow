@@ -17,6 +17,7 @@ export const user = pgTable(
       .$defaultFn(() => uuidv7()),
     name: text("name"),
     email: text("email").notNull(),
+    password: text("password").notNull(),
     emailVerified: boolean("email_verified").notNull().default(false),
     image: text("image"),
     activeOrgId: text("active_org_id").references(() => organization.id, {

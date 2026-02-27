@@ -1,6 +1,6 @@
 # Orgaflow
 
-A multi-tenant SaaS platform for business management, built with Next.js, tRPC, and a flexible role-based access control (RBAC) system.
+A multi-tenant SaaS platform for business management, built with Next.js, ElysiaJS API, and a flexible role-based access control (RBAC) system.
 
 ## Overview
 
@@ -41,7 +41,7 @@ Orgaflow helps organizations manage customers, estimates, invoices, payments, ex
 | ---------- | ---------------------------------- |
 | Framework  | Next.js 16 (App Router, Turbopack) |
 | UI         | React 19, Radix UI, Tailwind CSS   |
-| API        | tRPC v11 with React Query          |
+| API        | ElysiaJS + JWT                     |
 | Auth       | Better Auth                        |
 | Database   | PostgreSQL                         |
 | ORM        | Drizzle                            |
@@ -51,17 +51,14 @@ Orgaflow helps organizations manage customers, estimates, invoices, payments, ex
 ## Project Structure
 
 ```
+backend/                    # NEW standalone API project (ElysiaJS + JWT)
+├── src/                    # API server
+└── docs/                   # Backend docs
 src/
-├── app/                    # Next.js App Router
-│   ├── (marketing)/        # Public pages (auth, pricing, choose-plan)
-│   ├── (dashboard)/        # Protected app (customers, invoices, settings)
-│   └── api/                # API routes (tRPC, auth, billing)
+├── app/                    # Front-end Next.js App Router
 ├── components/             # Shared UI components
 ├── lib/                    # Utilities, auth, tenant resolution
-├── server/
-│   ├── api/                # tRPC routers and procedures
-│   ├── db/                 # Drizzle schema
-│   └── iam/                # Permissions, abilities, guards
+├── server/                 # Domain logic, DB and IAM
 └── validations/            # Zod schemas
 ```
 
@@ -107,7 +104,17 @@ STRIPE_PRICE_GROWTH_MONTHLY="price_..."
 STRIPE_PRICE_GROWTH_ANNUAL="price_..."
 STRIPE_PRICE_ENTERPRISE_MONTHLY="price_..."
 STRIPE_PRICE_ENTERPRISE_ANNUAL="price_..."
+
+# JWT API
+JWT_SECRET="super-secret-jwt"
+API_PORT="4000"
 ```
+
+### Domain Rule (fixed)
+
+- Front-end and API are now separated by project (`src/` front and `backend/` API), but must run under the **same root domain**.
+- Custom domains and split domains (e.g. `app.acme.com` + `api.other.com`) are **not supported**.
+- Tenant resolution only considers the current host/subdomain pattern `{org}.your-root-domain`.
 
 ### Database
 
@@ -168,6 +175,7 @@ Permissions are defined in `src/server/iam/permissions/catalog.ts` and synced to
 | Command            | Description                 |
 | ------------------ | --------------------------- |
 | `pnpm dev`         | Start development server    |
+| `pnpm dev:api`     | Start Elysia REST API       |
 | `pnpm build`       | Production build            |
 | `pnpm start`       | Start production server     |
 | `pnpm lint`        | Run Biome linter            |
@@ -179,3 +187,11 @@ Permissions are defined in `src/server/iam/permissions/catalog.ts` and synced to
 ## License
 
 Private — All rights reserved.
+
+## API docs
+
+API documentation lives at `backend/docs/API_ELYSIA.md`.
+
+## Backend em novo repositório
+
+Para publicar o conteúdo de `backend/` em um repositório próprio, use o guia `backend/NEW_REPOSITORY.md` ou o script `scripts/split-backend-repo.sh`.

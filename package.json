@@ -4,6 +4,7 @@
    "private": true,
    "scripts": {
       "dev": "next dev",
+      "dev:api": "pnpm --dir backend dev",
       "build": "next build",
       "start": "next start",
       "lint": "biome check",
@@ -55,6 +56,7 @@
       "date-fns": "^4.1.0",
       "dotenv": "^17.2.3",
       "drizzle-orm": "^0.45.1",
+      "elysia": "^1.2.10",
       "embla-carousel-react": "^8.6.0",
       "input-otp": "^1.4.2",
       "lucide-react": "^0.548.0",
