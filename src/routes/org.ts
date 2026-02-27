@@ -1,7 +1,14 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, ne } from "drizzle-orm";
 import type { Elysia } from "elysia";
 import { db, schema } from "../db";
-import { badRequest, forbidden, notFound, unauthorized } from "../lib/http";
+import {
+  badRequest,
+  conflict,
+  forbidden,
+  notFound,
+  preconditionFailed,
+  unauthorized,
+} from "../lib/http";
 import { requireAuth, requireOrg } from "../modules/context";
 import {
   orgCreateSchema,
@@ -51,7 +58,10 @@ export function registerOrgRoutes(app: Elysia) {
 
         if (!org[0]) return notFound("Organization not found");
         return org[0];
-      } catch {
+      } catch (error) {
+        if (error instanceof Error && error.message === "org-not-set") {
+          return preconditionFailed("Organization not set");
+        }
         return unauthorized();
       }
     })
@@ -87,6 +97,14 @@ export function registerOrgRoutes(app: Elysia) {
       try {
         const session = await requireAuth(request);
         const input = orgCreateSchema.parse(body);
+
+        const slugInUse = await db
+          .select({ id: schema.organization.id })
+          .from(schema.organization)
+          .where(eq(schema.organization.slug, input.slug))
+          .limit(1);
+
+        if (slugInUse[0]) return conflict("Slug already in use");
 
         const [org] = await db
           .insert(schema.organization)
@@ -133,6 +151,19 @@ export function registerOrgRoutes(app: Elysia) {
 
         if (!member[0]?.isOwner) return forbidden();
 
+        const slugInUse = await db
+          .select({ id: schema.organization.id })
+          .from(schema.organization)
+          .where(
+            and(
+              eq(schema.organization.slug, input.slug),
+              ne(schema.organization.id, input.orgId),
+            ),
+          )
+          .limit(1);
+
+        if (slugInUse[0]) return conflict("Slug already in use");
+
         await db
           .update(schema.organization)
           .set({ name: input.name, slug: input.slug })
@@ -164,6 +195,11 @@ export function registerOrgRoutes(app: Elysia) {
         await db
           .delete(schema.organization)
           .where(eq(schema.organization.id, input.orgId));
+
+        await db
+          .update(schema.user)
+          .set({ activeOrgId: null })
+          .where(eq(schema.user.activeOrgId, input.orgId));
 
         return { ok: true };
       } catch {

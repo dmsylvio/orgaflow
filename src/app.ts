@@ -8,21 +8,34 @@ import { registerOrgRoutes } from "./routes/org";
 
 export function createApp() {
   const app = new Elysia({ adapter: node() })
-    .use(openapi())
+    .use(
+      openapi({
+        documentation: {
+          info: {
+            title: "Orgaflow Backend API",
+            version: "1.0.0",
+            description:
+              "API multi-tenant do Orgaflow. A seleção de tenant ocorre por x-org-id, x-org-slug ou activeOrgId do usuário.",
+          },
+        },
+      }),
+    )
     .onRequest(({ set }) => {
       set.headers["access-control-allow-origin"] = "*";
       set.headers["access-control-allow-headers"] =
-        "content-type, authorization";
+        "content-type, authorization, x-org-slug, x-org-id";
       set.headers["access-control-allow-methods"] =
         "GET,POST,PATCH,DELETE,OPTIONS";
     })
     .options("/*", () => new Response(null, { status: 204 }))
-    .get("/health", () => ({ ok: true }));
-
-  registerAuthRoutes(app as any);
-  registerMeRoutes(app as any);
-  registerOrgRoutes(app as any);
-  registerCustomerRoutes(app as any);
+    .group("/api", (api) => {
+      api.get("/health", () => ({ ok: true }));
+      registerAuthRoutes(api as any);
+      registerMeRoutes(api as any);
+      registerOrgRoutes(api as any);
+      registerCustomerRoutes(api as any);
+      return api;
+    });
 
   return app;
 }

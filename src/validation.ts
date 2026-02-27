@@ -20,7 +20,7 @@ export const orgDeleteSchema = z.object({ orgId: z.string().uuid() });
 
 export const listCustomersSchema = z.object({
   q: z.string().optional(),
-  cursor: z.string().uuid().optional(),
+  cursor: z.string().min(1).optional(),
   limit: z.coerce.number().min(1).max(100).default(20),
 });
 
