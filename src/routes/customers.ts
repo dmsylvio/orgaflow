@@ -20,6 +20,29 @@ const customerFields = {
   updatedAt: schema.customer.updatedAt,
 } as const;
 
+function encodeCursor(createdAt: Date, id: string) {
+  return Buffer.from(`${createdAt.toISOString()}|${id}`, "utf8").toString(
+    "base64url",
+  );
+}
+
+function decodeCursor(cursor?: string) {
+  if (!cursor) return null;
+
+  try {
+    const raw = Buffer.from(cursor, "base64url").toString("utf8");
+    const [date, id] = raw.split("|");
+    if (!date || !id) return null;
+
+    const createdAt = new Date(date);
+    if (Number.isNaN(createdAt.getTime())) return null;
+
+    return { createdAt, id };
+  } catch {
+    return null;
+  }
+}
+
 export function registerCustomerRoutes(app: Elysia) {
   return app
     .get("/customers", async ({ request, query }) => {
@@ -42,8 +65,20 @@ export function registerCustomerRoutes(app: Elysia) {
             )
           : base;
 
-        const cursorWhere = input.cursor
-          ? and(where, lt(schema.customer.id, input.cursor))
+        const cursor = decodeCursor(input.cursor);
+        if (input.cursor && !cursor) return badRequest("Invalid cursor");
+
+        const cursorWhere = cursor
+          ? and(
+              where,
+              or(
+                lt(schema.customer.createdAt, cursor.createdAt),
+                and(
+                  eq(schema.customer.createdAt, cursor.createdAt),
+                  lt(schema.customer.id, cursor.id),
+                ),
+              ),
+            )
           : where;
 
         const rows = await db
@@ -55,7 +90,9 @@ export function registerCustomerRoutes(app: Elysia) {
 
         const items = rows.slice(0, input.limit);
         const nextCursor =
-          rows.length > input.limit ? rows[input.limit]?.id : undefined;
+          rows.length > input.limit && rows[input.limit]
+            ? encodeCursor(rows[input.limit].createdAt, rows[input.limit].id)
+            : undefined;
 
         return { items, nextCursor };
       } catch {
@@ -111,7 +148,10 @@ export function registerCustomerRoutes(app: Elysia) {
       try {
         const session = await requireAuth(request);
         const orgId = await requireOrg(request, session.userId);
-        const input = updateCustomerSchema.parse({ ...body, id: params.id });
+        const input = updateCustomerSchema.parse({
+          ...(typeof body === "object" && body ? body : {}),
+          id: params.id,
+        });
 
         const [updated] = await db
           .update(schema.customer)

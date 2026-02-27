@@ -1,21 +1,26 @@
 import { and, eq } from "drizzle-orm";
 import { db, schema } from "../db";
-import { getOrgFromHost } from "../tenant";
 import { type Session, resolveSession } from "./auth";
 
-const ROOT_DOMAIN = process.env.ROOT_DOMAIN ?? "";
+async function resolveOrgBySlug(slug: string) {
+  const org = await db
+    .select({ id: schema.organization.id })
+    .from(schema.organization)
+    .where(eq(schema.organization.slug, slug))
+    .limit(1);
 
-export async function resolveOrgId(host: string | null, userId?: string) {
-  const slug = getOrgFromHost(host, ROOT_DOMAIN);
-  let orgId: string | null = null;
+  return org[0]?.id ?? null;
+}
 
-  if (slug) {
-    const org = await db
-      .select({ id: schema.organization.id })
-      .from(schema.organization)
-      .where(eq(schema.organization.slug, slug))
-      .limit(1);
-    orgId = org[0]?.id ?? null;
+export async function resolveOrgId(
+  userId?: string,
+  explicitSlug?: string | null,
+  explicitOrgId?: string | null,
+) {
+  let orgId: string | null = explicitOrgId ?? null;
+
+  if (!orgId && explicitSlug) {
+    orgId = await resolveOrgBySlug(explicitSlug.toLowerCase().trim());
   }
 
   if (!orgId && userId) {
@@ -52,8 +57,10 @@ export async function requireAuth(request: Request): Promise<NonNullable<Session
 }
 
 export async function requireOrg(request: Request, userId: string) {
-  const host = request.headers.get("x-forwarded-host") ?? request.headers.get("host");
-  const orgId = await resolveOrgId(host, userId);
+  const explicitSlug = request.headers.get("x-org-slug");
+  const explicitOrgId = request.headers.get("x-org-id");
+
+  const orgId = await resolveOrgId(userId, explicitSlug, explicitOrgId);
   if (!orgId) throw new Error("org-not-set");
   return orgId;
 }

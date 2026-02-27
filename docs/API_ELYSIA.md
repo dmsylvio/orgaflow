@@ -1,20 +1,71 @@
-# Orgaflow Backend API (Projeto novo)
+# Orgaflow Backend API
 
-Este backend é **novo e independente** do front legado.
-Não reutiliza `appRouter`/tRPC do projeto antigo.
+Backend multi-tenant em Elysia + Drizzle com validação em **Zod**.
 
-## Stack
-- ElysiaJS
-- PostgreSQL + Drizzle ORM
-- JWT (HS256)
-- bcryptjs (rounds 12)
+## OpenAPI
 
-## Regras de domínio
-- Multi-tenant por subdomínio: `{slug}.seu-dominio.com`
-- Sem suporte a domínio custom por tenant
-- Front e backend em projetos separados, mas no mesmo root domain
+- UI: `GET /openapi`
+- JSON: `GET /openapi/json`
+- Base path da API: `/api`
 
-## Endpoints implementados
+## Multi-tenant
+
+A organização ativa é resolvida nesta ordem:
+
+1. Header `x-org-id`
+2. Header `x-org-slug`
+3. `user.activeOrgId`
+
+> Não há suporte a resolução de tenant por subdomínio.
+
+## Schemas Zod (fonte)
+
+```ts
+signupSchema: z.object({
+  name: z.string().min(2),
+  email: z.string().email(),
+  password: z.string().min(8),
+  orgName: z.string().min(2),
+  slug: z.string().min(2).regex(/^[a-z0-9-]+$/),
+})
+
+signinSchema: z.object({
+  email: z.string().email(),
+  password: z.string().min(6),
+})
+
+orgCreateSchema: z.object({
+  name: z.string().min(2),
+  slug: z.string().min(2).regex(/^[a-z0-9-]+$/),
+})
+
+orgUpdateSchema: z.object({
+  orgId: z.string().uuid(),
+  name: z.string().min(2),
+  slug: z.string().min(2).regex(/^[a-z0-9-]+$/),
+})
+
+orgDeleteSchema: z.object({ orgId: z.string().uuid() })
+orgSwitchSchema: z.object({ orgId: z.string().uuid() })
+
+listCustomersSchema: z.object({
+  q: z.string().optional(),
+  cursor: z.string().min(1).optional(),
+  limit: z.coerce.number().min(1).max(100).default(20),
+})
+
+createCustomerSchema: z.object({
+  name: z.string().min(2),
+  email: z.string().email().optional().or(z.literal("").transform(() => undefined)),
+  phone: z.string().optional(),
+  notes: z.string().optional(),
+})
+
+updateCustomerSchema: createCustomerSchema.extend({ id: z.string().uuid() })
+customerIdSchema: z.object({ id: z.string().uuid() })
+```
+
+## Endpoints
 
 ### Health
 - `GET /api/health`
@@ -27,7 +78,7 @@ Não reutiliza `appRouter`/tRPC do projeto antigo.
 - `GET /api/me`
 - `GET /api/me/permissions`
 
-### Organização
+### Organizações
 - `GET /api/org`
 - `GET /api/org/current`
 - `POST /api/org/switch`
@@ -35,41 +86,22 @@ Não reutiliza `appRouter`/tRPC do projeto antigo.
 - `PATCH /api/org`
 - `DELETE /api/org`
 
-### Clientes
+### Customers
 - `GET /api/customers`
 - `GET /api/customers/:id`
 - `POST /api/customers`
 - `PATCH /api/customers/:id`
 - `DELETE /api/customers/:id`
 
-## Registro
-`POST /api/auth/register`
+## Paginação de customers
+
+`GET /api/customers` retorna:
 
 ```json
 {
-  "name": "Owner",
-  "email": "owner@acme.com",
-  "password": "Passw0rd!",
-  "orgName": "Acme Inc",
-  "slug": "acme"
+  "items": [],
+  "nextCursor": "base64url(createdAt|id)"
 }
 ```
 
-## Login
-`POST /api/auth/login`
-
-```json
-{
-  "email": "owner@acme.com",
-  "password": "Passw0rd!"
-}
-```
-
-## Ambiente
-
-```env
-DATABASE_URL=postgresql://...
-JWT_SECRET=super-secret
-ROOT_DOMAIN=example.com
-API_PORT=4000
-```
+Se `nextCursor` vier preenchido, enviar em `cursor` na próxima chamada.
