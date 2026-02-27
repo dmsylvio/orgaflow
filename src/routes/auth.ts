@@ -6,7 +6,7 @@ import { signJwt } from "../modules/auth";
 import { badRequest, conflict, json, unauthorized } from "../lib/http";
 import { signinSchema, signupSchema } from "../validation";
 
-export function registerAuthRoutes(app: Elysia<"/api">) {
+export function registerAuthRoutes(app: Elysia) {
   return app
     .post("/auth/register", async ({ body }) => {
       try {

@@ -8,7 +8,10 @@
     "format": "biome format --write src"
   },
   "dependencies": {
+    "@elysiajs/node": "^1.4.5",
+    "@elysiajs/openapi": "^1.4.14",
     "bcryptjs": "^3.0.2",
+    "dotenv": "^17.3.1",
     "drizzle-orm": "^0.45.1",
     "elysia": "^1.2.10",
     "postgres": "^3.4.8",
@@ -16,6 +19,7 @@
     "zod": "^4.1.12"
   },
   "devDependencies": {
+    "@types/node": "^25.3.2",
     "tsx": "^4.20.6",
     "typescript": "^5"
   }

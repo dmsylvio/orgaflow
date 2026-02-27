@@ -10,7 +10,7 @@ import {
   orgUpdateSchema,
 } from "../validation";
 
-export function registerOrgRoutes(app: Elysia<"/api">) {
+export function registerOrgRoutes(app: Elysia) {
   return app
     .get("/org", async ({ request }) => {
       try {

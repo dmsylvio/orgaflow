@@ -20,7 +20,7 @@ const customerFields = {
   updatedAt: schema.customer.updatedAt,
 } as const;
 
-export function registerCustomerRoutes(app: Elysia<"/api">) {
+export function registerCustomerRoutes(app: Elysia) {
   return app
     .get("/customers", async ({ request, query }) => {
       try {

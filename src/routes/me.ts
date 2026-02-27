@@ -4,7 +4,7 @@ import { db, schema } from "../db";
 import { preconditionFailed, unauthorized } from "../lib/http";
 import { requireAuth, requireOrg } from "../modules/context";
 
-export function registerMeRoutes(app: Elysia<"/api">) {
+export function registerMeRoutes(app: Elysia) {
   return app
     .get("/me", async ({ request }) => {
       try {
