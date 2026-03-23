@@ -8,7 +8,7 @@ import {
   ESTIMATE_TRIGGER_STATUSES,
   INVOICE_TRIGGER_STATUSES,
 } from "@/server/db/schemas";
-import { createTRPCRouter, ownerProcedure } from "@/server/trpc/init";
+import { createTRPCRouter, ownerProcedure, requirePlan } from "@/server/trpc/init";
 
 const TRIGGER_DOCUMENTS = ["invoice", "estimate"] as const;
 const ASSIGN_STRATEGIES = ["document_owner", "organization_owner"] as const;
@@ -48,7 +48,7 @@ const ruleInputSchema = z.object({
 });
 
 export const automationsRouter = createTRPCRouter({
-  listRules: ownerProcedure.query(async ({ ctx }) => {
+  listRules: ownerProcedure.use(requirePlan("scale")).query(async ({ ctx }) => {
     return ctx.db
       .select()
       .from(automationRules)
@@ -57,6 +57,7 @@ export const automationsRouter = createTRPCRouter({
   }),
 
   createRule: ownerProcedure
+    .use(requirePlan("scale"))
     .input(ruleInputSchema)
     .mutation(async ({ ctx, input }) => {
       validateTriggerPair(input.triggerDocument, input.triggerStatus);
@@ -89,6 +90,7 @@ export const automationsRouter = createTRPCRouter({
     }),
 
   updateRule: ownerProcedure
+    .use(requirePlan("scale"))
     .input(
       z.object({
         id: z.string().min(1),
@@ -149,6 +151,7 @@ export const automationsRouter = createTRPCRouter({
     }),
 
   deleteRule: ownerProcedure
+    .use(requirePlan("scale"))
     .input(z.object({ id: z.string().min(1) }))
     .mutation(async ({ ctx, input }) => {
       await ctx.db

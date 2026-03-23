@@ -125,6 +125,52 @@ const DEFINITIONS = [
     group: "tasks",
     dependencies: ["task:view"] as const,
   },
+  {
+    key: "expense:view",
+    label: "View expenses",
+    group: "expenses",
+  },
+  {
+    key: "expense:create",
+    label: "Create expenses",
+    group: "expenses",
+    dependencies: ["expense:view"] as const,
+  },
+  {
+    key: "expense:edit",
+    label: "Edit expenses",
+    group: "expenses",
+    dependencies: ["expense:view"] as const,
+  },
+  {
+    key: "expense:delete",
+    label: "Delete expenses",
+    group: "expenses",
+    dependencies: ["expense:view"] as const,
+  },
+  {
+    key: "payment:view",
+    label: "View payments",
+    group: "payments",
+  },
+  {
+    key: "payment:create",
+    label: "Create payments",
+    group: "payments",
+    dependencies: ["payment:view"] as const,
+  },
+  {
+    key: "payment:edit",
+    label: "Edit payments",
+    group: "payments",
+    dependencies: ["payment:view"] as const,
+  },
+  {
+    key: "payment:delete",
+    label: "Delete payments",
+    group: "payments",
+    dependencies: ["payment:view"] as const,
+  },
 ] as const;
 
 export type PermissionKey = (typeof DEFINITIONS)[number]["key"];

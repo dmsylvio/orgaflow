@@ -631,6 +631,44 @@ export const settingsRouter = createTRPCRouter({
       return { ok: true as const };
     }),
 
+  updateTaxType: ownerProcedure
+    .input(
+      z.object({
+        id: z.string().min(1),
+        name: z.string().min(1).max(255).optional(),
+        percent: z.number().min(0).max(100).optional(),
+        compoundTax: z.boolean().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const [existing] = await ctx.db
+        .select({ id: taxTypes.id })
+        .from(taxTypes)
+        .where(
+          and(
+            eq(taxTypes.id, input.id),
+            eq(taxTypes.organizationId, ctx.organizationId),
+          ),
+        )
+        .limit(1);
+
+      if (!existing) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Tax type not found." });
+      }
+
+      await ctx.db
+        .update(taxTypes)
+        .set({
+          ...(input.name !== undefined && { name: input.name.trim() }),
+          ...(input.percent !== undefined && { percent: String(input.percent) }),
+          ...(input.compoundTax !== undefined && { compoundTax: input.compoundTax }),
+          updatedAt: new Date(),
+        })
+        .where(eq(taxTypes.id, input.id));
+
+      return { ok: true as const };
+    }),
+
   deleteTaxType: ownerProcedure
     .input(z.object({ id: z.string().min(1) }))
     .mutation(async ({ ctx, input }) => {

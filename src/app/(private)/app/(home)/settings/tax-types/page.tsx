@@ -1,9 +1,17 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Trash2 } from "lucide-react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogBody,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
@@ -45,14 +53,236 @@ type TaxType = {
   compoundTax: boolean;
 };
 
+// ---------------------------------------------------------------------------
+// Create Dialog
+// ---------------------------------------------------------------------------
+
+function CreateTaxDialog({
+  open,
+  onOpenChange,
+  onSuccess,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  onSuccess: () => void;
+}) {
+  const [name, setName] = useState("");
+  const [percent, setPercent] = useState("");
+  const [compoundTax, setCompoundTax] = useState(false);
+  const trpc = useTRPC();
+
+  const create = useMutation(
+    trpc.settings.createTaxType.mutationOptions({
+      onSuccess: () => {
+        onSuccess();
+        onOpenChange(false);
+        setName("");
+        setPercent("");
+        setCompoundTax(false);
+        toast.success("Tax type added.");
+      },
+      onError: (e) =>
+        toast.error("Couldn't add tax type", { description: e.message }),
+    }),
+  );
+
+  const canSubmit = name.trim().length > 0 && percent.trim().length > 0;
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Add Tax Type</DialogTitle>
+        </DialogHeader>
+        <DialogBody className="space-y-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="ct-name">Tax Name</Label>
+            <Input
+              id="ct-name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g. VAT"
+              autoFocus
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="ct-percent">Percent (%)</Label>
+            <Input
+              id="ct-percent"
+              value={percent}
+              onChange={(e) => setPercent(e.target.value)}
+              type="number"
+              min={0}
+              max={100}
+              step={0.001}
+              placeholder="0.00"
+            />
+          </div>
+          <div className="flex items-center justify-between rounded-lg border border-border p-3">
+            <div className="space-y-0.5">
+              <Label htmlFor="ct-compound" className="text-sm font-medium">
+                Compound Tax
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                Apply this tax on top of other taxes.
+              </p>
+            </div>
+            <Switch
+              id="ct-compound"
+              checked={compoundTax}
+              onCheckedChange={setCompoundTax}
+            />
+          </div>
+        </DialogBody>
+        <DialogFooter>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            loading={create.isPending}
+            disabled={create.isPending || !canSubmit}
+            onClick={() =>
+              create.mutate({
+                name: name.trim(),
+                percent: Number(percent),
+                compoundTax,
+              })
+            }
+          >
+            Add Tax Type
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Edit Dialog
+// ---------------------------------------------------------------------------
+
+function EditTaxDialog({
+  tax,
+  open,
+  onOpenChange,
+  onSuccess,
+}: {
+  tax: TaxType;
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  onSuccess: () => void;
+}) {
+  const [name, setName] = useState(tax.name);
+  const [percent, setPercent] = useState(tax.percent);
+  const [compoundTax, setCompoundTax] = useState(tax.compoundTax);
+  const trpc = useTRPC();
+
+  const update = useMutation(
+    trpc.settings.updateTaxType.mutationOptions({
+      onSuccess: () => {
+        onSuccess();
+        onOpenChange(false);
+        toast.success("Tax type updated.");
+      },
+      onError: (e) =>
+        toast.error("Couldn't update tax type", { description: e.message }),
+    }),
+  );
+
+  const canSubmit = name.trim().length > 0 && String(percent).trim().length > 0;
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Edit Tax Type</DialogTitle>
+        </DialogHeader>
+        <DialogBody className="space-y-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="et-name">Tax Name</Label>
+            <Input
+              id="et-name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              autoFocus
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="et-percent">Percent (%)</Label>
+            <Input
+              id="et-percent"
+              value={percent}
+              onChange={(e) => setPercent(e.target.value)}
+              type="number"
+              min={0}
+              max={100}
+              step={0.001}
+            />
+          </div>
+          <div className="flex items-center justify-between rounded-lg border border-border p-3">
+            <div className="space-y-0.5">
+              <Label htmlFor="et-compound" className="text-sm font-medium">
+                Compound Tax
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                Apply this tax on top of other taxes.
+              </p>
+            </div>
+            <Switch
+              id="et-compound"
+              checked={compoundTax}
+              onCheckedChange={setCompoundTax}
+            />
+          </div>
+        </DialogBody>
+        <DialogFooter>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            loading={update.isPending}
+            disabled={update.isPending || !canSubmit}
+            onClick={() =>
+              update.mutate({
+                id: tax.id,
+                name: name.trim(),
+                percent: Number(percent),
+                compoundTax,
+              })
+            }
+          >
+            Save Changes
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Row
+// ---------------------------------------------------------------------------
+
 function TaxRow({
   tax,
   onDelete,
   isDeletePending,
+  onEdit,
 }: {
   tax: TaxType;
   onDelete: (id: string) => void;
   isDeletePending: boolean;
+  onEdit: (tax: TaxType) => void;
 }) {
   return (
     <tr className="group border-b border-border last:border-0">
@@ -72,7 +302,15 @@ function TaxRow({
         <span className="text-sm text-foreground">{tax.percent}%</span>
       </td>
       <td className="py-3 pl-2 pr-4">
-        <div className="flex items-center justify-end opacity-0 transition-opacity group-hover:opacity-100">
+        <div className="flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+          <button
+            type="button"
+            title="Edit"
+            onClick={() => onEdit(tax)}
+            className="rounded p-1.5 text-muted-foreground/50 transition-colors hover:bg-accent hover:text-foreground"
+          >
+            <Pencil className="h-3.5 w-3.5" />
+          </button>
           <button
             type="button"
             title="Delete"
@@ -91,78 +329,9 @@ function TaxRow({
   );
 }
 
-function AddTaxRow({
-  onAdd,
-  onCancel,
-  isPending,
-}: {
-  onAdd: (data: {
-    name: string;
-    percent: number;
-    compoundTax: boolean;
-  }) => void;
-  onCancel: () => void;
-  isPending: boolean;
-}) {
-  const [name, setName] = useState("");
-  const [percent, setPercent] = useState("");
-  const [compoundTax, setCompoundTax] = useState(false);
-
-  const canSubmit = name.trim().length > 0 && percent.trim().length > 0;
-
-  return (
-    <tr className="border-t border-border bg-muted/30">
-      <td className="py-2 pl-4 pr-2">
-        <Input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="e.g. VAT"
-          className="h-8 text-sm"
-          autoFocus
-        />
-      </td>
-      <td className="py-2 px-2">
-        <div className="flex items-center justify-center">
-          <Switch checked={compoundTax} onCheckedChange={setCompoundTax} />
-        </div>
-      </td>
-      <td className="py-2 px-2">
-        <Input
-          value={percent}
-          onChange={(e) => setPercent(e.target.value)}
-          placeholder="0.00"
-          type="number"
-          min={0}
-          max={100}
-          step={0.001}
-          className="h-8 text-sm text-right"
-        />
-      </td>
-      <td className="py-2 pl-2 pr-4">
-        <div className="flex items-center justify-end gap-1">
-          <Button
-            type="button"
-            size="sm"
-            loading={isPending}
-            disabled={isPending || !canSubmit}
-            onClick={() =>
-              onAdd({
-                name: name.trim(),
-                percent: Number(percent),
-                compoundTax,
-              })
-            }
-          >
-            Add
-          </Button>
-          <Button type="button" size="sm" variant="ghost" onClick={onCancel}>
-            Cancel
-          </Button>
-        </div>
-      </td>
-    </tr>
-  );
-}
+// ---------------------------------------------------------------------------
+// Page
+// ---------------------------------------------------------------------------
 
 export default function TaxTypesPage() {
   const trpc = useTRPC();
@@ -172,7 +341,8 @@ export default function TaxTypesPage() {
     trpc.settings.listTaxTypes.queryOptions(),
   );
 
-  const [showAdd, setShowAdd] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState<TaxType | null>(null);
 
   function invalidate() {
     queryClient.invalidateQueries(trpc.settings.listTaxTypes.queryOptions());
@@ -183,18 +353,6 @@ export default function TaxTypesPage() {
       onSuccess: invalidate,
       onError: (e) =>
         toast.error("Couldn't update setting", { description: e.message }),
-    }),
-  );
-
-  const create = useMutation(
-    trpc.settings.createTaxType.mutationOptions({
-      onSuccess: () => {
-        invalidate();
-        setShowAdd(false);
-        toast.success("Tax type added.");
-      },
-      onError: (e) =>
-        toast.error("Couldn't add tax type", { description: e.message }),
     }),
   );
 
@@ -226,7 +384,6 @@ export default function TaxTypesPage() {
       description="Add or remove taxes as you please. Taxes can be applied to individual items or to the whole invoice."
     >
       <div className="space-y-6">
-        {/* Tax types table */}
         <div className="rounded-xl border border-border bg-card shadow-sm">
           <div className="flex items-center justify-between border-b border-border px-4 py-3">
             <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
@@ -236,15 +393,14 @@ export default function TaxTypesPage() {
               type="button"
               size="sm"
               variant="outline"
-              onClick={() => setShowAdd(true)}
-              disabled={showAdd}
+              onClick={() => setCreateOpen(true)}
             >
               <Plus className="h-4 w-4" />
               Add
             </Button>
           </div>
 
-          {items.length === 0 && !showAdd ? (
+          {items.length === 0 ? (
             <div className="p-8 text-center">
               <p className="text-sm text-muted-foreground">
                 No tax types yet. Add one above.
@@ -271,23 +427,16 @@ export default function TaxTypesPage() {
                   <TaxRow
                     key={t.id}
                     tax={t}
+                    onEdit={setEditTarget}
                     onDelete={(id) => remove.mutate({ id })}
                     isDeletePending={remove.isPending}
                   />
                 ))}
-                {showAdd ? (
-                  <AddTaxRow
-                    isPending={create.isPending}
-                    onAdd={(d) => create.mutate(d)}
-                    onCancel={() => setShowAdd(false)}
-                  />
-                ) : null}
               </tbody>
             </table>
           )}
         </div>
 
-        {/* Tax Per Item toggle */}
         <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
           <div className="flex items-start justify-between gap-4">
             <div className="space-y-0.5">
@@ -310,6 +459,21 @@ export default function TaxTypesPage() {
           </div>
         </div>
       </div>
+
+      <CreateTaxDialog
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        onSuccess={invalidate}
+      />
+
+      {editTarget ? (
+        <EditTaxDialog
+          tax={editTarget}
+          open={!!editTarget}
+          onOpenChange={(v) => { if (!v) setEditTarget(null); }}
+          onSuccess={invalidate}
+        />
+      ) : null}
     </SettingsPage>
   );
 }

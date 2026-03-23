@@ -3,6 +3,11 @@ import superjson from "superjson";
 import { ZodError } from "zod";
 
 import { can, type PermissionKey } from "@/server/iam";
+import {
+  getOrganizationPlan,
+  planAtLeast,
+  type SubscriptionPlan,
+} from "@/server/services/billing/get-organization-plan";
 import { getCurrentAbility } from "@/server/services/iam/get-current-ability";
 import type { TRPCContext } from "@/server/trpc/context";
 import type {
@@ -142,6 +147,23 @@ const ownerOnlyMiddleware = t.middleware(({ ctx, next }) => {
   }
   return next();
 });
+
+/**
+ * Chain after {@link ownerProcedure} or {@link organizationProcedure} to require a minimum plan.
+ */
+export function requirePlan(minPlan: SubscriptionPlan) {
+  return t.middleware(async ({ ctx, next }) => {
+    const { db, organizationId } = ctx as OrganizationMemberTRPCContext;
+    const plan = await getOrganizationPlan(db, organizationId);
+    if (!planAtLeast(plan, minPlan)) {
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message: `This feature requires the ${minPlan} plan or higher.`,
+      });
+    }
+    return next();
+  });
+}
 
 /**
  * Chain after {@link organizationProcedure} to require a specific permission (owner bypasses).

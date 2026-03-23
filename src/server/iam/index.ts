@@ -7,7 +7,6 @@ export {
 } from "./ability";
 export { type FilterMenuInput, filterMenuByAbility } from "./filter-menu";
 export {
-  APP_MENU_GROUP_LABELS,
   appMenu,
   type BaseMenuItem,
   type MainMenuGroup,

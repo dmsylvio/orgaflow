@@ -22,6 +22,7 @@ export const taskStages = pgTable(
       .notNull()
       .references(() => organizations.id, { onDelete: "cascade" }),
     name: text("name").notNull(),
+    color: text("color"),
     slug: text("slug").notNull(),
     position: integer("position").notNull().default(0),
     isSystem: boolean("is_system").notNull().default(false),

@@ -1,11 +1,22 @@
 import "server-only";
 
 import { TRPCError } from "@trpc/server";
-import { asc, eq, gt, sql } from "drizzle-orm";
+import { and, asc, eq, gt, sql } from "drizzle-orm";
 import { z } from "zod";
-import { organizationFeatures, taskStages } from "@/server/db/schemas";
+import {
+  organizationFeatures,
+  TASK_PRIORITIES,
+  taskStages,
+  tasks,
+} from "@/server/db/schemas";
 import { ensureDefaultTaskStages } from "@/server/services/workspace/ensure-default-task-stages";
-import { createTRPCRouter, ownerProcedure } from "@/server/trpc/init";
+import {
+  createTRPCRouter,
+  organizationProcedure,
+  ownerProcedure,
+  requirePermission,
+  requirePlan,
+} from "@/server/trpc/init";
 import { getSessionUserId } from "@/server/trpc/utils";
 
 function slugify(name: string): string {
@@ -19,7 +30,7 @@ function slugify(name: string): string {
 export const tasksRouter = createTRPCRouter({
   // ---- Stages ---------------------------------------------------------------
 
-  listStages: ownerProcedure.query(async ({ ctx }) => {
+  listStages: ownerProcedure.use(requirePlan("scale")).query(async ({ ctx }) => {
     await ensureDefaultTaskStages(ctx.db, ctx.organizationId);
     return ctx.db
       .select()
@@ -29,7 +40,8 @@ export const tasksRouter = createTRPCRouter({
   }),
 
   createStage: ownerProcedure
-    .input(z.object({ name: z.string().min(1).max(100) }))
+    .use(requirePlan("scale"))
+    .input(z.object({ name: z.string().min(1).max(100), color: z.string().optional() }))
     .mutation(async ({ ctx, input }) => {
       const userId = getSessionUserId(ctx);
       const name = input.name.trim();
@@ -46,6 +58,7 @@ export const tasksRouter = createTRPCRouter({
       await ctx.db.insert(taskStages).values({
         organizationId: ctx.organizationId,
         name,
+        color: input.color ?? null,
         slug: slugify(name),
         position: nextPos,
         isSystem: false,
@@ -56,10 +69,12 @@ export const tasksRouter = createTRPCRouter({
     }),
 
   updateStage: ownerProcedure
+    .use(requirePlan("scale"))
     .input(
       z.object({
         id: z.string().min(1),
-        name: z.string().min(1).max(100),
+        name: z.string().min(1).max(100).optional(),
+        color: z.string().nullable().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -73,16 +88,21 @@ export const tasksRouter = createTRPCRouter({
         throw new TRPCError({ code: "NOT_FOUND", message: "Stage not found." });
       }
 
-      const name = input.name.trim();
+      const name = input.name?.trim();
       await ctx.db
         .update(taskStages)
-        .set({ name, slug: slugify(name), updatedAt: new Date() })
+        .set({
+          ...(name !== undefined && { name, slug: slugify(name) }),
+          ...(input.color !== undefined && { color: input.color }),
+          updatedAt: new Date(),
+        })
         .where(eq(taskStages.id, input.id));
 
       return { ok: true as const };
     }),
 
   reorderStages: ownerProcedure
+    .use(requirePlan("scale"))
     .input(
       z.object({
         // ordered list of stage ids (must NOT include the system stage)
@@ -128,6 +148,7 @@ export const tasksRouter = createTRPCRouter({
     }),
 
   deleteStage: ownerProcedure
+    .use(requirePlan("scale"))
     .input(z.object({ id: z.string().min(1) }))
     .mutation(async ({ ctx, input }) => {
       const [stage] = await ctx.db
@@ -172,18 +193,29 @@ export const tasksRouter = createTRPCRouter({
     const [row] = await ctx.db
       .select({ enabled: organizationFeatures.enabled })
       .from(organizationFeatures)
-      .where(eq(organizationFeatures.organizationId, ctx.organizationId))
+      .where(
+        and(
+          eq(organizationFeatures.organizationId, ctx.organizationId),
+          eq(organizationFeatures.featureKey, "kanban"),
+        ),
+      )
       .limit(1);
     return { enabled: row?.enabled ?? false };
   }),
 
   setKanbanEnabled: ownerProcedure
+    .use(requirePlan("scale"))
     .input(z.object({ enabled: z.boolean() }))
     .mutation(async ({ ctx, input }) => {
       const [existing] = await ctx.db
         .select({ id: organizationFeatures.id })
         .from(organizationFeatures)
-        .where(eq(organizationFeatures.organizationId, ctx.organizationId))
+        .where(
+          and(
+            eq(organizationFeatures.organizationId, ctx.organizationId),
+            eq(organizationFeatures.featureKey, "kanban"),
+          ),
+        )
         .limit(1);
 
       if (existing) {
@@ -204,6 +236,131 @@ export const tasksRouter = createTRPCRouter({
       if (input.enabled) {
         await ensureDefaultTaskStages(ctx.db, ctx.organizationId);
       }
+
+      return { ok: true as const };
+    }),
+
+  // ---- Tasks ----------------------------------------------------------------
+
+  listTasks: organizationProcedure
+    .use(requirePermission("task:view"))
+    .use(requirePlan("scale"))
+    .query(async ({ ctx }) => {
+      return ctx.db
+        .select({
+          id: tasks.id,
+          stageId: tasks.stageId,
+          title: tasks.title,
+          description: tasks.description,
+          priority: tasks.priority,
+          dueDate: tasks.dueDate,
+          ownerId: tasks.ownerId,
+          sourceType: tasks.sourceType,
+          createdAt: tasks.createdAt,
+        })
+        .from(tasks)
+        .where(eq(tasks.organizationId, ctx.organizationId))
+        .orderBy(asc(tasks.createdAt));
+    }),
+
+  createTask: organizationProcedure
+    .use(requirePermission("task:create"))
+    .use(requirePlan("scale"))
+    .input(
+      z.object({
+        title: z.string().min(1).max(500),
+        description: z.string().max(2000).optional().nullable(),
+        priority: z.enum(TASK_PRIORITIES).default("medium"),
+        stageId: z.string().min(1).optional().nullable(),
+        dueDate: z.coerce.date().optional().nullable(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      // If no stageId given, default to the system stage
+      let stageId = input.stageId ?? null;
+      if (!stageId) {
+        const [systemStage] = await ctx.db
+          .select({ id: taskStages.id })
+          .from(taskStages)
+          .where(
+            and(
+              eq(taskStages.organizationId, ctx.organizationId),
+              eq(taskStages.isSystem, true),
+            ),
+          )
+          .limit(1);
+        stageId = systemStage?.id ?? null;
+      }
+
+      const [created] = await ctx.db
+        .insert(tasks)
+        .values({
+          organizationId: ctx.organizationId,
+          title: input.title.trim(),
+          description: input.description?.trim() ?? null,
+          priority: input.priority,
+          stageId,
+          dueDate: input.dueDate ?? null,
+          sourceType: "manual",
+        })
+        .returning({ id: tasks.id });
+
+      return created;
+    }),
+
+  updateTask: organizationProcedure
+    .use(requirePermission("task:edit"))
+    .use(requirePlan("scale"))
+    .input(
+      z.object({
+        id: z.string().min(1),
+        title: z.string().min(1).max(500).optional(),
+        description: z.string().max(2000).optional().nullable(),
+        priority: z.enum(TASK_PRIORITIES).optional(),
+        stageId: z.string().min(1).optional().nullable(),
+        dueDate: z.coerce.date().optional().nullable(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const [existing] = await ctx.db
+        .select({ id: tasks.id })
+        .from(tasks)
+        .where(
+          and(eq(tasks.id, input.id), eq(tasks.organizationId, ctx.organizationId)),
+        )
+        .limit(1);
+
+      if (!existing) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Task not found." });
+      }
+
+      await ctx.db
+        .update(tasks)
+        .set({
+          ...(input.title !== undefined && { title: input.title.trim() }),
+          ...(input.description !== undefined && {
+            description: input.description?.trim() ?? null,
+          }),
+          ...(input.priority !== undefined && { priority: input.priority }),
+          ...(input.stageId !== undefined && { stageId: input.stageId ?? null }),
+          ...(input.dueDate !== undefined && { dueDate: input.dueDate ?? null }),
+          updatedAt: new Date(),
+        })
+        .where(eq(tasks.id, input.id));
+
+      return { ok: true as const };
+    }),
+
+  deleteTask: organizationProcedure
+    .use(requirePermission("task:delete"))
+    .use(requirePlan("scale"))
+    .input(z.object({ id: z.string().min(1) }))
+    .mutation(async ({ ctx, input }) => {
+      await ctx.db
+        .delete(tasks)
+        .where(
+          and(eq(tasks.id, input.id), eq(tasks.organizationId, ctx.organizationId)),
+        );
 
       return { ok: true as const };
     }),

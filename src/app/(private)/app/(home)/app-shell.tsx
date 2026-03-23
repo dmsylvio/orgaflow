@@ -8,8 +8,11 @@ import {
   FileText,
   Layers,
   LayoutDashboard,
+  ListTodo,
+  Receipt,
   Settings,
   ShoppingBag,
+  TrendingDown,
   Users,
 } from "lucide-react";
 import NextLink from "next/link";
@@ -21,19 +24,15 @@ import { appPaths } from "@/lib/app-paths";
 import { cn } from "@/lib/utils";
 import { useTRPC } from "@/trpc/client";
 
-const GROUP_LABELS: Record<number, string> = {
-  0: "Overview",
-  1: "Customers & catalog",
-  2: "Documents",
-  3: "System",
-};
-
 const NAV_ICONS: Record<string, ReactNode> = {
   "/app": <LayoutDashboard className="h-4 w-4" />,
   "/app/customers": <Users className="h-4 w-4" />,
   "/app/items": <ShoppingBag className="h-4 w-4" />,
   "/app/estimates": <FileText className="h-4 w-4" />,
   "/app/invoices": <BookOpen className="h-4 w-4" />,
+  "/app/tasks": <ListTodo className="h-4 w-4" />,
+  "/app/expenses": <TrendingDown className="h-4 w-4" />,
+  "/app/payments": <Receipt className="h-4 w-4" />,
   "/app/reports": <BarChart3 className="h-4 w-4" />,
   "/app/settings": <Settings className="h-4 w-4" />,
 };
@@ -113,24 +112,15 @@ export function AppShell({ children }: AppShellProps) {
 
           {items?.map((item, index) => {
             const prev = items[index - 1];
-            const showGroupTitle =
-              !prev || prev.group !== item.group || index === 0;
-            const groupTitle = GROUP_LABELS[item.group];
+            const startsNewGroup = Boolean(prev && prev.group !== item.group);
             const active = isNavItemActive(pathname, item.href);
             const icon = NAV_ICONS[item.href];
 
             return (
-              <div key={item.key}>
-                {showGroupTitle && groupTitle ? (
-                  <p
-                    className={cn(
-                      "mb-1 px-2 text-[10px] font-semibold uppercase tracking-widest text-sidebar-foreground/30",
-                      index === 0 ? "mt-0" : "mt-4",
-                    )}
-                  >
-                    {groupTitle}
-                  </p>
-                ) : null}
+              <div
+                key={item.key}
+                className={startsNewGroup ? "mt-6" : undefined}
+              >
                 <NextLink
                   href={item.href}
                   className={cn(
@@ -230,7 +220,9 @@ export function AppShell({ children }: AppShellProps) {
       ) : null}
 
       {/* Main content */}
-      <main className="flex min-w-0 flex-1 flex-col overflow-y-auto">{children}</main>
+      <main className="flex min-w-0 flex-1 flex-col overflow-y-auto">
+        {children}
+      </main>
     </div>
   );
 }

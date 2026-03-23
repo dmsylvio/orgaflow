@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import NextLink from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { useForm } from "react-hook-form";
 import { AuthCard } from "@/components/auth/auth-card";
@@ -10,12 +10,22 @@ import { AuthField } from "@/components/auth/auth-field";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { appPaths } from "@/lib/app-paths";
+import { getSafeRedirectPath } from "@/lib/safe-redirect";
 import { toast } from "@/lib/toast";
 import { type RegisterFormValues, registerSchema } from "@/schemas/register";
 import { registerAction } from "@/server/actions/auth";
 
 export function RegisterForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const nextPath = getSafeRedirectPath(
+    searchParams.get("next"),
+    appPaths.workspace,
+  );
+  const nextQuery =
+    nextPath !== appPaths.workspace
+      ? `?next=${encodeURIComponent(nextPath)}`
+      : "";
 
   const {
     register,
@@ -61,7 +71,7 @@ export function RegisterForm() {
             return;
           }
 
-          router.push(appPaths.workspace);
+          router.push(nextPath);
           router.refresh();
         })}
         noValidate
@@ -139,7 +149,7 @@ export function RegisterForm() {
       <p className="mt-4 text-center text-sm text-muted-foreground">
         Already have an account?{" "}
         <NextLink
-          href="/login"
+          href={`/login${nextQuery}`}
           className="font-medium text-primary hover:underline"
         >
           Sign in

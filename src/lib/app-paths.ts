@@ -6,4 +6,6 @@ export const appPaths = {
   workspace: "/app/workspace",
   /** Raiz da app autenticada (requer organização ativa). */
   home: "/app",
+  settingsTeam: "/app/settings/team",
+  invite: (token: string) => `/invite/${token}`,
 } as const;

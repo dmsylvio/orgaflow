@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import NextLink from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { useForm } from "react-hook-form";
 import { AuthCard } from "@/components/auth/auth-card";
@@ -10,11 +10,21 @@ import { AuthField } from "@/components/auth/auth-field";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { appPaths } from "@/lib/app-paths";
+import { getSafeRedirectPath } from "@/lib/safe-redirect";
 import { toast } from "@/lib/toast";
 import { type LoginFormValues, loginSchema } from "@/schemas/login";
 
 export function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const nextPath = getSafeRedirectPath(
+    searchParams.get("next"),
+    appPaths.workspace,
+  );
+  const nextQuery =
+    nextPath !== appPaths.workspace
+      ? `?next=${encodeURIComponent(nextPath)}`
+      : "";
 
   const {
     register,
@@ -45,7 +55,7 @@ export function LoginForm() {
             return;
           }
 
-          router.push(appPaths.workspace);
+          router.push(nextPath);
           router.refresh();
         })}
         noValidate
@@ -81,7 +91,7 @@ export function LoginForm() {
 
         <div className="flex justify-end">
           <NextLink
-            href="/forgot-password"
+            href={`/forgot-password${nextQuery}`}
             className="text-xs text-muted-foreground hover:text-primary hover:underline"
           >
             Forgot password?
@@ -102,7 +112,7 @@ export function LoginForm() {
       <p className="mt-4 text-center text-sm text-muted-foreground">
         No account?{" "}
         <NextLink
-          href="/register"
+          href={`/register${nextQuery}`}
           className="font-medium text-primary hover:underline"
         >
           Create one

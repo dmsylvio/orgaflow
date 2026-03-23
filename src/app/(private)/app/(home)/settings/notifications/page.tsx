@@ -1,7 +1,6 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -97,10 +96,11 @@ function SwitchRow({
 // Page
 // ---------------------------------------------------------------------------
 
+const DEFAULT_NOTIFICATION_EMAIL = "noreply@orgaflow.app";
+
 export default function NotificationsPage() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const { data: session } = useSession();
 
   const { data, isPending } = useQuery(
     trpc.settings.getNotificationSettings.queryOptions(),
@@ -112,11 +112,10 @@ export default function NotificationsPage() {
 
   useEffect(() => {
     if (!data) return;
-    // Fall back to the owner's account email when no custom email is saved
-    setNotifyEmail(data.notifyEmail ?? session?.user?.email ?? "");
+    setNotifyEmail(data.notifyEmail ?? DEFAULT_NOTIFICATION_EMAIL);
     setInvoiceViewed(data.invoiceViewed ?? false);
     setEstimateViewed(data.estimateViewed ?? false);
-  }, [data, session?.user?.email]);
+  }, [data]);
 
   const update = useMutation(
     trpc.settings.updateNotificationSettings.mutationOptions({
@@ -159,7 +158,7 @@ export default function NotificationsPage() {
         {/* Destination */}
         <Section
           title="Send notifications to"
-          description="Leave blank to use your account email."
+          description="Leave blank to use the default notifications address."
         >
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="notif-email">Email address</Label>
@@ -168,7 +167,7 @@ export default function NotificationsPage() {
               type="email"
               value={notifyEmail}
               onChange={(e) => setNotifyEmail(e.target.value)}
-              placeholder={session?.user?.email ?? "you@example.com"}
+              placeholder={DEFAULT_NOTIFICATION_EMAIL}
             />
           </div>
         </Section>
