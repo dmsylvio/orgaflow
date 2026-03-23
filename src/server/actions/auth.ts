@@ -3,6 +3,7 @@
 import { randomBytes } from "node:crypto";
 import { hashSync } from "bcryptjs";
 import { and, eq } from "drizzle-orm";
+import { getAppBaseUrl } from "@/lib/base-url";
 import { forgotPasswordSchema } from "@/schemas/forgot-password";
 import { registerSchema } from "@/schemas/register";
 import { resetPasswordSchema } from "@/schemas/reset-password";
@@ -20,9 +21,7 @@ function passwordResetIdentifier(email: string): string {
 }
 
 function buildPasswordResetUrl(token: string): string {
-  const base =
-    process.env.AUTH_URL ?? process.env.NEXTAUTH_URL ?? "http://localhost:3000";
-  const url = new URL("/reset-password", base);
+  const url = new URL("/reset-password", getAppBaseUrl());
   url.searchParams.set("token", token);
   return url.toString();
 }
