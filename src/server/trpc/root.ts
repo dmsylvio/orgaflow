@@ -5,8 +5,10 @@ import {
 } from "@/server/trpc/init";
 import { accountRouter } from "@/server/trpc/routers/account";
 import { automationsRouter } from "@/server/trpc/routers/automations";
+import { customersRouter } from "@/server/trpc/routers/customers";
 import { expensesRouter } from "@/server/trpc/routers/expenses";
 import { iamRouter } from "@/server/trpc/routers/iam";
+import { itemsRouter } from "@/server/trpc/routers/items";
 import { paymentsRouter } from "@/server/trpc/routers/payments";
 import { roleRouter } from "@/server/trpc/routers/role";
 import { settingsRouter } from "@/server/trpc/routers/settings";
@@ -23,8 +25,10 @@ export const appRouter = createTRPCRouter({
 
   account: accountRouter,
   automations: automationsRouter,
+  customers: customersRouter,
   expenses: expensesRouter,
   iam: iamRouter,
+  items: itemsRouter,
   payments: paymentsRouter,
   role: roleRouter,
   settings: settingsRouter,

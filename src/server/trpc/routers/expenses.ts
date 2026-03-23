@@ -55,7 +55,9 @@ export const expensesRouter = createTRPCRouter({
       const userId = getSessionUserId(ctx);
 
       const [prefs] = await ctx.db
-        .select({ defaultCurrencyId: organizationPreferences.defaultCurrencyId })
+        .select({
+          defaultCurrencyId: organizationPreferences.defaultCurrencyId,
+        })
         .from(organizationPreferences)
         .where(eq(organizationPreferences.organizationId, ctx.organizationId))
         .limit(1);
@@ -132,6 +134,10 @@ export const expensesRouter = createTRPCRouter({
           id: currencies.id,
           code: currencies.code,
           symbol: currencies.symbol,
+          precision: currencies.precision,
+          thousandSeparator: currencies.thousandSeparator,
+          decimalSeparator: currencies.decimalSeparator,
+          swapCurrencySymbol: currencies.swapCurrencySymbol,
         })
         .from(organizationPreferences)
         .innerJoin(

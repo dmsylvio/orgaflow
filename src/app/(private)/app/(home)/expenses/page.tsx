@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Pencil, Plus, Trash2, Upload } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import {
   Dialog,
   DialogBody,
@@ -16,6 +17,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { Spinner } from "@/components/ui/spinner";
+import {
+  type CurrencyFormat,
+  formatCurrencyDisplay,
+} from "@/lib/currency-format";
 import { toast } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { useTRPC } from "@/trpc/client";
@@ -36,7 +41,7 @@ type Expense = {
   createdAt: Date;
 };
 
-type OrgCurrency = { id: string; code: string; symbol: string } | null;
+type OrgCurrency = CurrencyFormat;
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -72,7 +77,8 @@ function ReceiptField() {
         <div>
           <p className="text-sm font-medium text-foreground">Receipt Upload</p>
           <p className="text-xs text-muted-foreground">
-            File attachments are not yet available. This feature will be enabled in a future update.
+            File attachments are not yet available. This feature will be enabled
+            in a future update.
           </p>
         </div>
       </div>
@@ -153,23 +159,12 @@ function ExpenseFormFields({
       {/* Amount */}
       <div className="space-y-1.5">
         <Label htmlFor="ef-amount">Amount *</Label>
-        <div className="relative flex items-center">
-          {orgCurrency?.symbol && (
-            <span className="pointer-events-none absolute left-3 select-none text-sm text-muted-foreground">
-              {orgCurrency.symbol}
-            </span>
-          )}
-          <Input
-            id="ef-amount"
-            type="number"
-            min="0"
-            step="0.01"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            placeholder="0.00"
-            className={orgCurrency?.symbol ? "pl-7" : ""}
-          />
-        </div>
+        <CurrencyInput
+          id="ef-amount"
+          currency={orgCurrency}
+          value={amount}
+          onValueChange={setAmount}
+        />
       </div>
 
       {/* Currency — locked to org default */}
@@ -379,7 +374,9 @@ function EditExpenseDialog({
   const [notes, setNotes] = useState(expense.notes ?? "");
   const [categoryId, setCategoryId] = useState(expense.categoryId ?? "");
   const [customerId, setCustomerId] = useState(expense.customerId ?? "");
-  const [paymentModeId, setPaymentModeId] = useState(expense.paymentModeId ?? "");
+  const [paymentModeId, setPaymentModeId] = useState(
+    expense.paymentModeId ?? "",
+  );
 
   const update = useMutation(
     trpc.expenses.update.mutationOptions({
@@ -455,7 +452,7 @@ function ExpenseRow({
   categoryName,
   customerName,
   paymentModeName,
-  currencySymbol,
+  currency,
   onEdit,
   onDelete,
   isDeletePending,
@@ -464,7 +461,7 @@ function ExpenseRow({
   categoryName?: string;
   customerName?: string;
   paymentModeName?: string;
-  currencySymbol?: string;
+  currency: OrgCurrency;
   onEdit: (e: Expense) => void;
   onDelete: (id: string) => void;
   isDeletePending: boolean;
@@ -475,8 +472,7 @@ function ExpenseRow({
         {formatDate(expense.expenseDate)}
       </td>
       <td className="py-3 px-2 text-sm font-medium text-foreground whitespace-nowrap">
-        {currencySymbol ?? ""}
-        {parseFloat(expense.amount).toFixed(2)}
+        {formatCurrencyDisplay(expense.amount, currency)}
       </td>
       <td className="py-3 px-2 text-sm text-muted-foreground">
         {categoryName ?? <span className="italic opacity-40">—</span>}
@@ -598,8 +594,7 @@ export default function ExpensesPage() {
               Total Expenses
             </p>
             <p className="mt-1 text-2xl font-semibold text-foreground">
-              {orgCurrency?.symbol ?? ""}
-              {totalAmount.toFixed(2)}
+              {formatCurrencyDisplay(totalAmount, orgCurrency)}
             </p>
           </div>
           <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
@@ -618,7 +613,11 @@ export default function ExpensesPage() {
           <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
             {expenseList.length} record{expenseList.length !== 1 ? "s" : ""}
           </p>
-          <Button size="sm" variant="outline" onClick={() => setCreateOpen(true)}>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setCreateOpen(true)}
+          >
             <Plus className="h-4 w-4" />
             Add
           </Button>
@@ -674,7 +673,7 @@ export default function ExpensesPage() {
                         ? modeMap.get(expense.paymentModeId)
                         : undefined
                     }
-                    currencySymbol={orgCurrency?.symbol ?? undefined}
+                    currency={orgCurrency}
                     onEdit={setEditTarget}
                     onDelete={(id) => remove.mutate({ id })}
                     isDeletePending={remove.isPending}

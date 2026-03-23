@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import {
   Dialog,
   DialogBody,
@@ -16,6 +17,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { Spinner } from "@/components/ui/spinner";
+import {
+  type CurrencyFormat,
+  formatCurrencyDisplay,
+} from "@/lib/currency-format";
 import { toast } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { useTRPC } from "@/trpc/client";
@@ -37,7 +42,7 @@ type Payment = {
   createdAt: Date;
 };
 
-type OrgCurrency = { id: string; code: string; symbol: string } | null;
+type OrgCurrency = CurrencyFormat;
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -160,23 +165,12 @@ function PaymentFormFields({
       {/* Amount */}
       <div className="space-y-1.5">
         <Label htmlFor="pf-amount">Amount *</Label>
-        <div className="relative flex items-center">
-          {orgCurrency?.symbol && (
-            <span className="pointer-events-none absolute left-3 select-none text-sm text-muted-foreground">
-              {orgCurrency.symbol}
-            </span>
-          )}
-          <Input
-            id="pf-amount"
-            type="number"
-            min="0"
-            step="0.01"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            placeholder="0.00"
-            className={orgCurrency?.symbol ? "pl-7" : ""}
-          />
-        </div>
+        <CurrencyInput
+          id="pf-amount"
+          currency={orgCurrency}
+          value={amount}
+          onValueChange={setAmount}
+        />
       </div>
 
       {/* Payment Mode */}
@@ -420,7 +414,7 @@ function PaymentRow({
   payment,
   customerName,
   paymentModeName,
-  currencySymbol,
+  currency,
   onEdit,
   onDelete,
   isDeletePending,
@@ -428,7 +422,7 @@ function PaymentRow({
   payment: Payment;
   customerName?: string;
   paymentModeName?: string;
-  currencySymbol?: string;
+  currency: OrgCurrency;
   onEdit: (p: Payment) => void;
   onDelete: (id: string) => void;
   isDeletePending: boolean;
@@ -448,8 +442,7 @@ function PaymentRow({
         {payment.invoiceRef ?? <span className="italic opacity-40">—</span>}
       </td>
       <td className="py-3 px-2 text-sm font-medium text-foreground whitespace-nowrap">
-        {currencySymbol ?? ""}
-        {parseFloat(payment.amount).toFixed(2)}
+        {formatCurrencyDisplay(payment.amount, currency)}
       </td>
       <td className="py-3 px-2 text-sm text-muted-foreground">
         {paymentModeName ?? <span className="italic opacity-40">—</span>}
@@ -564,8 +557,7 @@ export default function PaymentsPage() {
               Total Received
             </p>
             <p className="mt-1 text-2xl font-semibold text-foreground">
-              {orgCurrency?.symbol ?? ""}
-              {totalAmount.toFixed(2)}
+              {formatCurrencyDisplay(totalAmount, orgCurrency)}
             </p>
           </div>
           <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
@@ -642,7 +634,7 @@ export default function PaymentsPage() {
                         ? modeMap.get(payment.paymentModeId)
                         : undefined
                     }
-                    currencySymbol={orgCurrency?.symbol ?? undefined}
+                    currency={orgCurrency}
                     onEdit={setEditTarget}
                     onDelete={(id) => remove.mutate({ id })}
                     isDeletePending={remove.isPending}

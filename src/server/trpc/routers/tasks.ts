@@ -30,18 +30,25 @@ function slugify(name: string): string {
 export const tasksRouter = createTRPCRouter({
   // ---- Stages ---------------------------------------------------------------
 
-  listStages: ownerProcedure.use(requirePlan("scale")).query(async ({ ctx }) => {
-    await ensureDefaultTaskStages(ctx.db, ctx.organizationId);
-    return ctx.db
-      .select()
-      .from(taskStages)
-      .where(eq(taskStages.organizationId, ctx.organizationId))
-      .orderBy(asc(taskStages.position));
-  }),
+  listStages: ownerProcedure
+    .use(requirePlan("scale"))
+    .query(async ({ ctx }) => {
+      await ensureDefaultTaskStages(ctx.db, ctx.organizationId);
+      return ctx.db
+        .select()
+        .from(taskStages)
+        .where(eq(taskStages.organizationId, ctx.organizationId))
+        .orderBy(asc(taskStages.position));
+    }),
 
   createStage: ownerProcedure
     .use(requirePlan("scale"))
-    .input(z.object({ name: z.string().min(1).max(100), color: z.string().optional() }))
+    .input(
+      z.object({
+        name: z.string().min(1).max(100),
+        color: z.string().optional(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       const userId = getSessionUserId(ctx);
       const name = input.name.trim();
@@ -134,13 +141,33 @@ export const tasksRouter = createTRPCRouter({
 
       // System stage is always position 0; custom stages start at 1
       const basePosition = systemStage ? 1 : 0;
+      const updatedAt = new Date();
 
       await ctx.db.transaction(async (tx) => {
+        // Move custom stages to a temporary negative range first so the
+        // unique (organization_id, position) index never collides mid-reorder.
         for (const [i, id] of input.orderedIds.entries()) {
           await tx
             .update(taskStages)
-            .set({ position: basePosition + i, updatedAt: new Date() })
-            .where(eq(taskStages.id, id));
+            .set({ position: -(i + 1), updatedAt })
+            .where(
+              and(
+                eq(taskStages.id, id),
+                eq(taskStages.organizationId, ctx.organizationId),
+              ),
+            );
+        }
+
+        for (const [i, id] of input.orderedIds.entries()) {
+          await tx
+            .update(taskStages)
+            .set({ position: basePosition + i, updatedAt })
+            .where(
+              and(
+                eq(taskStages.id, id),
+                eq(taskStages.organizationId, ctx.organizationId),
+              ),
+            );
         }
       });
 
@@ -179,9 +206,7 @@ export const tasksRouter = createTRPCRouter({
             position: sql`${taskStages.position} - 1`,
             updatedAt: new Date(),
           })
-          .where(
-            gt(taskStages.position, stage.position),
-          );
+          .where(gt(taskStages.position, stage.position));
       });
 
       return { ok: true as const };
@@ -222,9 +247,7 @@ export const tasksRouter = createTRPCRouter({
         await ctx.db
           .update(organizationFeatures)
           .set({ enabled: input.enabled, updatedAt: new Date() })
-          .where(
-            eq(organizationFeatures.organizationId, ctx.organizationId),
-          );
+          .where(eq(organizationFeatures.organizationId, ctx.organizationId));
       } else {
         await ctx.db.insert(organizationFeatures).values({
           organizationId: ctx.organizationId,
@@ -326,7 +349,10 @@ export const tasksRouter = createTRPCRouter({
         .select({ id: tasks.id })
         .from(tasks)
         .where(
-          and(eq(tasks.id, input.id), eq(tasks.organizationId, ctx.organizationId)),
+          and(
+            eq(tasks.id, input.id),
+            eq(tasks.organizationId, ctx.organizationId),
+          ),
         )
         .limit(1);
 
@@ -342,8 +368,12 @@ export const tasksRouter = createTRPCRouter({
             description: input.description?.trim() ?? null,
           }),
           ...(input.priority !== undefined && { priority: input.priority }),
-          ...(input.stageId !== undefined && { stageId: input.stageId ?? null }),
-          ...(input.dueDate !== undefined && { dueDate: input.dueDate ?? null }),
+          ...(input.stageId !== undefined && {
+            stageId: input.stageId ?? null,
+          }),
+          ...(input.dueDate !== undefined && {
+            dueDate: input.dueDate ?? null,
+          }),
           updatedAt: new Date(),
         })
         .where(eq(tasks.id, input.id));
@@ -359,7 +389,10 @@ export const tasksRouter = createTRPCRouter({
       await ctx.db
         .delete(tasks)
         .where(
-          and(eq(tasks.id, input.id), eq(tasks.organizationId, ctx.organizationId)),
+          and(
+            eq(tasks.id, input.id),
+            eq(tasks.organizationId, ctx.organizationId),
+          ),
         );
 
       return { ok: true as const };

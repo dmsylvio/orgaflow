@@ -36,7 +36,7 @@ export const payments = pgTable(
     currencyId: text("currency_id").references(() => currencies.id, {
       onDelete: "restrict",
     }),
-    amount: numeric("amount", { precision: 12, scale: 2 }).notNull(),
+    amount: numeric("amount", { precision: 13, scale: 3 }).notNull(),
     paymentDate: date("payment_date").notNull(),
     invoiceRef: text("invoice_ref"),
     notes: text("notes"),

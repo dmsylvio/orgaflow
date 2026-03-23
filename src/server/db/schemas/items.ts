@@ -15,9 +15,9 @@ export const items = pgTable(
       .references(() => organizations.id, { onDelete: "cascade" }),
 
     name: text("name").notNull(),
-    price: numeric("price", { precision: 12, scale: 2 })
+    price: numeric("price", { precision: 13, scale: 3 })
       .notNull()
-      .default("0.00"),
+      .default("0.000"),
     unitId: text("unit_id").references(() => units.id, {
       onDelete: "set null",
     }),

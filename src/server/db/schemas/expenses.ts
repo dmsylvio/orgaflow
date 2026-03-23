@@ -1,5 +1,12 @@
 import { relations } from "drizzle-orm";
-import { date, index, numeric, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import {
+  date,
+  index,
+  numeric,
+  pgTable,
+  text,
+  timestamp,
+} from "drizzle-orm/pg-core";
 import { uuidv7 } from "uuidv7";
 import { currencies } from "./currencies";
 import { customers } from "./customers";
@@ -29,7 +36,7 @@ export const expenses = pgTable(
     currencyId: text("currency_id").references(() => currencies.id, {
       onDelete: "restrict",
     }),
-    amount: numeric("amount", { precision: 12, scale: 2 }).notNull(),
+    amount: numeric("amount", { precision: 13, scale: 3 }).notNull(),
     expenseDate: date("expense_date").notNull(),
     notes: text("notes"),
     createdById: text("created_by_id").references(() => users.id, {
