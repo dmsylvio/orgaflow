@@ -6,7 +6,7 @@ import authConfig from "./auth.config";
 const { auth } = NextAuth(authConfig);
 
 const PUBLIC_ROUTES = ["/", "/pricing"];
-const AUTH_ROUTES = ["/sign-in", "/sign-up", "/auth/error"];
+const AUTH_ROUTES = ["/login", "/register", "/auth/error"];
 
 function matchesRoute(pathname: string, routes: string[]) {
   return routes.some((route) => {

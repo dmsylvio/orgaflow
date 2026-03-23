@@ -39,39 +39,52 @@ export async function registerAction(
   }
 
   const email = parsed.data.email.trim().toLowerCase();
-  const existing = await db.query.users.findFirst({
-    where: eq(users.email, email),
-  });
 
-  if (existing) {
-    return {
-      success: false,
-      message: "Could not create account",
-      fieldErrors: {
-        email: "An account with this email already exists",
-      },
-    };
-  }
+  try {
+    const existing = await db.query.users.findFirst({
+      where: eq(users.email, email),
+    });
 
-  const passwordHash = hashSync(parsed.data.password, BCRYPT_ROUNDS);
+    if (existing) {
+      return {
+        success: false,
+        message: "Could not create account",
+        fieldErrors: {
+          email: "An account with this email already exists",
+        },
+      };
+    }
 
-  const [created] = await db
-    .insert(users)
-    .values({
-      name: parsed.data.name.trim(),
+    const passwordHash = hashSync(parsed.data.password, BCRYPT_ROUNDS);
+
+    const [created] = await db
+      .insert(users)
+      .values({
+        name: parsed.data.name.trim(),
+        email,
+        password: passwordHash,
+      })
+      .returning({ id: users.id });
+
+    if (!created) {
+      return {
+        success: false,
+        message: "Could not create account",
+      };
+    }
+
+    return { success: true, data: { userId: created.id } };
+  } catch (error) {
+    console.error("[auth/register] Failed to create account", {
       email,
-      password: passwordHash,
-    })
-    .returning({ id: users.id });
+      error,
+    });
 
-  if (!created) {
     return {
       success: false,
-      message: "Could not create account",
+      message: "Could not create account. Please try again.",
     };
   }
-
-  return { success: true, data: { userId: created.id } };
 }
 
 export async function forgotPasswordAction(
