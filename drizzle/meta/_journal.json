@@ -29,6 +29,13 @@
       "when": 1773977100000,
       "tag": "0003_subscription_plan_scale",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1774287600000,
+      "tag": "0004_create_languages_table",
+      "breakpoints": true
     }
   ]
 }

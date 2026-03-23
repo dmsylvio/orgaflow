@@ -30,13 +30,19 @@ const DEFAULT_LANGUAGES = [
  */
 export async function ensureDefaultLanguages(db: DbClient): Promise<void> {
   const existing = await db
-    .select({ id: languages.id })
+    .select({ code: languages.code })
     .from(languages)
-    .limit(1);
-  if (existing.length > 0) return;
+    .limit(DEFAULT_LANGUAGES.length);
+
+  const existingCodes = new Set(existing.map((language) => language.code));
+  const missingLanguages = DEFAULT_LANGUAGES.filter(
+    (language) => !existingCodes.has(language.code),
+  );
+
+  if (missingLanguages.length === 0) return;
 
   await db.insert(languages).values(
-    DEFAULT_LANGUAGES.map((l) => ({
+    missingLanguages.map((l) => ({
       code: l.code,
       name: l.name,
     })),
