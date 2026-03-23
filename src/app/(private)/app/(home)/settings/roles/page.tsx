@@ -3,13 +3,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ChevronDown, ChevronRight, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
-import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
+import { toast } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import type { PermissionKey } from "@/server/iam";
 import { useTRPC } from "@/trpc/client";
@@ -76,7 +76,8 @@ function CreateRoleForm({
         onCreated();
         toast.success("Role created.");
       },
-      onError: (e) => toast.error("Couldn't create role", { description: e.message }),
+      onError: (e) =>
+        toast.error("Couldn't create role", { description: e.message }),
     }),
   );
 
@@ -184,7 +185,11 @@ function CreateRoleForm({
           loading={create.isPending}
           disabled={create.isPending || !name.trim() || !key.trim()}
           onClick={() =>
-            create.mutate({ name, key, permissions: Array.from(selected) as PermissionKey[] })
+            create.mutate({
+              name,
+              key,
+              permissions: Array.from(selected) as PermissionKey[],
+            })
           }
         >
           Create role
@@ -219,10 +224,13 @@ function RoleRow({
   const updateRole = useMutation(
     trpc.role.update.mutationOptions({
       onSuccess: () => {
-        queryClient.invalidateQueries(trpc.role.byId.queryOptions({ id: role.id }));
+        queryClient.invalidateQueries(
+          trpc.role.byId.queryOptions({ id: role.id }),
+        );
         toast.success("Role updated.");
       },
-      onError: (e) => toast.error("Couldn't update role", { description: e.message }),
+      onError: (e) =>
+        toast.error("Couldn't update role", { description: e.message }),
     }),
   );
 
@@ -232,7 +240,8 @@ function RoleRow({
         onDeleted();
         toast.success("Role deleted.");
       },
-      onError: (e) => toast.error("Couldn't delete role", { description: e.message }),
+      onError: (e) =>
+        toast.error("Couldn't delete role", { description: e.message }),
     }),
   );
 
@@ -242,7 +251,10 @@ function RoleRow({
     const next = new Set(currentPerms);
     if (next.has(key)) next.delete(key);
     else next.add(key);
-    updateRole.mutate({ id: role.id, permissions: Array.from(next) as PermissionKey[] });
+    updateRole.mutate({
+      id: role.id,
+      permissions: Array.from(next) as PermissionKey[],
+    });
   }
 
   return (

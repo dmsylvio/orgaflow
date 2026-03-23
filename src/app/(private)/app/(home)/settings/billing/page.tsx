@@ -15,11 +15,11 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
+import { toast } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { useTRPC } from "@/trpc/client";
 
@@ -171,13 +171,7 @@ function SettingsPage({
   );
 }
 
-function InfoRow({
-  label,
-  value,
-}: {
-  label: string;
-  value: React.ReactNode;
-}) {
+function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="flex items-center justify-between py-3">
       <span className="text-sm text-muted-foreground">{label}</span>
@@ -292,7 +286,10 @@ function UpgradeSection({
   isUpgradePending,
 }: {
   currentPlan: Plan;
-  onUpgrade: (plan: Exclude<Plan, "starter">, interval: BillingInterval) => void;
+  onUpgrade: (
+    plan: Exclude<Plan, "starter">,
+    interval: BillingInterval,
+  ) => void;
   isUpgradePending: boolean;
 }) {
   const [interval, setInterval] = useState<BillingInterval>("monthly");
@@ -599,7 +596,10 @@ export default function BillingSettingsPage() {
           upgrade.mutate({
             targetPlan,
             billingInterval,
-            returnUrl: typeof window !== "undefined" ? window.location.href : "/app/settings/billing",
+            returnUrl:
+              typeof window !== "undefined"
+                ? window.location.href
+                : "/app/settings/billing",
           })
         }
       />
@@ -621,9 +621,7 @@ export default function BillingSettingsPage() {
           variant="outline"
           loading={openPortal.isPending}
           disabled={openPortal.isPending || !hasStripe}
-          onClick={() =>
-            openPortal.mutate({ returnUrl: window.location.href })
-          }
+          onClick={() => openPortal.mutate({ returnUrl: window.location.href })}
         >
           <ExternalLink className="h-4 w-4" />
           Open billing portal

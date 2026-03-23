@@ -2,7 +2,6 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { CurrencyPicker } from "@/components/ui/currency-picker";
 import { Input } from "@/components/ui/input";
@@ -19,6 +18,7 @@ import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
 import { TimezonePicker } from "@/components/ui/timezone-picker";
+import { toast } from "@/lib/toast";
 import {
   DATE_FORMAT_VALUES,
   type DateFormatValue,
@@ -43,18 +43,18 @@ const DATE_FORMAT_LABELS: Record<DateFormatValue, string> = {
 };
 
 const FINANCIAL_YEAR_LABELS: Record<FinancialYearValue, string> = {
-  "january-december":   "January – December",
-  "february-january":   "February – January",
-  "march-february":     "March – February",
-  "april-march":        "April – March",
-  "may-april":          "May – April",
-  "june-may":           "June – May",
-  "july-june":          "July – June",
-  "august-july":        "August – July",
-  "september-august":   "September – August",
-  "october-september":  "October – September",
-  "november-october":   "November – October",
-  "december-november":  "December – November",
+  "january-december": "January – December",
+  "february-january": "February – January",
+  "march-february": "March – February",
+  "april-march": "April – March",
+  "may-april": "May – April",
+  "june-may": "June – May",
+  "july-june": "July – June",
+  "august-july": "August – July",
+  "september-august": "September – August",
+  "october-september": "October – September",
+  "november-october": "November – October",
+  "december-november": "December – November",
 };
 
 // ---------------------------------------------------------------------------

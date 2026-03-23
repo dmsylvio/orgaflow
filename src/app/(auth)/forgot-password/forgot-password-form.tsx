@@ -9,6 +9,7 @@ import { AuthField } from "@/components/auth/auth-field";
 import { Button } from "@/components/ui/button";
 import { Callout } from "@/components/ui/callout";
 import { Input } from "@/components/ui/input";
+import { toast } from "@/lib/toast";
 import {
   type ForgotPasswordFormValues,
   forgotPasswordSchema,
@@ -16,13 +17,11 @@ import {
 import { forgotPasswordAction } from "@/server/actions/auth";
 
 export function ForgotPasswordForm() {
-  const [rootError, setRootError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
 
   const {
     register,
     handleSubmit,
-    setError,
     formState: { errors, isSubmitting },
   } = useForm<ForgotPasswordFormValues>({
     resolver: zodResolver(forgotPasswordSchema),
@@ -45,34 +44,24 @@ export function ForgotPasswordForm() {
       ) : (
         <form
           onSubmit={handleSubmit(async (values) => {
-            setRootError(null);
             const result = await forgotPasswordAction(values);
 
             if (!result.success) {
-              if (result.fieldErrors) {
-                for (const [key, message] of Object.entries(
-                  result.fieldErrors,
-                )) {
-                  if (key === "email") {
-                    setError("email", { message });
-                  }
-                }
-              }
-              setRootError(result.message);
+              toast.error("Couldn't send reset link", {
+                description: result.message,
+              });
               return;
             }
 
             setSent(true);
+            toast.success("Reset link sent", {
+              description:
+                "If an account exists for that email, reset instructions will arrive shortly.",
+            });
           })}
           noValidate
           className="flex flex-col gap-4"
         >
-          {rootError ? (
-            <Callout variant="error">
-              <span role="alert">{rootError}</span>
-            </Callout>
-          ) : null}
-
           <AuthField id="email" label="Email" error={errors.email?.message}>
             <Input
               id="email"

@@ -7,7 +7,6 @@ import { getAppBaseUrl } from "@/lib/base-url";
 import { forgotPasswordSchema } from "@/schemas/forgot-password";
 import { registerSchema } from "@/schemas/register";
 import { resetPasswordSchema } from "@/schemas/reset-password";
-import { zodErrorToFieldErrors } from "@/schemas/zod-field-errors";
 import { db } from "@/server/db";
 import { users, verificationTokens } from "@/server/db/schemas";
 import type { AuthActionResult } from "@/types/auth-actions";
@@ -33,8 +32,7 @@ export async function registerAction(
   if (!parsed.success) {
     return {
       success: false,
-      message: "Validation failed",
-      fieldErrors: zodErrorToFieldErrors(parsed.error),
+      message: parsed.error.issues[0]?.message ?? "Validation failed",
     };
   }
 
@@ -48,10 +46,7 @@ export async function registerAction(
     if (existing) {
       return {
         success: false,
-        message: "Could not create account",
-        fieldErrors: {
-          email: "An account with this email already exists",
-        },
+        message: "An account with this email already exists.",
       };
     }
 
@@ -94,8 +89,7 @@ export async function forgotPasswordAction(
   if (!parsed.success) {
     return {
       success: false,
-      message: "Validation failed",
-      fieldErrors: zodErrorToFieldErrors(parsed.error),
+      message: parsed.error.issues[0]?.message ?? "Validation failed",
     };
   }
 
@@ -136,8 +130,7 @@ export async function resetPasswordAction(
   if (!parsed.success) {
     return {
       success: false,
-      message: "Validation failed",
-      fieldErrors: zodErrorToFieldErrors(parsed.error),
+      message: parsed.error.issues[0]?.message ?? "Validation failed",
     };
   }
 
@@ -156,8 +149,7 @@ export async function resetPasswordAction(
   if (!row) {
     return {
       success: false,
-      message: "This reset link is invalid or has expired",
-      fieldErrors: { token: "Invalid or expired reset link" },
+      message: "This reset link is invalid or has expired.",
     };
   }
 

@@ -4,25 +4,22 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import NextLink from "next/link";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { AuthCard } from "@/components/auth/auth-card";
 import { AuthField } from "@/components/auth/auth-field";
 import { Button } from "@/components/ui/button";
-import { Callout } from "@/components/ui/callout";
 import { Input } from "@/components/ui/input";
 import { appPaths } from "@/lib/app-paths";
+import { toast } from "@/lib/toast";
 import { type RegisterFormValues, registerSchema } from "@/schemas/register";
 import { registerAction } from "@/server/actions/auth";
 
 export function RegisterForm() {
   const router = useRouter();
-  const [rootError, setRootError] = useState<string | null>(null);
 
   const {
     register,
     handleSubmit,
-    setError,
     formState: { errors, isSubmitting },
   } = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
@@ -41,18 +38,12 @@ export function RegisterForm() {
     >
       <form
         onSubmit={handleSubmit(async (values) => {
-          setRootError(null);
           const result = await registerAction(values);
 
           if (!result.success) {
-            if (result.fieldErrors) {
-              for (const [key, message] of Object.entries(result.fieldErrors)) {
-                if (key in values) {
-                  setError(key as keyof RegisterFormValues, { message });
-                }
-              }
-            }
-            setRootError(result.message);
+            toast.error("Couldn't create account", {
+              description: result.message,
+            });
             return;
           }
 
@@ -63,9 +54,10 @@ export function RegisterForm() {
           });
 
           if (signInRes?.error) {
-            setRootError(
-              "Account created but sign-in failed. Please try logging in.",
-            );
+            toast.error("Account created", {
+              description:
+                "Your account was created, but automatic sign-in failed. Please log in manually.",
+            });
             return;
           }
 
@@ -75,12 +67,6 @@ export function RegisterForm() {
         noValidate
         className="flex flex-col gap-4"
       >
-        {rootError ? (
-          <Callout variant="error">
-            <span role="alert">{rootError}</span>
-          </Callout>
-        ) : null}
-
         <AuthField id="name" label="Full name" error={errors.name?.message}>
           <Input
             id="name"

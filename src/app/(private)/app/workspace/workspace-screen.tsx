@@ -4,7 +4,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ChevronRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { type ReactNode, useEffect, useState } from "react";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { CurrencyPicker } from "@/components/ui/currency-picker";
 import { Input } from "@/components/ui/input";
@@ -12,6 +11,7 @@ import { LanguagePicker } from "@/components/ui/language-picker";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
 import { appPaths } from "@/lib/app-paths";
+import { toast } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import {
   createOrganizationDetailsSchema,

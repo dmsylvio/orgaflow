@@ -3,12 +3,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Pencil, Plus, Star, Trash2 } from "lucide-react";
 import { useState } from "react";
-import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
+import { toast } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { useTRPC } from "@/trpc/client";
 
@@ -115,7 +115,9 @@ function DataRow({
                 size="sm"
                 loading={update.isPending}
                 disabled={update.isPending || !name.trim()}
-                onClick={() => update.mutate({ id: mode.id, name: name.trim() })}
+                onClick={() =>
+                  update.mutate({ id: mode.id, name: name.trim() })
+                }
               >
                 Save
               </Button>
@@ -220,7 +222,8 @@ export default function PaymentModesPage() {
         );
         toast.success("Payment mode removed.");
       },
-      onError: (e) => toast.error("Couldn't delete", { description: e.message }),
+      onError: (e) =>
+        toast.error("Couldn't delete", { description: e.message }),
     }),
   );
 
@@ -268,7 +271,9 @@ export default function PaymentModesPage() {
                 <DataRow
                   key={m.id}
                   mode={m}
-                  onSetDefault={(id) => setDefault.mutate({ id, isDefault: true })}
+                  onSetDefault={(id) =>
+                    setDefault.mutate({ id, isDefault: true })
+                  }
                   onDelete={(id) => remove.mutate({ id })}
                   isDefaultPending={setDefault.isPending}
                   isDeletePending={remove.isPending}

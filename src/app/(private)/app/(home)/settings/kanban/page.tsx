@@ -3,13 +3,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { useRef, useState } from "react";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
+import { toast } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { useTRPC } from "@/trpc/client";
 
@@ -163,7 +163,12 @@ function StageRow({
               >
                 Save
               </Button>
-              <Button type="button" size="sm" variant="ghost" onClick={cancelEdit}>
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                onClick={cancelEdit}
+              >
                 Cancel
               </Button>
             </>
@@ -220,7 +225,9 @@ export default function KanbanSettingsPage() {
   const toggleFeature = useMutation(
     trpc.tasks.setKanbanEnabled.mutationOptions({
       onSuccess: () => {
-        queryClient.invalidateQueries(trpc.tasks.getKanbanEnabled.queryOptions());
+        queryClient.invalidateQueries(
+          trpc.tasks.getKanbanEnabled.queryOptions(),
+        );
         queryClient.invalidateQueries(trpc.tasks.listStages.queryOptions());
         queryClient.invalidateQueries(trpc.iam.navigation.queryOptions());
       },
@@ -267,7 +274,10 @@ export default function KanbanSettingsPage() {
     const idx = customStages.findIndex((s) => s.id === id);
     if (idx <= 0) return;
     const reordered = [...customStages];
-    [reordered[idx - 1], reordered[idx]] = [reordered[idx]!, reordered[idx - 1]!];
+    const current = reordered[idx];
+    const previous = reordered[idx - 1];
+    if (!current || !previous) return;
+    [reordered[idx - 1], reordered[idx]] = [current, previous];
     reorder.mutate({ orderedIds: reordered.map((s) => s.id) });
   }
 
@@ -275,7 +285,10 @@ export default function KanbanSettingsPage() {
     const idx = customStages.findIndex((s) => s.id === id);
     if (idx === -1 || idx >= customStages.length - 1) return;
     const reordered = [...customStages];
-    [reordered[idx], reordered[idx + 1]] = [reordered[idx + 1]!, reordered[idx]!];
+    const current = reordered[idx];
+    const next = reordered[idx + 1];
+    if (!current || !next) return;
+    [reordered[idx], reordered[idx + 1]] = [next, current];
     reorder.mutate({ orderedIds: reordered.map((s) => s.id) });
   }
 
@@ -356,8 +369,7 @@ export default function KanbanSettingsPage() {
                         onMoveDown={handleMoveDown}
                         canMoveUp={!stage.isSystem && customIdx > 0}
                         canMoveDown={
-                          !stage.isSystem &&
-                          customIdx < customStages.length - 1
+                          !stage.isSystem && customIdx < customStages.length - 1
                         }
                       />
                     );

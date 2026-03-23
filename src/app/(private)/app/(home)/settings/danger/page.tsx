@@ -4,7 +4,6 @@ import { useMutation } from "@tanstack/react-query";
 import { TriangleAlert } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { toast } from "sonner";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -17,6 +16,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { toast } from "@/lib/toast";
 import { useTRPC } from "@/trpc/client";
 
 function SettingsPage({

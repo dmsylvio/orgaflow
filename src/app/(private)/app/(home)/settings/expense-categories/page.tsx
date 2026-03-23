@@ -3,11 +3,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
+import { toast } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { useTRPC } from "@/trpc/client";
 
@@ -82,7 +82,9 @@ function CategoryRow({
             autoFocus
           />
         ) : (
-          <span className="text-sm font-medium text-foreground">{cat.name}</span>
+          <span className="text-sm font-medium text-foreground">
+            {cat.name}
+          </span>
         )}
       </td>
       <td className="py-3 px-2">
@@ -198,7 +200,8 @@ export default function ExpenseCategoriesPage() {
         );
         toast.success("Category removed.");
       },
-      onError: (e) => toast.error("Couldn't delete", { description: e.message }),
+      onError: (e) =>
+        toast.error("Couldn't delete", { description: e.message }),
     }),
   );
 

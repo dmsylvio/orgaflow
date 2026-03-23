@@ -2,12 +2,12 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
+import { toast } from "@/lib/toast";
 import { useTRPC } from "@/trpc/client";
 
 function SettingsPage({
@@ -221,7 +221,7 @@ export default function CompanySettingsPage() {
           </div>
         </Section>
 
-<div className="flex justify-end">
+        <div className="flex justify-end">
           <Button
             type="submit"
             loading={update.isPending}

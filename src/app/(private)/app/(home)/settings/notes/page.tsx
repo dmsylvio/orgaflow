@@ -3,12 +3,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
+import { toast } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { useTRPC } from "@/trpc/client";
 
@@ -121,7 +121,9 @@ function NoteRow({
             autoFocus
           />
         ) : (
-          <span className="text-sm font-medium text-foreground">{note.name}</span>
+          <span className="text-sm font-medium text-foreground">
+            {note.name}
+          </span>
         )}
       </td>
       <td className="py-3 px-2 w-32">
@@ -238,7 +240,8 @@ export default function NotesPage() {
         resetAdd();
         toast.success("Note added.");
       },
-      onError: (e) => toast.error("Couldn't add note", { description: e.message }),
+      onError: (e) =>
+        toast.error("Couldn't add note", { description: e.message }),
     }),
   );
 
@@ -248,7 +251,8 @@ export default function NotesPage() {
         queryClient.invalidateQueries(trpc.settings.listNotes.queryOptions());
         toast.success("Note removed.");
       },
-      onError: (e) => toast.error("Couldn't delete", { description: e.message }),
+      onError: (e) =>
+        toast.error("Couldn't delete", { description: e.message }),
     }),
   );
 

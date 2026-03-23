@@ -4,19 +4,17 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import NextLink from "next/link";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { AuthCard } from "@/components/auth/auth-card";
 import { AuthField } from "@/components/auth/auth-field";
 import { Button } from "@/components/ui/button";
-import { Callout } from "@/components/ui/callout";
 import { Input } from "@/components/ui/input";
 import { appPaths } from "@/lib/app-paths";
+import { toast } from "@/lib/toast";
 import { type LoginFormValues, loginSchema } from "@/schemas/login";
 
 export function LoginForm() {
   const router = useRouter();
-  const [rootError, setRootError] = useState<string | null>(null);
 
   const {
     register,
@@ -34,7 +32,6 @@ export function LoginForm() {
     >
       <form
         onSubmit={handleSubmit(async (values) => {
-          setRootError(null);
           const res = await signIn("credentials", {
             email: values.email.trim().toLowerCase(),
             password: values.password,
@@ -42,7 +39,9 @@ export function LoginForm() {
           });
 
           if (res?.error) {
-            setRootError("Invalid email or password.");
+            toast.error("Couldn't sign in", {
+              description: "Invalid email or password. Please try again.",
+            });
             return;
           }
 
@@ -52,12 +51,6 @@ export function LoginForm() {
         noValidate
         className="flex flex-col gap-4"
       >
-        {rootError ? (
-          <Callout variant="error">
-            <span role="alert">{rootError}</span>
-          </Callout>
-        ) : null}
-
         <AuthField id="email" label="Email" error={errors.email?.message}>
           <Input
             id="email"

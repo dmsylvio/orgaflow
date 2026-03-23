@@ -3,13 +3,13 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import NextLink from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { AuthCard } from "@/components/auth/auth-card";
 import { AuthField } from "@/components/auth/auth-field";
 import { Button } from "@/components/ui/button";
-import { Callout } from "@/components/ui/callout";
 import { Input } from "@/components/ui/input";
+import { toast } from "@/lib/toast";
 import {
   type ResetPasswordFormValues,
   resetPasswordSchema,
@@ -22,12 +22,10 @@ interface ResetPasswordFormProps {
 
 export function ResetPasswordForm({ initialToken }: ResetPasswordFormProps) {
   const router = useRouter();
-  const [rootError, setRootError] = useState<string | null>(null);
 
   const {
     register,
     handleSubmit,
-    setError,
     watch,
     formState: { errors, isSubmitting },
   } = useForm<ResetPasswordFormValues>({
@@ -42,6 +40,15 @@ export function ResetPasswordForm({ initialToken }: ResetPasswordFormProps) {
   const tokenValue = watch("token");
   const tokenMissing = !tokenValue?.trim();
 
+  useEffect(() => {
+    if (!tokenMissing) return;
+
+    toast.error("Reset link invalid", {
+      description:
+        "This reset link is missing a token. Open the link from your email or request a new one.",
+    });
+  }, [tokenMissing]);
+
   return (
     <AuthCard
       title="Set a new password"
@@ -49,48 +56,26 @@ export function ResetPasswordForm({ initialToken }: ResetPasswordFormProps) {
     >
       <input type="hidden" {...register("token")} />
 
-      {tokenMissing ? (
-        <Callout variant="error" className="mb-4">
-          <span role="alert">
-            This reset link is missing a token. Open the link from your email or
-            request a new reset.
-          </span>
-        </Callout>
-      ) : null}
-
       <form
         onSubmit={handleSubmit(async (values) => {
-          setRootError(null);
           const result = await resetPasswordAction(values);
 
           if (!result.success) {
-            if (result.fieldErrors) {
-              for (const [key, message] of Object.entries(result.fieldErrors)) {
-                if (
-                  key === "token" ||
-                  key === "password" ||
-                  key === "confirmPassword"
-                ) {
-                  setError(key as keyof ResetPasswordFormValues, { message });
-                }
-              }
-            }
-            setRootError(result.message);
+            toast.error("Couldn't reset password", {
+              description: result.message,
+            });
             return;
           }
 
+          toast.success("Password updated", {
+            description: "Your password has been updated. You can sign in now.",
+          });
           router.push("/login");
           router.refresh();
         })}
         noValidate
       >
         <div className="flex flex-col gap-4">
-          {rootError ? (
-            <Callout variant="error">
-              <span role="alert">{rootError}</span>
-            </Callout>
-          ) : null}
-
           <AuthField
             id="password"
             label="New password"
