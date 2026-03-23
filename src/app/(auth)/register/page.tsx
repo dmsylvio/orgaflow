@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { RegisterForm } from "./register-form";
 
 /**
@@ -5,5 +6,9 @@ import { RegisterForm } from "./register-form";
  * Ver `docs/orgaflow-ui-architecture.md`.
  */
 export default function RegisterPage() {
-  return <RegisterForm />;
+  return (
+    <Suspense fallback={null}>
+      <RegisterForm />
+    </Suspense>
+  );
 }

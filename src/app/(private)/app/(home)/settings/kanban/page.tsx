@@ -144,7 +144,7 @@ function CreateStageDialog({
   onSuccess: () => void;
 }) {
   const [name, setName] = useState("");
-  const [color, setColor] = useState(DEFAULT_STAGE_COLOR);
+  const [color, setColor] = useState<string>(DEFAULT_STAGE_COLOR);
   const trpc = useTRPC();
 
   const create = useMutation(

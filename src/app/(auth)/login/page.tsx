@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { LoginForm } from "./login-form";
 
 /**
@@ -5,5 +6,9 @@ import { LoginForm } from "./login-form";
  * Ver `docs/orgaflow-ui-architecture.md`.
  */
 export default function LoginPage() {
-  return <LoginForm />;
+  return (
+    <Suspense fallback={null}>
+      <LoginForm />
+    </Suspense>
+  );
 }
