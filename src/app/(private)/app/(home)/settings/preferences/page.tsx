@@ -57,6 +57,14 @@ const FINANCIAL_YEAR_LABELS: Record<FinancialYearValue, string> = {
   "december-november": "December – November",
 };
 
+function isDateFormatValue(value: string): value is DateFormatValue {
+  return DATE_FORMAT_VALUES.includes(value as DateFormatValue);
+}
+
+function isFinancialYearValue(value: string): value is FinancialYearValue {
+  return FINANCIAL_YEAR_VALUES.includes(value as FinancialYearValue);
+}
+
 // ---------------------------------------------------------------------------
 // Layout helpers
 // ---------------------------------------------------------------------------
@@ -192,8 +200,16 @@ export default function PreferencesPage() {
     setDefaultCurrencyId(p?.defaultCurrencyId ?? "");
     setLanguage(p?.language ?? "en");
     setTimezone(p?.timezone ?? "UTC");
-    setDateFormat(p?.dateFormat ?? "DD/MM/YYYY");
-    setFinancialYearStart(p?.financialYearStart ?? "january-december");
+    setDateFormat(
+      p?.dateFormat && isDateFormatValue(p.dateFormat)
+        ? p.dateFormat
+        : "DD/MM/YYYY",
+    );
+    setFinancialYearStart(
+      p?.financialYearStart && isFinancialYearValue(p.financialYearStart)
+        ? p.financialYearStart
+        : "january-december",
+    );
     setPublicLinksExpireEnabled(p?.publicLinksExpireEnabled ?? true);
     setPublicLinksExpireDays(p?.publicLinksExpireDays ?? 7);
     setDiscountPerItem(p?.discountPerItem ?? false);
@@ -285,7 +301,7 @@ export default function PreferencesPage() {
                 onValueChange={(v) => setDateFormat(v as DateFormatValue)}
               >
                 <SelectTrigger id="pref-date">
-                  <SelectValue />
+                  <SelectValue>{DATE_FORMAT_LABELS[dateFormat]}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {DATE_FORMAT_VALUES.map((f) => (
@@ -309,7 +325,9 @@ export default function PreferencesPage() {
                 }
               >
                 <SelectTrigger id="pref-fy">
-                  <SelectValue />
+                  <SelectValue>
+                    {FINANCIAL_YEAR_LABELS[financialYearStart]}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {FINANCIAL_YEAR_VALUES.map((v) => (
