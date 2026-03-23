@@ -1,8 +1,31 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
   reactCompiler: true,
+  async redirects() {
+    return [
+      {
+        source: "/dashboard",
+        destination: "/app",
+        permanent: true,
+      },
+      {
+        source: "/dashboard/:path*",
+        destination: "/app",
+        permanent: true,
+      },
+      {
+        source: "/workspace",
+        destination: "/app/workspace",
+        permanent: true,
+      },
+      {
+        source: "/workspace/:path*",
+        destination: "/app/workspace",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

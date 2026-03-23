@@ -1,0 +1,178 @@
+/**
+ * Canonical catalog of assignable permissions (`resource:action`).
+ * Org settings / billing / company are not listed here — enforced via owner policy.
+ */
+
+const DEFINITIONS = [
+  {
+    key: "dashboard:view",
+    label: "View dashboard",
+    description: "Access the main dashboard.",
+    group: "dashboard",
+  },
+  {
+    key: "customer:view",
+    label: "View customers",
+    group: "customers",
+  },
+  {
+    key: "customer:create",
+    label: "Create customers",
+    group: "customers",
+    dependencies: ["customer:view"] as const,
+  },
+  {
+    key: "customer:edit",
+    label: "Edit customers",
+    group: "customers",
+    dependencies: ["customer:view"] as const,
+  },
+  {
+    key: "customer:delete",
+    label: "Delete customers",
+    group: "customers",
+    dependencies: ["customer:view"] as const,
+  },
+  {
+    key: "item:view",
+    label: "View items",
+    group: "items",
+  },
+  {
+    key: "item:create",
+    label: "Create items",
+    group: "items",
+    dependencies: ["item:view"] as const,
+  },
+  {
+    key: "item:edit",
+    label: "Edit items",
+    group: "items",
+    dependencies: ["item:view"] as const,
+  },
+  {
+    key: "item:delete",
+    label: "Delete items",
+    group: "items",
+    dependencies: ["item:view"] as const,
+  },
+  {
+    key: "estimate:view",
+    label: "View estimates",
+    group: "estimates",
+  },
+  {
+    key: "estimate:create",
+    label: "Create estimates",
+    group: "estimates",
+    dependencies: ["estimate:view", "customer:view", "item:view"] as const,
+  },
+  {
+    key: "estimate:edit",
+    label: "Edit estimates",
+    group: "estimates",
+    dependencies: ["estimate:view"] as const,
+  },
+  {
+    key: "estimate:delete",
+    label: "Delete estimates",
+    group: "estimates",
+    dependencies: ["estimate:view"] as const,
+  },
+  {
+    key: "invoice:view",
+    label: "View invoices",
+    group: "invoices",
+  },
+  {
+    key: "invoice:create",
+    label: "Create invoices",
+    group: "invoices",
+    dependencies: ["invoice:view", "customer:view", "item:view"] as const,
+  },
+  {
+    key: "invoice:edit",
+    label: "Edit invoices",
+    group: "invoices",
+    dependencies: ["invoice:view"] as const,
+  },
+  {
+    key: "invoice:delete",
+    label: "Delete invoices",
+    group: "invoices",
+    dependencies: ["invoice:view"] as const,
+  },
+  {
+    key: "task:view",
+    label: "View tasks",
+    group: "tasks",
+  },
+  {
+    key: "task:create",
+    label: "Create tasks",
+    group: "tasks",
+    dependencies: ["task:view"] as const,
+  },
+  {
+    key: "task:edit",
+    label: "Edit tasks",
+    group: "tasks",
+    dependencies: ["task:view"] as const,
+  },
+  {
+    key: "task:delete",
+    label: "Delete tasks",
+    group: "tasks",
+    dependencies: ["task:view"] as const,
+  },
+] as const;
+
+export type PermissionKey = (typeof DEFINITIONS)[number]["key"];
+
+export type PermissionDefinition = {
+  key: PermissionKey;
+  label: string;
+  description?: string;
+  group: string;
+  ownerOnly?: boolean;
+  dependencies?: PermissionKey[];
+};
+
+export const PERMISSION_DEFINITIONS: PermissionDefinition[] = DEFINITIONS.map(
+  (d): PermissionDefinition => {
+    const def: PermissionDefinition = {
+      key: d.key,
+      label: d.label,
+      group: d.group,
+    };
+    if ("description" in d && d.description) {
+      def.description = d.description;
+    }
+    if ("dependencies" in d && d.dependencies) {
+      def.dependencies = [...d.dependencies];
+    }
+    return def;
+  },
+);
+
+const DEFINITION_BY_KEY = new Map(
+  PERMISSION_DEFINITIONS.map((d) => [d.key, d] as const),
+);
+
+const PERMISSION_KEYS_SET = new Set<string>(
+  PERMISSION_DEFINITIONS.map((d) => d.key),
+);
+
+export function isPermissionKey(value: string): value is PermissionKey {
+  return PERMISSION_KEYS_SET.has(value);
+}
+
+export function getPermissionDefinition(
+  permissionKey: PermissionKey,
+): PermissionDefinition | undefined {
+  return DEFINITION_BY_KEY.get(permissionKey);
+}
+
+export function listPermissionKeys(): PermissionKey[] {
+  return PERMISSION_DEFINITIONS.map((d) => d.key);
+}
