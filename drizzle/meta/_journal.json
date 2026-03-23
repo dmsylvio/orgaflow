@@ -36,6 +36,13 @@
       "when": 1774287600000,
       "tag": "0004_create_languages_table",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1774289400000,
+      "tag": "0005_add_missing_workspace_tables",
+      "breakpoints": true
     }
   ]
 }
