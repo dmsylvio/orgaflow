@@ -12,7 +12,6 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
@@ -301,7 +300,7 @@ export default function PreferencesPage() {
                 onValueChange={(v) => setDateFormat(v as DateFormatValue)}
               >
                 <SelectTrigger id="pref-date">
-                  <SelectValue>{DATE_FORMAT_LABELS[dateFormat]}</SelectValue>
+                  <span>{DATE_FORMAT_LABELS[dateFormat]}</span>
                 </SelectTrigger>
                 <SelectContent>
                   {DATE_FORMAT_VALUES.map((f) => (
@@ -325,9 +324,7 @@ export default function PreferencesPage() {
                 }
               >
                 <SelectTrigger id="pref-fy">
-                  <SelectValue>
-                    {FINANCIAL_YEAR_LABELS[financialYearStart]}
-                  </SelectValue>
+                  <span>{FINANCIAL_YEAR_LABELS[financialYearStart]}</span>
                 </SelectTrigger>
                 <SelectContent>
                   {FINANCIAL_YEAR_VALUES.map((v) => (
