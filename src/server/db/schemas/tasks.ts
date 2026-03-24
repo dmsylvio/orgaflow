@@ -1,10 +1,5 @@
 import { relations } from "drizzle-orm";
-import {
-  index,
-  pgTable,
-  text,
-  timestamp,
-} from "drizzle-orm/pg-core";
+import { index, integer, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { uuidv7 } from "uuidv7";
 import { organizations } from "./organizations";
 import { taskStages } from "./task-stages";
@@ -34,6 +29,7 @@ export const tasks = pgTable(
       .$type<TaskPriority>()
       .notNull()
       .default("medium"),
+    estimatedDurationMinutes: integer("estimated_duration_minutes"),
     dueDate: timestamp("due_date", { withTimezone: true, mode: "date" }),
     ownerId: text("owner_id").references(() => users.id, {
       onDelete: "set null",

@@ -5,6 +5,11 @@ export const estimateItemDiscountTypeEnum = pgEnum(
   ["fixed", "percentage"],
 );
 
+export const invoiceItemDiscountTypeEnum = pgEnum(
+  "invoice_item_discount_type",
+  ["fixed", "percentage"],
+);
+
 export const estimateStatusEnum = pgEnum("estimate_status", [
   "DRAFT",
   "SENT",
@@ -12,6 +17,16 @@ export const estimateStatusEnum = pgEnum("estimate_status", [
   "EXPIRED",
   "APPROVED",
   "REJECTED",
+]);
+
+export const invoiceStatusEnum = pgEnum("invoice_status", [
+  "DRAFT",
+  "PENDING",
+  "SENT",
+  "VIEWED",
+  "PAID",
+  "OVERDUE",
+  "VOID",
 ]);
 
 export const subscriptionPlanEnum = pgEnum("subscription_plan", [

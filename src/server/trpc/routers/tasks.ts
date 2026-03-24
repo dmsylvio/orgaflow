@@ -276,6 +276,7 @@ export const tasksRouter = createTRPCRouter({
           title: tasks.title,
           description: tasks.description,
           priority: tasks.priority,
+          estimatedDurationMinutes: tasks.estimatedDurationMinutes,
           dueDate: tasks.dueDate,
           ownerId: tasks.ownerId,
           sourceType: tasks.sourceType,
@@ -295,6 +296,13 @@ export const tasksRouter = createTRPCRouter({
         description: z.string().max(2000).optional().nullable(),
         priority: z.enum(TASK_PRIORITIES).default("medium"),
         stageId: z.string().min(1).optional().nullable(),
+        estimatedDurationMinutes: z
+          .number()
+          .int()
+          .min(1)
+          .max(525600)
+          .optional()
+          .nullable(),
         dueDate: z.coerce.date().optional().nullable(),
       }),
     )
@@ -323,6 +331,7 @@ export const tasksRouter = createTRPCRouter({
           description: input.description?.trim() ?? null,
           priority: input.priority,
           stageId,
+          estimatedDurationMinutes: input.estimatedDurationMinutes ?? null,
           dueDate: input.dueDate ?? null,
           sourceType: "manual",
         })
@@ -341,6 +350,13 @@ export const tasksRouter = createTRPCRouter({
         description: z.string().max(2000).optional().nullable(),
         priority: z.enum(TASK_PRIORITIES).optional(),
         stageId: z.string().min(1).optional().nullable(),
+        estimatedDurationMinutes: z
+          .number()
+          .int()
+          .min(1)
+          .max(525600)
+          .optional()
+          .nullable(),
         dueDate: z.coerce.date().optional().nullable(),
       }),
     )
@@ -370,6 +386,9 @@ export const tasksRouter = createTRPCRouter({
           ...(input.priority !== undefined && { priority: input.priority }),
           ...(input.stageId !== undefined && {
             stageId: input.stageId ?? null,
+          }),
+          ...(input.estimatedDurationMinutes !== undefined && {
+            estimatedDurationMinutes: input.estimatedDurationMinutes ?? null,
           }),
           ...(input.dueDate !== undefined && {
             dueDate: input.dueDate ?? null,

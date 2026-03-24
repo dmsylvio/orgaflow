@@ -12,8 +12,8 @@ import {
   Receipt,
   Settings,
   ShoppingBag,
-  TrendingDown,
   Users,
+  Wallet,
 } from "lucide-react";
 import NextLink from "next/link";
 import { usePathname } from "next/navigation";
@@ -31,7 +31,7 @@ const NAV_ICONS: Record<string, ReactNode> = {
   "/app/estimates": <FileText className="h-4 w-4" />,
   "/app/invoices": <BookOpen className="h-4 w-4" />,
   "/app/tasks": <ListTodo className="h-4 w-4" />,
-  "/app/expenses": <TrendingDown className="h-4 w-4" />,
+  "/app/expenses": <Wallet className="h-4 w-4" />,
   "/app/payments": <Receipt className="h-4 w-4" />,
   "/app/reports": <BarChart3 className="h-4 w-4" />,
   "/app/settings": <Settings className="h-4 w-4" />,

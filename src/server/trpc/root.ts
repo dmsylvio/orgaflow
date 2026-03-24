@@ -6,8 +6,10 @@ import {
 import { accountRouter } from "@/server/trpc/routers/account";
 import { automationsRouter } from "@/server/trpc/routers/automations";
 import { customersRouter } from "@/server/trpc/routers/customers";
+import { estimatesRouter } from "@/server/trpc/routers/estimates";
 import { expensesRouter } from "@/server/trpc/routers/expenses";
 import { iamRouter } from "@/server/trpc/routers/iam";
+import { invoicesRouter } from "@/server/trpc/routers/invoices";
 import { itemsRouter } from "@/server/trpc/routers/items";
 import { paymentsRouter } from "@/server/trpc/routers/payments";
 import { roleRouter } from "@/server/trpc/routers/role";
@@ -26,8 +28,10 @@ export const appRouter = createTRPCRouter({
   account: accountRouter,
   automations: automationsRouter,
   customers: customersRouter,
+  estimates: estimatesRouter,
   expenses: expensesRouter,
   iam: iamRouter,
+  invoices: invoicesRouter,
   items: itemsRouter,
   payments: paymentsRouter,
   role: roleRouter,

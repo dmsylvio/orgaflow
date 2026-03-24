@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CalendarDays, Pencil, Plus, Trash2 } from "lucide-react";
+import { CalendarDays, Clock3, Pencil, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { usePlanCheck } from "@/components/plan-gate";
 import { Button } from "@/components/ui/button";
@@ -42,6 +42,7 @@ type Task = {
   title: string;
   description: string | null;
   priority: "low" | "medium" | "high" | "urgent";
+  estimatedDurationMinutes: number | null;
   dueDate: Date | null;
   sourceType: string;
   createdAt: Date;
@@ -52,7 +53,11 @@ type Task = {
 // ---------------------------------------------------------------------------
 
 const PRIORITIES = [
-  { value: "urgent", label: "Urgent", color: "bg-red-100 text-red-800 ring-1 ring-red-300" },
+  {
+    value: "urgent",
+    label: "Urgent",
+    color: "bg-red-100 text-red-800 ring-1 ring-red-300",
+  },
   { value: "high", label: "High", color: "bg-orange-100 text-orange-700" },
   { value: "medium", label: "Medium", color: "bg-yellow-100 text-yellow-700" },
   { value: "low", label: "Low", color: "bg-blue-100 text-blue-700" },
@@ -87,6 +92,42 @@ function formatDate(d: Date | null) {
   });
 }
 
+function formatEstimateMinutes(minutes: number | null): string | null {
+  if (!minutes || minutes <= 0) return null;
+
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+
+  if (hours > 0 && remainingMinutes > 0) {
+    return `${hours}h ${remainingMinutes}m`;
+  }
+
+  if (hours > 0) {
+    return `${hours}h`;
+  }
+
+  return `${remainingMinutes}m`;
+}
+
+function estimatedDurationMinutesToInputValue(minutes: number | null): string {
+  if (!minutes || minutes <= 0) return "";
+
+  const hours = minutes / 60;
+  return Number.isInteger(hours) ? String(hours) : String(hours.toFixed(2));
+}
+
+function estimateInputToMinutes(value: string): number | null {
+  const normalized = value.trim().replace(",", ".");
+  if (!normalized) return null;
+
+  const hours = Number(normalized);
+  if (!Number.isFinite(hours) || hours <= 0) {
+    return null;
+  }
+
+  return Math.round(hours * 60);
+}
+
 // ---------------------------------------------------------------------------
 // Add Task Dialog (completely independent)
 // ---------------------------------------------------------------------------
@@ -108,6 +149,7 @@ function AddTaskDialog({
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState<Priority>("medium");
   const [stageId, setStageId] = useState(defaultStageId ?? "");
+  const [estimateHours, setEstimateHours] = useState("");
   const [dueDate, setDueDate] = useState("");
   const trpc = useTRPC();
 
@@ -116,6 +158,7 @@ function AddTaskDialog({
     setDescription("");
     setPriority("medium");
     setStageId(defaultStageId ?? "");
+    setEstimateHours("");
     setDueDate("");
   }
 
@@ -215,6 +258,25 @@ function AddTaskDialog({
               </div>
 
               <div className="space-y-1.5">
+                <Label htmlFor="at-estimate">
+                  Estimate (hours){" "}
+                  <span className="text-xs text-muted-foreground">
+                    (optional)
+                  </span>
+                </Label>
+                <Input
+                  id="at-estimate"
+                  type="number"
+                  min="0"
+                  step="0.25"
+                  inputMode="decimal"
+                  value={estimateHours}
+                  onChange={(e) => setEstimateHours(e.target.value)}
+                  placeholder="2.5"
+                />
+              </div>
+
+              <div className="space-y-1.5">
                 <Label htmlFor="at-due">
                   Due Date{" "}
                   <span className="text-xs text-muted-foreground">
@@ -249,6 +311,7 @@ function AddTaskDialog({
                 description: description.trim() || null,
                 priority,
                 stageId: stageId || null,
+                estimatedDurationMinutes: estimateInputToMinutes(estimateHours),
                 dueDate: dueDate ? new Date(dueDate) : null,
               })
             }
@@ -286,6 +349,9 @@ function EditTaskDialog({
   const [description, setDescription] = useState(task.description ?? "");
   const [priority, setPriority] = useState<Priority>(task.priority);
   const [stageId, setStageId] = useState(task.stageId ?? "");
+  const [estimateHours, setEstimateHours] = useState(
+    estimatedDurationMinutesToInputValue(task.estimatedDurationMinutes),
+  );
   const [dueDate, setDueDate] = useState(toInputDate(task.dueDate));
   const trpc = useTRPC();
 
@@ -385,6 +451,25 @@ function EditTaskDialog({
               </div>
 
               <div className="space-y-1.5">
+                <Label htmlFor="et-estimate">
+                  Estimate (hours){" "}
+                  <span className="text-xs text-muted-foreground">
+                    (optional)
+                  </span>
+                </Label>
+                <Input
+                  id="et-estimate"
+                  type="number"
+                  min="0"
+                  step="0.25"
+                  inputMode="decimal"
+                  value={estimateHours}
+                  onChange={(e) => setEstimateHours(e.target.value)}
+                  placeholder="2.5"
+                />
+              </div>
+
+              <div className="space-y-1.5">
                 <Label htmlFor="et-due">
                   Due Date{" "}
                   <span className="text-xs text-muted-foreground">
@@ -435,6 +520,8 @@ function EditTaskDialog({
                   description: description.trim() || null,
                   priority,
                   stageId: stageId || null,
+                  estimatedDurationMinutes:
+                    estimateInputToMinutes(estimateHours),
                   dueDate: dueDate ? new Date(dueDate) : null,
                 })
               }
@@ -460,6 +547,7 @@ function TaskCard({
   onEdit: (task: Task) => void;
 }) {
   const due = formatDate(task.dueDate);
+  const estimate = formatEstimateMinutes(task.estimatedDurationMinutes);
   const isOverdue =
     task.dueDate &&
     new Date(task.dueDate) < new Date() &&
@@ -482,6 +570,12 @@ function TaskCard({
       ) : null}
       <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
         <PriorityBadge priority={task.priority} />
+        {estimate ? (
+          <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+            <Clock3 className="h-3 w-3" />
+            {estimate}
+          </span>
+        ) : null}
         {due ? (
           <span
             className={cn(
@@ -530,7 +624,10 @@ function StageColumn({
     >
       <div className="flex items-center justify-between px-3 py-2.5">
         <div className="flex items-center gap-2">
-          <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: color }} />
+          <span
+            className="h-2.5 w-2.5 shrink-0 rounded-full"
+            style={{ backgroundColor: color }}
+          />
           <span className="text-sm font-semibold text-foreground">
             {stage.name}
           </span>

@@ -9,6 +9,8 @@ export * from "./estimate-items";
 export * from "./estimates";
 export * from "./expense-categories";
 export * from "./expenses";
+export * from "./invoice-items";
+export * from "./invoices";
 export * from "./invitations";
 export * from "./items";
 export * from "./languages";
