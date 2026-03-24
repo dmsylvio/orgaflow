@@ -12,8 +12,8 @@ import {
   estimateItems,
   estimates,
   items,
-  organizations,
   organizationPreferences,
+  organizations,
   taxTypes,
   units,
 } from "@/server/db/schemas";
@@ -483,13 +483,17 @@ export const estimatesRouter = createTRPCRouter({
           currencyThousandSeparator: currencies.thousandSeparator,
           currencyDecimalSeparator: currencies.decimalSeparator,
           currencySwapSymbol: currencies.swapCurrencySymbol,
-          publicLinksExpireEnabled: organizationPreferences.publicLinksExpireEnabled,
+          publicLinksExpireEnabled:
+            organizationPreferences.publicLinksExpireEnabled,
           publicLinksExpireDays: organizationPreferences.publicLinksExpireDays,
         })
         .from(estimates)
         .innerJoin(customers, eq(estimates.customerId, customers.id))
         .innerJoin(currencies, eq(estimates.currencyId, currencies.id))
-        .innerJoin(organizations, eq(estimates.organizationId, organizations.id))
+        .innerJoin(
+          organizations,
+          eq(estimates.organizationId, organizations.id),
+        )
         .leftJoin(
           organizationPreferences,
           eq(organizationPreferences.organizationId, estimates.organizationId),
@@ -919,7 +923,10 @@ export const estimatesRouter = createTRPCRouter({
         .returning({ id: estimates.id, status: estimates.status });
 
       if (!updated) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Estimate not found." });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Estimate not found.",
+        });
       }
 
       return { ok: true as const, ...updated };
@@ -937,10 +944,15 @@ export const estimatesRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      const now = new Date();
+
       const [estimate] = await ctx.db
         .select({
           id: estimates.id,
           estimateNumber: estimates.estimateNumber,
+          status: estimates.status,
+          publicLinkToken: estimates.publicLinkToken,
+          publicLinkCreatedAt: estimates.publicLinkCreatedAt,
           customerName: customers.displayName,
         })
         .from(estimates)
@@ -954,11 +966,46 @@ export const estimatesRouter = createTRPCRouter({
         .limit(1);
 
       if (!estimate) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Estimate not found." });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Estimate not found.",
+        });
       }
 
-      const now = new Date();
-      const publicToken = randomBytes(32).toString("hex");
+      const [prefs] = await ctx.db
+        .select({
+          publicLinksExpireEnabled:
+            organizationPreferences.publicLinksExpireEnabled,
+          publicLinksExpireDays: organizationPreferences.publicLinksExpireDays,
+        })
+        .from(organizationPreferences)
+        .where(eq(organizationPreferences.organizationId, ctx.organizationId))
+        .limit(1);
+
+      const expireEnabled = prefs?.publicLinksExpireEnabled ?? true;
+      const expireDays = prefs?.publicLinksExpireDays ?? 7;
+
+      const existingToken = estimate.publicLinkToken;
+      const existingCreatedAt = estimate.publicLinkCreatedAt;
+      const existingExpiresAt =
+        expireEnabled && existingCreatedAt
+          ? new Date(
+              existingCreatedAt.getTime() + expireDays * 24 * 60 * 60 * 1000,
+            )
+          : null;
+      const existingIsExpired =
+        existingExpiresAt !== null ? existingExpiresAt <= now : false;
+
+      const publicToken =
+        existingToken && existingCreatedAt && !existingIsExpired
+          ? existingToken
+          : randomBytes(32).toString("hex");
+
+      const publicLinkCreatedAt =
+        existingToken && existingCreatedAt && !existingIsExpired
+          ? existingCreatedAt
+          : now;
+
       const viewUrl = `${getAppBaseUrl()}/estimate/${publicToken}`;
 
       const text = `${input.body.trim()}\n\nView estimate: ${viewUrl}`;
@@ -1005,12 +1052,14 @@ export const estimatesRouter = createTRPCRouter({
         from: input.from,
       });
 
+      const nextStatus = estimate.status === "DRAFT" ? "SENT" : estimate.status;
+
       await ctx.db
         .update(estimates)
         .set({
-          status: "SENT",
+          status: nextStatus,
           publicLinkToken: publicToken,
-          publicLinkCreatedAt: now,
+          publicLinkCreatedAt,
           updatedAt: now,
         })
         .where(

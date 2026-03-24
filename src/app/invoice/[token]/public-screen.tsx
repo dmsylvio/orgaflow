@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { CalendarClock, Receipt, TriangleAlert } from "lucide-react";
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -196,9 +197,7 @@ export function InvoicePublicScreen({ token }: { token: string }) {
                     <div className="mt-3 grid gap-3 text-sm text-muted-foreground sm:grid-cols-3">
                       <div>
                         Qty:{" "}
-                        <span className="text-foreground">
-                          {item.quantity}
-                        </span>
+                        <span className="text-foreground">{item.quantity}</span>
                       </div>
                       <div>
                         Unit price:{" "}
@@ -260,7 +259,15 @@ export function InvoicePublicScreen({ token }: { token: string }) {
         </Card>
 
         <p className="mt-6 text-center text-xs text-muted-foreground">
-          Powered by Orgaflow
+          Powered by{" "}
+          <Link
+            className="text-primary underline"
+            target="_blank"
+            href="https://orgaflow.dev"
+          >
+            Orgaflow
+          </Link>{" "}
+          platform.
         </p>
       </div>
     </div>

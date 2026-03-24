@@ -1040,10 +1040,15 @@ export const invoicesRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      const now = new Date();
+
       const [invoice] = await ctx.db
         .select({
           id: invoices.id,
           invoiceNumber: invoices.invoiceNumber,
+          status: invoices.status,
+          publicLinkToken: invoices.publicLinkToken,
+          publicLinkCreatedAt: invoices.publicLinkCreatedAt,
           customerName: customers.displayName,
         })
         .from(invoices)
@@ -1060,8 +1065,40 @@ export const invoicesRouter = createTRPCRouter({
         throw new TRPCError({ code: "NOT_FOUND", message: "Invoice not found." });
       }
 
-      const now = new Date();
-      const publicToken = randomBytes(32).toString("hex");
+      const [prefs] = await ctx.db
+        .select({
+          publicLinksExpireEnabled:
+            organizationPreferences.publicLinksExpireEnabled,
+          publicLinksExpireDays: organizationPreferences.publicLinksExpireDays,
+        })
+        .from(organizationPreferences)
+        .where(eq(organizationPreferences.organizationId, ctx.organizationId))
+        .limit(1);
+
+      const expireEnabled = prefs?.publicLinksExpireEnabled ?? true;
+      const expireDays = prefs?.publicLinksExpireDays ?? 7;
+
+      const existingToken = invoice.publicLinkToken;
+      const existingCreatedAt = invoice.publicLinkCreatedAt;
+      const existingExpiresAt =
+        expireEnabled && existingCreatedAt
+          ? new Date(
+              existingCreatedAt.getTime() + expireDays * 24 * 60 * 60 * 1000,
+            )
+          : null;
+      const existingIsExpired =
+        existingExpiresAt !== null ? existingExpiresAt <= now : false;
+
+      const publicToken =
+        existingToken && existingCreatedAt && !existingIsExpired
+          ? existingToken
+          : randomBytes(32).toString("hex");
+
+      const publicLinkCreatedAt =
+        existingToken && existingCreatedAt && !existingIsExpired
+          ? existingCreatedAt
+          : now;
+
       const viewUrl = `${getAppBaseUrl()}/invoice/${publicToken}`;
 
       const text = `${input.body.trim()}\n\nView invoice: ${viewUrl}`;
@@ -1108,12 +1145,17 @@ export const invoicesRouter = createTRPCRouter({
         from: input.from,
       });
 
+      const nextStatus =
+        invoice.status === "DRAFT" || invoice.status === "PENDING"
+          ? "SENT"
+          : invoice.status;
+
       await ctx.db
         .update(invoices)
         .set({
-          status: "SENT",
+          status: nextStatus,
           publicLinkToken: publicToken,
-          publicLinkCreatedAt: now,
+          publicLinkCreatedAt,
           updatedAt: now,
         })
         .where(
