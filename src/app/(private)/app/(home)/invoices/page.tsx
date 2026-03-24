@@ -1,8 +1,9 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { FileText, Pencil, Plus, Trash2 } from "lucide-react";
+import { FileText, Plus } from "lucide-react";
 import NextLink from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
@@ -13,6 +14,7 @@ import {
 import { toast } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { useTRPC } from "@/trpc/client";
+import { InvoiceActionsDropdown } from "./invoice-actions-dropdown";
 import {
   formatInvoiceDate,
   type InvoiceStatus,
@@ -34,6 +36,7 @@ type InvoiceRecord = {
   customer: {
     id: string;
     displayName: string;
+    email: string | null;
   };
   currency: NonNullable<CurrencyFormat>;
   itemCount: number;
@@ -43,12 +46,20 @@ type InvoiceFilter = "ALL" | "DRAFT" | "SENT" | "DUE";
 
 function InvoiceRow({
   invoice,
-  deletePendingId,
+  isDeleting,
+  isCloning,
+  isUpdatingStatus,
+  onClone,
+  onSetStatus,
   onDelete,
 }: {
   invoice: InvoiceRecord;
-  deletePendingId: string | null;
-  onDelete: (id: string) => void;
+  isDeleting: boolean;
+  isCloning: boolean;
+  isUpdatingStatus: boolean;
+  onClone: () => void;
+  onSetStatus: (status: InvoiceStatus, successMessage: string) => void;
+  onDelete: () => void;
 }) {
   return (
     <tr className="border-b border-border last:border-0">
@@ -87,30 +98,18 @@ function InvoiceRow({
         {formatCurrencyDisplay(invoice.total, invoice.currency)}
       </td>
       <td className="py-3 pl-2 pr-4 align-top">
-        <div className="flex justify-end gap-1">
-          <Button type="button" variant="ghost" size="icon" asChild>
-            <NextLink href={`/app/invoices/${invoice.id}`}>
-              <FileText className="h-4 w-4" />
-              <span className="sr-only">View invoice</span>
-            </NextLink>
-          </Button>
-          <Button type="button" variant="ghost" size="icon" asChild>
-            <NextLink href={`/app/invoices/edit?id=${invoice.id}`}>
-              <Pencil className="h-4 w-4" />
-              <span className="sr-only">Edit invoice</span>
-            </NextLink>
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            disabled={deletePendingId === invoice.id}
-            onClick={() => onDelete(invoice.id)}
-            className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-          >
-            <Trash2 className="h-4 w-4" />
-            <span className="sr-only">Delete invoice</span>
-          </Button>
+        <div className="flex justify-end">
+          <InvoiceActionsDropdown
+            invoiceId={invoice.id}
+            invoiceNumber={invoice.invoiceNumber}
+            customerEmail={invoice.customer.email}
+            isDeleting={isDeleting}
+            isCloning={isCloning}
+            isUpdatingStatus={isUpdatingStatus}
+            onClone={onClone}
+            onSetStatus={onSetStatus}
+            onDelete={onDelete}
+          />
         </div>
       </td>
     </tr>
@@ -119,6 +118,7 @@ function InvoiceRow({
 
 export default function InvoicesPage() {
   const trpc = useTRPC();
+  const router = useRouter();
   const queryClient = useQueryClient();
   const [activeFilter, setActiveFilter] = useState<InvoiceFilter>("ALL");
 
@@ -142,6 +142,44 @@ export default function InvoicesPage() {
       },
       onError: (error) =>
         toast.error("Couldn't delete invoice.", {
+          description: error.message,
+        }),
+    }),
+  );
+
+  const setInvoiceStatus = useMutation(
+    trpc.invoices.setStatus.mutationOptions({
+      onSuccess: (_result, variables) => {
+        queryClient.invalidateQueries(trpc.invoices.list.queryOptions());
+        queryClient.invalidateQueries(
+          trpc.invoices.getById.queryOptions({ id: variables.id }),
+        );
+      },
+      onError: (error) =>
+        toast.error("Couldn't update invoice.", {
+          description: error.message,
+        }),
+    }),
+  );
+
+  const cloneInvoice = useMutation(
+    trpc.invoices.clone.mutationOptions({
+      onSuccess: (created) => {
+        queryClient.invalidateQueries(trpc.invoices.list.queryOptions());
+        queryClient.invalidateQueries(trpc.invoices.getUsage.queryOptions());
+        queryClient.invalidateQueries(trpc.invoices.getFormMeta.queryOptions());
+        queryClient.invalidateQueries(
+          trpc.invoices.getById.queryOptions({ id: created.id }),
+        );
+
+        toast.success("Invoice cloned.", {
+          description: `${created.invoiceNumber} is ready in draft status.`,
+        });
+
+        router.push(`/app/invoices/${created.id}`);
+      },
+      onError: (error) =>
+        toast.error("Couldn't clone invoice.", {
           description: error.message,
         }),
     }),
@@ -349,12 +387,28 @@ export default function InvoicesPage() {
                   <InvoiceRow
                     key={invoice.id}
                     invoice={invoice}
-                    deletePendingId={
-                      deleteInvoice.isPending
-                        ? (deleteInvoice.variables?.id ?? null)
-                        : null
+                    isDeleting={
+                      deleteInvoice.isPending &&
+                      deleteInvoice.variables?.id === invoice.id
                     }
-                    onDelete={(id) => deleteInvoice.mutate({ id })}
+                    isCloning={
+                      cloneInvoice.isPending &&
+                      cloneInvoice.variables?.id === invoice.id
+                    }
+                    isUpdatingStatus={
+                      setInvoiceStatus.isPending &&
+                      setInvoiceStatus.variables?.id === invoice.id
+                    }
+                    onClone={() => cloneInvoice.mutate({ id: invoice.id })}
+                    onSetStatus={(status, successMessage) =>
+                      setInvoiceStatus.mutate(
+                        { id: invoice.id, status },
+                        {
+                          onSuccess: () => toast.success(successMessage),
+                        },
+                      )
+                    }
+                    onDelete={() => deleteInvoice.mutate({ id: invoice.id })}
                   />
                 ))}
               </tbody>

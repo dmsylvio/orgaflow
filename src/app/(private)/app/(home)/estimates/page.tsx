@@ -1,8 +1,9 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { FileText, Pencil, Plus, Trash2 } from "lucide-react";
+import { FileText, Plus } from "lucide-react";
 import NextLink from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
@@ -13,6 +14,7 @@ import {
 import { toast } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { useTRPC } from "@/trpc/client";
+import { EstimateActionsDropdown } from "./estimate-actions-dropdown";
 import {
   type EstimateStatus,
   EstimateStatusBadge,
@@ -34,6 +36,7 @@ type EstimateRecord = {
   customer: {
     id: string;
     displayName: string;
+    email: string | null;
   };
   currency: NonNullable<CurrencyFormat>;
   itemCount: number;
@@ -43,12 +46,20 @@ type EstimateFilter = "ALL" | "DRAFT" | "SENT";
 
 function EstimateRow({
   estimate,
-  deletePendingId,
+  isDeleting,
+  isConverting,
+  isUpdatingStatus,
+  onConvertToInvoice,
+  onSetStatus,
   onDelete,
 }: {
   estimate: EstimateRecord;
-  deletePendingId: string | null;
-  onDelete: (id: string) => void;
+  isDeleting: boolean;
+  isConverting: boolean;
+  isUpdatingStatus: boolean;
+  onConvertToInvoice: () => void;
+  onSetStatus: (status: EstimateStatus, successMessage: string) => void;
+  onDelete: () => void;
 }) {
   return (
     <tr className="border-b border-border last:border-0">
@@ -87,30 +98,18 @@ function EstimateRow({
         {formatCurrencyDisplay(estimate.total, estimate.currency)}
       </td>
       <td className="py-3 pl-2 pr-4 align-top">
-        <div className="flex justify-end gap-1">
-          <Button type="button" variant="ghost" size="icon" asChild>
-            <NextLink href={`/app/estimates/${estimate.id}`}>
-              <FileText className="h-4 w-4" />
-              <span className="sr-only">View estimate</span>
-            </NextLink>
-          </Button>
-          <Button type="button" variant="ghost" size="icon" asChild>
-            <NextLink href={`/app/estimates/edit?id=${estimate.id}`}>
-              <Pencil className="h-4 w-4" />
-              <span className="sr-only">Edit estimate</span>
-            </NextLink>
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            disabled={deletePendingId === estimate.id}
-            onClick={() => onDelete(estimate.id)}
-            className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-          >
-            <Trash2 className="h-4 w-4" />
-            <span className="sr-only">Delete estimate</span>
-          </Button>
+        <div className="flex justify-end">
+          <EstimateActionsDropdown
+            estimateId={estimate.id}
+            estimateNumber={estimate.estimateNumber}
+            customerEmail={estimate.customer.email}
+            isDeleting={isDeleting}
+            isConverting={isConverting}
+            isUpdatingStatus={isUpdatingStatus}
+            onConvertToInvoice={onConvertToInvoice}
+            onSetStatus={onSetStatus}
+            onDelete={onDelete}
+          />
         </div>
       </td>
     </tr>
@@ -119,6 +118,7 @@ function EstimateRow({
 
 export default function EstimatesPage() {
   const trpc = useTRPC();
+  const router = useRouter();
   const queryClient = useQueryClient();
   const [activeFilter, setActiveFilter] = useState<EstimateFilter>("ALL");
 
@@ -144,6 +144,44 @@ export default function EstimatesPage() {
       },
       onError: (error) =>
         toast.error("Couldn't delete estimate.", {
+          description: error.message,
+        }),
+    }),
+  );
+
+  const setEstimateStatus = useMutation(
+    trpc.estimates.setStatus.mutationOptions({
+      onSuccess: (_result, variables) => {
+        queryClient.invalidateQueries(trpc.estimates.list.queryOptions());
+        queryClient.invalidateQueries(
+          trpc.estimates.getById.queryOptions({ id: variables.id }),
+        );
+      },
+      onError: (error) =>
+        toast.error("Couldn't update estimate.", {
+          description: error.message,
+        }),
+    }),
+  );
+
+  const convertToInvoice = useMutation(
+    trpc.invoices.createFromEstimate.mutationOptions({
+      onSuccess: (created) => {
+        queryClient.invalidateQueries(trpc.invoices.list.queryOptions());
+        queryClient.invalidateQueries(trpc.invoices.getUsage.queryOptions());
+        queryClient.invalidateQueries(trpc.invoices.getFormMeta.queryOptions());
+        queryClient.invalidateQueries(
+          trpc.invoices.getById.queryOptions({ id: created.id }),
+        );
+
+        toast.success("Invoice created.", {
+          description: `${created.invoiceNumber} created from estimate.`,
+        });
+
+        router.push(`/app/invoices/${created.id}`);
+      },
+      onError: (error) =>
+        toast.error("Couldn't convert estimate to invoice.", {
           description: error.message,
         }),
     }),
@@ -343,12 +381,30 @@ export default function EstimatesPage() {
                   <EstimateRow
                     key={estimate.id}
                     estimate={estimate}
-                    deletePendingId={
-                      deleteEstimate.isPending
-                        ? (deleteEstimate.variables?.id ?? null)
-                        : null
+                    isDeleting={
+                      deleteEstimate.isPending &&
+                      deleteEstimate.variables?.id === estimate.id
                     }
-                    onDelete={(id) => deleteEstimate.mutate({ id })}
+                    isConverting={
+                      convertToInvoice.isPending &&
+                      convertToInvoice.variables?.estimateId === estimate.id
+                    }
+                    isUpdatingStatus={
+                      setEstimateStatus.isPending &&
+                      setEstimateStatus.variables?.id === estimate.id
+                    }
+                    onConvertToInvoice={() =>
+                      convertToInvoice.mutate({ estimateId: estimate.id })
+                    }
+                    onSetStatus={(status, successMessage) =>
+                      setEstimateStatus.mutate(
+                        { id: estimate.id, status },
+                        {
+                          onSuccess: () => toast.success(successMessage),
+                        },
+                      )
+                    }
+                    onDelete={() => deleteEstimate.mutate({ id: estimate.id })}
                   />
                 ))}
               </tbody>

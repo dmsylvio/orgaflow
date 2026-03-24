@@ -1,24 +1,31 @@
 import "server-only";
 
+import { randomBytes } from "node:crypto";
 import { TRPCError } from "@trpc/server";
 import { and, asc, count, desc, eq, inArray, max } from "drizzle-orm";
 import { z } from "zod";
+import { getAppBaseUrl } from "@/lib/base-url";
 import type { DbClient } from "@/server/db";
 import {
   currencies,
   customers,
+  estimateItems,
+  estimates,
   invoiceItems,
   invoices,
   items,
+  organizations,
   organizationPreferences,
   taxTypes,
   units,
 } from "@/server/db/schemas";
 import { getOrganizationPlan } from "@/server/services/billing/get-organization-plan";
 import { getUsageLimit } from "@/server/services/billing/plan-limits";
+import { sendTransactionalEmail } from "@/server/services/email/resend";
 import {
   createTRPCRouter,
   organizationProcedure,
+  publicProcedure,
   requirePermission,
 } from "@/server/trpc/init";
 
@@ -80,6 +87,19 @@ function toQuantityString(value: number): string {
 function nullableString(value: string | null | undefined): string | null {
   const nextValue = value?.trim() ?? "";
   return nextValue.length > 0 ? nextValue : null;
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function formatEmailBodyHtml(body: string): string {
+  return escapeHtml(body).replaceAll("\n", "<br />");
 }
 
 async function getInvoiceFormMeta(db: DbClient, organizationId: string) {
@@ -265,6 +285,7 @@ export const invoicesRouter = createTRPCRouter({
           createdAt: invoices.createdAt,
           customerId: customers.id,
           customerName: customers.displayName,
+          customerEmail: customers.email,
           currencyId: currencies.id,
           currencyCode: currencies.code,
           currencySymbol: currencies.symbol,
@@ -306,6 +327,7 @@ export const invoicesRouter = createTRPCRouter({
         customer: {
           id: row.customerId,
           displayName: row.customerName,
+          email: row.customerEmail,
         },
         currency: {
           id: row.currencyId,
@@ -341,6 +363,7 @@ export const invoicesRouter = createTRPCRouter({
           updatedAt: invoices.updatedAt,
           customerId: customers.id,
           customerName: customers.displayName,
+          customerEmail: customers.email,
           currencyId: currencies.id,
           currencyCode: currencies.code,
           currencySymbol: currencies.symbol,
@@ -404,6 +427,7 @@ export const invoicesRouter = createTRPCRouter({
         customer: {
           id: invoice.customerId,
           displayName: invoice.customerName,
+          email: invoice.customerEmail,
         },
         currency: {
           id: invoice.currencyId,
@@ -415,6 +439,142 @@ export const invoicesRouter = createTRPCRouter({
           swapCurrencySymbol: invoice.currencySwapSymbol,
         },
         items: lineItems,
+      };
+    }),
+
+  getPublicByToken: publicProcedure
+    .input(z.string().trim().min(1))
+    .query(async ({ ctx, input }) => {
+      const token = input;
+
+      const [invoice] = await ctx.db
+        .select({
+          id: invoices.id,
+          organizationId: invoices.organizationId,
+          organizationName: organizations.name,
+          invoiceNumber: invoices.invoiceNumber,
+          status: invoices.status,
+          invoiceDate: invoices.invoiceDate,
+          dueDate: invoices.dueDate,
+          notes: invoices.notes,
+          subTotal: invoices.subTotal,
+          total: invoices.total,
+          tax: invoices.tax,
+          discount: invoices.discount,
+          discountFixed: invoices.discountFixed,
+          createdAt: invoices.createdAt,
+          updatedAt: invoices.updatedAt,
+          publicLinkCreatedAt: invoices.publicLinkCreatedAt,
+          customerId: customers.id,
+          customerName: customers.displayName,
+          customerEmail: customers.email,
+          currencyId: currencies.id,
+          currencyCode: currencies.code,
+          currencySymbol: currencies.symbol,
+          currencyPrecision: currencies.precision,
+          currencyThousandSeparator: currencies.thousandSeparator,
+          currencyDecimalSeparator: currencies.decimalSeparator,
+          currencySwapSymbol: currencies.swapCurrencySymbol,
+          publicLinksExpireEnabled: organizationPreferences.publicLinksExpireEnabled,
+          publicLinksExpireDays: organizationPreferences.publicLinksExpireDays,
+        })
+        .from(invoices)
+        .innerJoin(customers, eq(invoices.customerId, customers.id))
+        .innerJoin(currencies, eq(invoices.currencyId, currencies.id))
+        .innerJoin(organizations, eq(invoices.organizationId, organizations.id))
+        .leftJoin(
+          organizationPreferences,
+          eq(organizationPreferences.organizationId, invoices.organizationId),
+        )
+        .where(eq(invoices.publicLinkToken, token))
+        .limit(1);
+
+      if (!invoice || !invoice.publicLinkCreatedAt) {
+        return { status: "invalid" as const };
+      }
+
+      const expireEnabled = invoice.publicLinksExpireEnabled ?? true;
+      const expireDays = invoice.publicLinksExpireDays ?? 7;
+      const expiresAt = expireEnabled
+        ? new Date(
+            invoice.publicLinkCreatedAt.getTime() +
+              expireDays * 24 * 60 * 60 * 1000,
+          )
+        : null;
+
+      if (expiresAt && expiresAt <= new Date()) {
+        return { status: "expired" as const, expiresAt };
+      }
+
+      const lineItems = await ctx.db
+        .select({
+          id: invoiceItems.id,
+          itemId: invoiceItems.itemId,
+          name: invoiceItems.name,
+          description: invoiceItems.description,
+          unitName: invoiceItems.unitName,
+          quantity: invoiceItems.quantity,
+          price: invoiceItems.price,
+          total: invoiceItems.total,
+        })
+        .from(invoiceItems)
+        .where(
+          and(
+            eq(invoiceItems.organizationId, invoice.organizationId),
+            eq(invoiceItems.invoiceId, invoice.id),
+          ),
+        )
+        .orderBy(asc(invoiceItems.createdAt));
+
+      let nextStatus = invoice.status;
+      let nextUpdatedAt = invoice.updatedAt;
+
+      if (invoice.status === "SENT") {
+        nextStatus = "VIEWED";
+        nextUpdatedAt = new Date();
+        await ctx.db
+          .update(invoices)
+          .set({ status: nextStatus, updatedAt: nextUpdatedAt })
+          .where(eq(invoices.id, invoice.id));
+      }
+
+      return {
+        status: "ok" as const,
+        expiresAt,
+        invoice: {
+          id: invoice.id,
+          invoiceNumber: invoice.invoiceNumber,
+          status: nextStatus,
+          invoiceDate: invoice.invoiceDate,
+          dueDate: invoice.dueDate,
+          notes: invoice.notes,
+          subTotal: invoice.subTotal,
+          total: invoice.total,
+          tax: invoice.tax,
+          discount: invoice.discount,
+          discountFixed: invoice.discountFixed,
+          createdAt: invoice.createdAt,
+          updatedAt: nextUpdatedAt,
+          organization: {
+            id: invoice.organizationId,
+            name: invoice.organizationName,
+          },
+          customer: {
+            id: invoice.customerId,
+            displayName: invoice.customerName,
+            email: invoice.customerEmail,
+          },
+          currency: {
+            id: invoice.currencyId,
+            code: invoice.currencyCode,
+            symbol: invoice.currencySymbol,
+            precision: invoice.currencyPrecision,
+            thousandSeparator: invoice.currencyThousandSeparator,
+            decimalSeparator: invoice.currencyDecimalSeparator,
+            swapCurrencySymbol: invoice.currencySwapSymbol,
+          },
+          items: lineItems,
+        },
       };
     }),
 
@@ -593,6 +753,156 @@ export const invoicesRouter = createTRPCRouter({
       return created;
     }),
 
+  createFromEstimate: organizationProcedure
+    .use(requirePermission("invoice:create"))
+    .use(requirePermission("estimate:view"))
+    .input(z.object({ estimateId: z.string().trim().min(1) }))
+    .mutation(async ({ ctx, input }) => {
+      const plan = await getOrganizationPlan(ctx.db, ctx.organizationId);
+      const limit = getUsageLimit(plan, "invoices");
+
+      if (limit !== null) {
+        const [row] = await ctx.db
+          .select({ total: count(invoices.id) })
+          .from(invoices)
+          .where(eq(invoices.organizationId, ctx.organizationId));
+
+        const total = Number(row?.total ?? 0);
+
+        if (total >= limit) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: `You reached the limit of ${limit} invoices for the Starter plan. Upgrade to continue creating invoices.`,
+          });
+        }
+      }
+
+      const [estimate] = await ctx.db
+        .select({
+          id: estimates.id,
+          customerId: estimates.customerId,
+          currencyId: estimates.currencyId,
+          estimateDate: estimates.estimateDate,
+          expiryDate: estimates.expiryDate,
+          notes: estimates.notes,
+          taxPerItem: estimates.taxPerItem,
+          discountPerItem: estimates.discountPerItem,
+          discountFixed: estimates.discountFixed,
+          discount: estimates.discount,
+          discountVal: estimates.discountVal,
+          subTotal: estimates.subTotal,
+          total: estimates.total,
+          tax: estimates.tax,
+        })
+        .from(estimates)
+        .where(
+          and(
+            eq(estimates.id, input.estimateId),
+            eq(estimates.organizationId, ctx.organizationId),
+          ),
+        )
+        .limit(1);
+
+      if (!estimate) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Estimate not found." });
+      }
+
+      const lineItems = await ctx.db
+        .select({
+          itemId: estimateItems.itemId,
+          name: estimateItems.name,
+          description: estimateItems.description,
+          unitName: estimateItems.unitName,
+          quantity: estimateItems.quantity,
+          price: estimateItems.price,
+          total: estimateItems.total,
+        })
+        .from(estimateItems)
+        .where(
+          and(
+            eq(estimateItems.organizationId, ctx.organizationId),
+            eq(estimateItems.estimateId, input.estimateId),
+          ),
+        )
+        .orderBy(asc(estimateItems.createdAt));
+
+      if (lineItems.length === 0) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Estimate has no line items.",
+        });
+      }
+
+      const created = await ctx.db.transaction(async (tx) => {
+        const [maxRow] = await tx
+          .select({ maxSeq: max(invoices.sequenceNumber) })
+          .from(invoices)
+          .where(eq(invoices.organizationId, ctx.organizationId));
+
+        const nextSeq = (maxRow?.maxSeq ?? 0) + 1;
+        const invoiceNumber = formatInvoiceNumber(nextSeq);
+
+        const [createdInvoice] = await tx
+          .insert(invoices)
+          .values({
+            organizationId: ctx.organizationId,
+            customerId: estimate.customerId,
+            currencyId: estimate.currencyId,
+            sequenceNumber: nextSeq,
+            invoiceDate: estimate.estimateDate,
+            dueDate: estimate.expiryDate ?? undefined,
+            invoiceNumber,
+            status: "DRAFT",
+            taxPerItem: estimate.taxPerItem ?? false,
+            discountPerItem: estimate.discountPerItem ?? false,
+            discountFixed: estimate.discountFixed ?? false,
+            notes: estimate.notes ?? undefined,
+            discount: estimate.discount ?? undefined,
+            discountVal: estimate.discountVal ?? undefined,
+            subTotal: estimate.subTotal,
+            total: estimate.total,
+            tax: estimate.tax,
+            exchangeRate: undefined,
+            baseDiscountVal: undefined,
+            baseSubTotal: undefined,
+            baseTotal: undefined,
+            baseTax: undefined,
+            salesTax: undefined,
+          })
+          .returning({
+            id: invoices.id,
+            invoiceNumber: invoices.invoiceNumber,
+          });
+
+        await tx.insert(invoiceItems).values(
+          lineItems.map((item) => ({
+            organizationId: ctx.organizationId,
+            invoiceId: createdInvoice.id,
+            itemId: item.itemId,
+            name: item.name,
+            description: item.description,
+            unitName: item.unitName,
+            quantity: item.quantity,
+            price: item.price,
+            discountType: "fixed" as const,
+            discount: null,
+            discountVal: null,
+            tax: null,
+            total: item.total,
+            exchangeRate: null,
+            baseDiscountVal: null,
+            basePrice: null,
+            baseTax: null,
+            baseTotal: null,
+          })),
+        );
+
+        return createdInvoice;
+      });
+
+      return created;
+    }),
+
   update: organizationProcedure
     .use(requirePermission("invoice:edit"))
     .input(
@@ -716,6 +1026,291 @@ export const invoicesRouter = createTRPCRouter({
         ok: true as const,
         id: existing.id,
       };
+    }),
+
+  sendEmail: organizationProcedure
+    .use(requirePermission("invoice:edit"))
+    .input(
+      z.object({
+        id: z.string().trim().min(1),
+        from: z.string().trim().max(320).optional(),
+        to: z.string().trim().email().max(320),
+        subject: z.string().trim().min(1).max(200),
+        body: z.string().trim().min(1).max(20000),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const [invoice] = await ctx.db
+        .select({
+          id: invoices.id,
+          invoiceNumber: invoices.invoiceNumber,
+          customerName: customers.displayName,
+        })
+        .from(invoices)
+        .innerJoin(customers, eq(invoices.customerId, customers.id))
+        .where(
+          and(
+            eq(invoices.id, input.id),
+            eq(invoices.organizationId, ctx.organizationId),
+          ),
+        )
+        .limit(1);
+
+      if (!invoice) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Invoice not found." });
+      }
+
+      const now = new Date();
+      const publicToken = randomBytes(32).toString("hex");
+      const viewUrl = `${getAppBaseUrl()}/invoice/${publicToken}`;
+
+      const text = `${input.body.trim()}\n\nView invoice: ${viewUrl}`;
+      const html = `
+        <div style="background:#f6f6f1;padding:32px 16px;font-family:Arial,Helvetica,sans-serif;color:#101828;">
+          <div style="max-width:620px;margin:0 auto;background:#ffffff;border:1px solid #e5e7eb;border-radius:20px;overflow:hidden;">
+            <div style="padding:32px 32px 20px;background:linear-gradient(135deg,#163329 0%,#274d3f 100%);color:#ffffff;">
+              <div style="font-size:12px;letter-spacing:0.14em;text-transform:uppercase;opacity:0.78;">Orgaflow Invoice</div>
+              <h1 style="margin:14px 0 0;font-size:28px;line-height:1.2;">Invoice ${escapeHtml(invoice.invoiceNumber)}</h1>
+            </div>
+            <div style="padding:32px;">
+              <div style="margin:0 0 18px;padding:16px 18px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;">
+                <p style="margin:0 0 8px;font-size:14px;line-height:1.6;"><strong>Customer:</strong> ${escapeHtml(invoice.customerName)}</p>
+                <p style="margin:0;font-size:14px;line-height:1.6;"><strong>To:</strong> ${escapeHtml(input.to)}</p>
+              </div>
+
+              <div style="margin:0 0 22px;font-size:15px;line-height:1.8;color:#101828;">
+                ${formatEmailBodyHtml(input.body.trim())}
+              </div>
+
+              <a
+                href="${escapeHtml(viewUrl)}"
+                style="display:inline-block;background:#163329;color:#ffffff;text-decoration:none;font-weight:600;padding:13px 20px;border-radius:12px;"
+              >
+                View invoice
+              </a>
+
+              <p style="margin:24px 0 0;font-size:13px;line-height:1.7;color:#475467;">
+                If the button does not work, open this link:
+              </p>
+              <p style="margin:8px 0 0;font-size:13px;line-height:1.7;word-break:break-all;color:#163329;">
+                ${escapeHtml(viewUrl)}
+              </p>
+            </div>
+          </div>
+        </div>
+      `.trim();
+
+      await sendTransactionalEmail({
+        to: input.to,
+        subject: input.subject,
+        html,
+        text,
+        from: input.from,
+      });
+
+      await ctx.db
+        .update(invoices)
+        .set({
+          status: "SENT",
+          publicLinkToken: publicToken,
+          publicLinkCreatedAt: now,
+          updatedAt: now,
+        })
+        .where(
+          and(
+            eq(invoices.id, invoice.id),
+            eq(invoices.organizationId, ctx.organizationId),
+          ),
+        );
+
+      return { ok: true as const, id: invoice.id };
+    }),
+
+  setStatus: organizationProcedure
+    .use(requirePermission("invoice:edit"))
+    .input(
+      z.object({
+        id: z.string().trim().min(1),
+        status: z.enum([
+          "DRAFT",
+          "PENDING",
+          "SENT",
+          "VIEWED",
+          "PAID",
+          "OVERDUE",
+          "VOID",
+        ]),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const [updated] = await ctx.db
+        .update(invoices)
+        .set({
+          status: input.status,
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(invoices.id, input.id),
+            eq(invoices.organizationId, ctx.organizationId),
+          ),
+        )
+        .returning({ id: invoices.id, status: invoices.status });
+
+      if (!updated) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Invoice not found." });
+      }
+
+      return { ok: true as const, ...updated };
+    }),
+
+  clone: organizationProcedure
+    .use(requirePermission("invoice:create"))
+    .input(z.object({ id: z.string().trim().min(1) }))
+    .mutation(async ({ ctx, input }) => {
+      const plan = await getOrganizationPlan(ctx.db, ctx.organizationId);
+      const limit = getUsageLimit(plan, "invoices");
+
+      if (limit !== null) {
+        const [row] = await ctx.db
+          .select({ total: count(invoices.id) })
+          .from(invoices)
+          .where(eq(invoices.organizationId, ctx.organizationId));
+
+        const total = Number(row?.total ?? 0);
+
+        if (total >= limit) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: `You reached the limit of ${limit} invoices for the Starter plan. Upgrade to continue creating invoices.`,
+          });
+        }
+      }
+
+      const [invoice] = await ctx.db
+        .select({
+          id: invoices.id,
+          customerId: invoices.customerId,
+          currencyId: invoices.currencyId,
+          invoiceDate: invoices.invoiceDate,
+          dueDate: invoices.dueDate,
+          notes: invoices.notes,
+          taxPerItem: invoices.taxPerItem,
+          discountPerItem: invoices.discountPerItem,
+          discountFixed: invoices.discountFixed,
+          discount: invoices.discount,
+          discountVal: invoices.discountVal,
+          subTotal: invoices.subTotal,
+          total: invoices.total,
+          tax: invoices.tax,
+        })
+        .from(invoices)
+        .where(
+          and(
+            eq(invoices.id, input.id),
+            eq(invoices.organizationId, ctx.organizationId),
+          ),
+        )
+        .limit(1);
+
+      if (!invoice) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Invoice not found." });
+      }
+
+      const lineItems = await ctx.db
+        .select({
+          itemId: invoiceItems.itemId,
+          name: invoiceItems.name,
+          description: invoiceItems.description,
+          unitName: invoiceItems.unitName,
+          quantity: invoiceItems.quantity,
+          price: invoiceItems.price,
+          total: invoiceItems.total,
+        })
+        .from(invoiceItems)
+        .where(
+          and(
+            eq(invoiceItems.organizationId, ctx.organizationId),
+            eq(invoiceItems.invoiceId, input.id),
+          ),
+        )
+        .orderBy(asc(invoiceItems.createdAt));
+
+      if (lineItems.length === 0) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Invoice has no line items.",
+        });
+      }
+
+      const created = await ctx.db.transaction(async (tx) => {
+        const [maxRow] = await tx
+          .select({ maxSeq: max(invoices.sequenceNumber) })
+          .from(invoices)
+          .where(eq(invoices.organizationId, ctx.organizationId));
+
+        const nextSeq = (maxRow?.maxSeq ?? 0) + 1;
+        const invoiceNumber = formatInvoiceNumber(nextSeq);
+
+        const [createdInvoice] = await tx
+          .insert(invoices)
+          .values({
+            organizationId: ctx.organizationId,
+            customerId: invoice.customerId,
+            currencyId: invoice.currencyId,
+            sequenceNumber: nextSeq,
+            invoiceDate: invoice.invoiceDate,
+            dueDate: invoice.dueDate ?? undefined,
+            invoiceNumber,
+            status: "DRAFT",
+            taxPerItem: invoice.taxPerItem ?? false,
+            discountPerItem: invoice.discountPerItem ?? false,
+            discountFixed: invoice.discountFixed ?? false,
+            notes: invoice.notes ?? undefined,
+            discount: invoice.discount ?? undefined,
+            discountVal: invoice.discountVal ?? undefined,
+            subTotal: invoice.subTotal,
+            total: invoice.total,
+            tax: invoice.tax,
+            exchangeRate: undefined,
+            baseDiscountVal: undefined,
+            baseSubTotal: undefined,
+            baseTotal: undefined,
+            baseTax: undefined,
+            salesTax: undefined,
+          })
+          .returning({
+            id: invoices.id,
+            invoiceNumber: invoices.invoiceNumber,
+          });
+
+        await tx.insert(invoiceItems).values(
+          lineItems.map((item) => ({
+            organizationId: ctx.organizationId,
+            invoiceId: createdInvoice.id,
+            itemId: item.itemId,
+            name: item.name,
+            description: item.description,
+            unitName: item.unitName,
+            quantity: item.quantity,
+            price: item.price,
+            discountType: "fixed" as const,
+            discount: null,
+            discountVal: null,
+            tax: null,
+            total: item.total,
+            exchangeRate: null,
+            baseDiscountVal: null,
+            basePrice: null,
+            baseTax: null,
+            baseTotal: null,
+          })),
+        );
+
+        return createdInvoice;
+      });
+
+      return created;
     }),
 
   delete: organizationProcedure

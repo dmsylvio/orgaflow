@@ -1,7 +1,7 @@
 import "server-only";
 
 import { getAppBaseUrl } from "@/lib/base-url";
-import { sendTransactionalEmail } from "@/server/services/email/mailtrap";
+import { sendTransactionalEmail } from "@/server/services/email/resend";
 
 const INVITATION_TTL_DAYS = 7;
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Trash2, X } from "lucide-react";
+import { DollarSign, Percent, Plus, Trash2, X } from "lucide-react";
 import NextLink from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -459,16 +459,35 @@ export function EditEstimateForm() {
                   className="w-24 text-xs"
                   placeholder="0"
                 />
-                <NativeSelect
-                  value={discountType}
-                  onChange={(e) =>
-                    setDiscountType(e.target.value as "fixed" | "percentage")
-                  }
-                  className="w-28 text-xs"
-                >
-                  <option value="fixed">Fixed</option>
-                  <option value="percentage">Percentage</option>
-                </NativeSelect>
+                <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-input bg-background shadow-sm">
+                  <NativeSelect
+                    value={discountType}
+                    onChange={(e) =>
+                      setDiscountType(e.target.value as "fixed" | "percentage")
+                    }
+                    className="absolute inset-0 z-10 cursor-pointer opacity-0"
+                    aria-label="Discount type: fixed amount or percentage"
+                    title={
+                      discountType === "fixed"
+                        ? "Fixed amount"
+                        : "Percentage"
+                    }
+                  >
+                    <option value="fixed">Fixed</option>
+                    <option value="percentage">Percentage</option>
+                  </NativeSelect>
+                  {discountType === "fixed" ? (
+                    <DollarSign
+                      className="pointer-events-none h-4 w-4 text-muted-foreground"
+                      aria-hidden
+                    />
+                  ) : (
+                    <Percent
+                      className="pointer-events-none h-4 w-4 text-muted-foreground"
+                      aria-hidden
+                    />
+                  )}
+                </div>
               </div>
             </div>
 

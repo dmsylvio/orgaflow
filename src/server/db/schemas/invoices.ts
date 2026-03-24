@@ -37,6 +37,11 @@ export const invoices = pgTable(
     dueDate: date("due_date"),
     invoiceNumber: text("invoice_number").notNull(),
     status: invoiceStatusEnum("status").notNull().default("DRAFT"),
+    publicLinkToken: text("public_link_token"),
+    publicLinkCreatedAt: timestamp("public_link_created_at", {
+      withTimezone: true,
+      mode: "date",
+    }),
     taxPerItem: boolean("tax_per_item").notNull().default(false),
     discountPerItem: boolean("discount_per_item").notNull().default(false),
     discountFixed: boolean("discount_fixed").notNull().default(false),
@@ -76,6 +81,7 @@ export const invoices = pgTable(
       table.organizationId,
       table.invoiceNumber,
     ),
+    uniqueIndex("invoices_public_link_token_unique").on(table.publicLinkToken),
   ],
 );
 

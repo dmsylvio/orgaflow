@@ -1,8 +1,10 @@
 import "server-only";
 
+import { randomBytes } from "node:crypto";
 import { TRPCError } from "@trpc/server";
 import { and, asc, count, desc, eq, inArray, max } from "drizzle-orm";
 import { z } from "zod";
+import { getAppBaseUrl } from "@/lib/base-url";
 import type { DbClient } from "@/server/db";
 import {
   currencies,
@@ -10,15 +12,18 @@ import {
   estimateItems,
   estimates,
   items,
+  organizations,
   organizationPreferences,
   taxTypes,
   units,
 } from "@/server/db/schemas";
 import { getOrganizationPlan } from "@/server/services/billing/get-organization-plan";
 import { getUsageLimit } from "@/server/services/billing/plan-limits";
+import { sendTransactionalEmail } from "@/server/services/email/resend";
 import {
   createTRPCRouter,
   organizationProcedure,
+  publicProcedure,
   requirePermission,
 } from "@/server/trpc/init";
 
@@ -80,6 +85,19 @@ function toQuantityString(value: number): string {
 function nullableString(value: string | null | undefined): string | null {
   const nextValue = value?.trim() ?? "";
   return nextValue.length > 0 ? nextValue : null;
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function formatEmailBodyHtml(body: string): string {
+  return escapeHtml(body).replaceAll("\n", "<br />");
 }
 
 async function getEstimateFormMeta(db: DbClient, organizationId: string) {
@@ -275,6 +293,7 @@ export const estimatesRouter = createTRPCRouter({
           createdAt: estimates.createdAt,
           customerId: customers.id,
           customerName: customers.displayName,
+          customerEmail: customers.email,
           currencyId: currencies.id,
           currencyCode: currencies.code,
           currencySymbol: currencies.symbol,
@@ -316,6 +335,7 @@ export const estimatesRouter = createTRPCRouter({
         customer: {
           id: row.customerId,
           displayName: row.customerName,
+          email: row.customerEmail,
         },
         currency: {
           id: row.currencyId,
@@ -351,6 +371,7 @@ export const estimatesRouter = createTRPCRouter({
           updatedAt: estimates.updatedAt,
           customerId: customers.id,
           customerName: customers.displayName,
+          customerEmail: customers.email,
           currencyId: currencies.id,
           currencyCode: currencies.code,
           currencySymbol: currencies.symbol,
@@ -414,6 +435,7 @@ export const estimatesRouter = createTRPCRouter({
         customer: {
           id: estimate.customerId,
           displayName: estimate.customerName,
+          email: estimate.customerEmail,
         },
         currency: {
           id: estimate.currencyId,
@@ -425,6 +447,142 @@ export const estimatesRouter = createTRPCRouter({
           swapCurrencySymbol: estimate.currencySwapSymbol,
         },
         items: lineItems,
+      };
+    }),
+
+  getPublicByToken: publicProcedure
+    .input(z.string().trim().min(1))
+    .query(async ({ ctx, input }) => {
+      const token = input;
+
+      const [estimate] = await ctx.db
+        .select({
+          id: estimates.id,
+          organizationId: estimates.organizationId,
+          organizationName: organizations.name,
+          estimateNumber: estimates.estimateNumber,
+          status: estimates.status,
+          estimateDate: estimates.estimateDate,
+          expiryDate: estimates.expiryDate,
+          notes: estimates.notes,
+          subTotal: estimates.subTotal,
+          total: estimates.total,
+          tax: estimates.tax,
+          discount: estimates.discount,
+          discountFixed: estimates.discountFixed,
+          createdAt: estimates.createdAt,
+          updatedAt: estimates.updatedAt,
+          publicLinkCreatedAt: estimates.publicLinkCreatedAt,
+          customerId: customers.id,
+          customerName: customers.displayName,
+          customerEmail: customers.email,
+          currencyId: currencies.id,
+          currencyCode: currencies.code,
+          currencySymbol: currencies.symbol,
+          currencyPrecision: currencies.precision,
+          currencyThousandSeparator: currencies.thousandSeparator,
+          currencyDecimalSeparator: currencies.decimalSeparator,
+          currencySwapSymbol: currencies.swapCurrencySymbol,
+          publicLinksExpireEnabled: organizationPreferences.publicLinksExpireEnabled,
+          publicLinksExpireDays: organizationPreferences.publicLinksExpireDays,
+        })
+        .from(estimates)
+        .innerJoin(customers, eq(estimates.customerId, customers.id))
+        .innerJoin(currencies, eq(estimates.currencyId, currencies.id))
+        .innerJoin(organizations, eq(estimates.organizationId, organizations.id))
+        .leftJoin(
+          organizationPreferences,
+          eq(organizationPreferences.organizationId, estimates.organizationId),
+        )
+        .where(eq(estimates.publicLinkToken, token))
+        .limit(1);
+
+      if (!estimate || !estimate.publicLinkCreatedAt) {
+        return { status: "invalid" as const };
+      }
+
+      const expireEnabled = estimate.publicLinksExpireEnabled ?? true;
+      const expireDays = estimate.publicLinksExpireDays ?? 7;
+      const expiresAt = expireEnabled
+        ? new Date(
+            estimate.publicLinkCreatedAt.getTime() +
+              expireDays * 24 * 60 * 60 * 1000,
+          )
+        : null;
+
+      if (expiresAt && expiresAt <= new Date()) {
+        return { status: "expired" as const, expiresAt };
+      }
+
+      const lineItems = await ctx.db
+        .select({
+          id: estimateItems.id,
+          itemId: estimateItems.itemId,
+          name: estimateItems.name,
+          description: estimateItems.description,
+          unitName: estimateItems.unitName,
+          quantity: estimateItems.quantity,
+          price: estimateItems.price,
+          total: estimateItems.total,
+        })
+        .from(estimateItems)
+        .where(
+          and(
+            eq(estimateItems.organizationId, estimate.organizationId),
+            eq(estimateItems.estimateId, estimate.id),
+          ),
+        )
+        .orderBy(asc(estimateItems.createdAt));
+
+      let nextStatus = estimate.status;
+      let nextUpdatedAt = estimate.updatedAt;
+
+      if (estimate.status === "SENT") {
+        nextStatus = "VIEWED";
+        nextUpdatedAt = new Date();
+        await ctx.db
+          .update(estimates)
+          .set({ status: nextStatus, updatedAt: nextUpdatedAt })
+          .where(eq(estimates.id, estimate.id));
+      }
+
+      return {
+        status: "ok" as const,
+        expiresAt,
+        estimate: {
+          id: estimate.id,
+          estimateNumber: estimate.estimateNumber,
+          status: nextStatus,
+          estimateDate: estimate.estimateDate,
+          expiryDate: estimate.expiryDate,
+          notes: estimate.notes,
+          subTotal: estimate.subTotal,
+          total: estimate.total,
+          tax: estimate.tax,
+          discount: estimate.discount,
+          discountFixed: estimate.discountFixed,
+          createdAt: estimate.createdAt,
+          updatedAt: nextUpdatedAt,
+          organization: {
+            id: estimate.organizationId,
+            name: estimate.organizationName,
+          },
+          customer: {
+            id: estimate.customerId,
+            displayName: estimate.customerName,
+            email: estimate.customerEmail,
+          },
+          currency: {
+            id: estimate.currencyId,
+            code: estimate.currencyCode,
+            symbol: estimate.currencySymbol,
+            precision: estimate.currencyPrecision,
+            thousandSeparator: estimate.currencyThousandSeparator,
+            decimalSeparator: estimate.currencyDecimalSeparator,
+            swapCurrencySymbol: estimate.currencySwapSymbol,
+          },
+          items: lineItems,
+        },
       };
     }),
 
@@ -728,6 +886,141 @@ export const estimatesRouter = createTRPCRouter({
         ok: true as const,
         id: existing.id,
       };
+    }),
+
+  setStatus: organizationProcedure
+    .use(requirePermission("estimate:edit"))
+    .input(
+      z.object({
+        id: z.string().trim().min(1),
+        status: z.enum([
+          "DRAFT",
+          "SENT",
+          "VIEWED",
+          "EXPIRED",
+          "APPROVED",
+          "REJECTED",
+        ]),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const [updated] = await ctx.db
+        .update(estimates)
+        .set({
+          status: input.status,
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(estimates.id, input.id),
+            eq(estimates.organizationId, ctx.organizationId),
+          ),
+        )
+        .returning({ id: estimates.id, status: estimates.status });
+
+      if (!updated) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Estimate not found." });
+      }
+
+      return { ok: true as const, ...updated };
+    }),
+
+  sendEmail: organizationProcedure
+    .use(requirePermission("estimate:edit"))
+    .input(
+      z.object({
+        id: z.string().trim().min(1),
+        from: z.string().trim().max(320).optional(),
+        to: z.string().trim().email().max(320),
+        subject: z.string().trim().min(1).max(200),
+        body: z.string().trim().min(1).max(20000),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const [estimate] = await ctx.db
+        .select({
+          id: estimates.id,
+          estimateNumber: estimates.estimateNumber,
+          customerName: customers.displayName,
+        })
+        .from(estimates)
+        .innerJoin(customers, eq(estimates.customerId, customers.id))
+        .where(
+          and(
+            eq(estimates.id, input.id),
+            eq(estimates.organizationId, ctx.organizationId),
+          ),
+        )
+        .limit(1);
+
+      if (!estimate) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Estimate not found." });
+      }
+
+      const now = new Date();
+      const publicToken = randomBytes(32).toString("hex");
+      const viewUrl = `${getAppBaseUrl()}/estimate/${publicToken}`;
+
+      const text = `${input.body.trim()}\n\nView estimate: ${viewUrl}`;
+      const html = `
+        <div style="background:#f6f6f1;padding:32px 16px;font-family:Arial,Helvetica,sans-serif;color:#101828;">
+          <div style="max-width:620px;margin:0 auto;background:#ffffff;border:1px solid #e5e7eb;border-radius:20px;overflow:hidden;">
+            <div style="padding:32px 32px 20px;background:linear-gradient(135deg,#163329 0%,#274d3f 100%);color:#ffffff;">
+              <div style="font-size:12px;letter-spacing:0.14em;text-transform:uppercase;opacity:0.78;">Orgaflow Estimate</div>
+              <h1 style="margin:14px 0 0;font-size:28px;line-height:1.2;">Estimate ${escapeHtml(estimate.estimateNumber)}</h1>
+            </div>
+            <div style="padding:32px;">
+              <div style="margin:0 0 18px;padding:16px 18px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;">
+                <p style="margin:0 0 8px;font-size:14px;line-height:1.6;"><strong>Customer:</strong> ${escapeHtml(estimate.customerName)}</p>
+                <p style="margin:0;font-size:14px;line-height:1.6;"><strong>To:</strong> ${escapeHtml(input.to)}</p>
+              </div>
+
+              <div style="margin:0 0 22px;font-size:15px;line-height:1.8;color:#101828;">
+                ${formatEmailBodyHtml(input.body.trim())}
+              </div>
+
+              <a
+                href="${escapeHtml(viewUrl)}"
+                style="display:inline-block;background:#163329;color:#ffffff;text-decoration:none;font-weight:600;padding:13px 20px;border-radius:12px;"
+              >
+                View estimate
+              </a>
+
+              <p style="margin:24px 0 0;font-size:13px;line-height:1.7;color:#475467;">
+                If the button does not work, open this link:
+              </p>
+              <p style="margin:8px 0 0;font-size:13px;line-height:1.7;word-break:break-all;color:#163329;">
+                ${escapeHtml(viewUrl)}
+              </p>
+            </div>
+          </div>
+        </div>
+      `.trim();
+
+      await sendTransactionalEmail({
+        to: input.to,
+        subject: input.subject,
+        html,
+        text,
+        from: input.from,
+      });
+
+      await ctx.db
+        .update(estimates)
+        .set({
+          status: "SENT",
+          publicLinkToken: publicToken,
+          publicLinkCreatedAt: now,
+          updatedAt: now,
+        })
+        .where(
+          and(
+            eq(estimates.id, estimate.id),
+            eq(estimates.organizationId, ctx.organizationId),
+          ),
+        );
+
+      return { ok: true as const, id: estimate.id };
     }),
 
   delete: organizationProcedure

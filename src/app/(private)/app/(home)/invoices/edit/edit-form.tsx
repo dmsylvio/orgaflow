@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { DollarSignIcon, PercentIcon, Plus, Trash2, X } from "lucide-react";
+import { DollarSign, Percent, Plus, Trash2, X } from "lucide-react";
 import NextLink from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -12,13 +12,7 @@ import { Input } from "@/components/ui/input";
 import { ItemPicker } from "@/components/ui/item-picker";
 import { Label } from "@/components/ui/label";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
-import {
-  NativeSelect,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-} from "@/components/ui/select";
+import { NativeSelect } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
 import { formatCurrencyDisplay } from "@/lib/currency-format";
 import { toast } from "@/lib/toast";
@@ -458,37 +452,35 @@ export function EditInvoiceForm() {
                   className="w-24 text-xs"
                   placeholder="0"
                 />
-                <Select
-                  value={discountType}
-                  onValueChange={(value) =>
-                    setDiscountType(value as "fixed" | "percentage")
-                  }
-                >
-                  <SelectTrigger className="w-32 text-xs">
-                    <span className="flex items-center gap-1.5">
-                      {discountType === "fixed" ? (
-                        <DollarSignIcon className="h-3.5 w-3.5" />
-                      ) : (
-                        <PercentIcon className="h-3.5 w-3.5" />
-                      )}
-                      {discountType === "fixed" ? "Fixed" : "Percent"}
-                    </span>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="fixed">
-                      <span className="flex items-center gap-2">
-                        <DollarSignIcon className="h-3.5 w-3.5" />
-                        Fixed
-                      </span>
-                    </SelectItem>
-                    <SelectItem value="percentage">
-                      <span className="flex items-center gap-2">
-                        <PercentIcon className="h-3.5 w-3.5" />
-                        Percent
-                      </span>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-input bg-background shadow-sm">
+                  <NativeSelect
+                    value={discountType}
+                    onChange={(e) =>
+                      setDiscountType(e.target.value as "fixed" | "percentage")
+                    }
+                    className="absolute inset-0 z-10 cursor-pointer opacity-0"
+                    aria-label="Discount type: fixed amount or percentage"
+                    title={
+                      discountType === "fixed"
+                        ? "Fixed amount"
+                        : "Percentage"
+                    }
+                  >
+                    <option value="fixed">Fixed</option>
+                    <option value="percentage">Percentage</option>
+                  </NativeSelect>
+                  {discountType === "fixed" ? (
+                    <DollarSign
+                      className="pointer-events-none h-4 w-4 text-muted-foreground"
+                      aria-hidden
+                    />
+                  ) : (
+                    <Percent
+                      className="pointer-events-none h-4 w-4 text-muted-foreground"
+                      aria-hidden
+                    />
+                  )}
+                </div>
               </div>
             </div>
 

@@ -38,6 +38,11 @@ export const estimates = pgTable(
     expiryDate: date("expiry_date"),
     estimateNumber: text("estimate_number").notNull(),
     status: estimateStatusEnum("status").notNull().default("DRAFT"),
+    publicLinkToken: text("public_link_token"),
+    publicLinkCreatedAt: timestamp("public_link_created_at", {
+      withTimezone: true,
+      mode: "date",
+    }),
     taxPerItem: boolean("tax_per_item").notNull().default(false),
     discountPerItem: boolean("discount_per_item").notNull().default(false),
     discountFixed: boolean("discount_fixed").notNull().default(false),
@@ -77,6 +82,7 @@ export const estimates = pgTable(
       table.organizationId,
       table.estimateNumber,
     ),
+    uniqueIndex("estimates_public_link_token_unique").on(table.publicLinkToken),
   ],
 );
 
