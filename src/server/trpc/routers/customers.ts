@@ -110,23 +110,30 @@ export const customersRouter = createTRPCRouter({
         }
       }
 
-      await ctx.db.insert(customers).values({
-        organizationId: ctx.organizationId,
-        displayName: input.displayName,
-        primaryContactName: nullableString(input.primaryContactName),
-        email: nullableString(input.email),
-        phone: nullableString(input.phone),
-        website: nullableString(input.website),
-        prefix: nullableString(input.prefix),
-        name: nullableString(input.name),
-        state: nullableString(input.state),
-        city: nullableString(input.city),
-        address: nullableString(input.address),
-        zipCode: nullableString(input.zipCode),
-        addressPhone: nullableString(input.addressPhone),
-      });
+      const [created] = await ctx.db
+        .insert(customers)
+        .values({
+          organizationId: ctx.organizationId,
+          displayName: input.displayName,
+          primaryContactName: nullableString(input.primaryContactName),
+          email: nullableString(input.email),
+          phone: nullableString(input.phone),
+          website: nullableString(input.website),
+          prefix: nullableString(input.prefix),
+          name: nullableString(input.name),
+          state: nullableString(input.state),
+          city: nullableString(input.city),
+          address: nullableString(input.address),
+          zipCode: nullableString(input.zipCode),
+          addressPhone: nullableString(input.addressPhone),
+        })
+        .returning({ id: customers.id, displayName: customers.displayName });
 
-      return { ok: true as const };
+      return {
+        ok: true as const,
+        id: created.id,
+        displayName: created.displayName,
+      };
     }),
 
   update: organizationProcedure

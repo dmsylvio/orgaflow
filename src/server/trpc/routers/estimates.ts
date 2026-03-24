@@ -11,6 +11,7 @@ import {
   estimates,
   items,
   organizationPreferences,
+  taxTypes,
   units,
 } from "@/server/db/schemas";
 import { getOrganizationPlan } from "@/server/services/billing/get-organization-plan";
@@ -25,6 +26,7 @@ const estimateLineItemInputSchema = z.object({
   itemId: z.string().trim().min(1),
   quantity: z.string().trim().min(1),
   unitPrice: z.string().trim().min(1),
+  taxId: z.string().nullable().optional(),
 });
 
 const estimateUpsertSchema = z.object({
@@ -33,6 +35,7 @@ const estimateUpsertSchema = z.object({
   expiryDate: z.string().trim().nullable().optional(),
   notes: z.string().trim().max(20000).nullable().optional(),
   items: z.array(estimateLineItemInputSchema).min(1),
+  globalTaxId: z.string().nullable().optional(),
 });
 
 function formatEstimateNumber(seq: number): string {
@@ -97,6 +100,12 @@ async function getEstimateFormMeta(db: DbClient, organizationId: string) {
     .where(eq(organizationPreferences.organizationId, organizationId))
     .limit(1);
 
+  const [prefs] = await db
+    .select({ taxPerItem: organizationPreferences.taxPerItem })
+    .from(organizationPreferences)
+    .where(eq(organizationPreferences.organizationId, organizationId))
+    .limit(1);
+
   const customerOptions = await db
     .select({
       id: customers.id,
@@ -119,6 +128,16 @@ async function getEstimateFormMeta(db: DbClient, organizationId: string) {
     .where(eq(items.organizationId, organizationId))
     .orderBy(asc(items.name), asc(items.createdAt));
 
+  const taxTypeOptions = await db
+    .select({
+      id: taxTypes.id,
+      name: taxTypes.name,
+      percent: taxTypes.percent,
+    })
+    .from(taxTypes)
+    .where(eq(taxTypes.organizationId, organizationId))
+    .orderBy(asc(taxTypes.name));
+
   const [maxRow] = await db
     .select({ maxSeq: max(estimates.sequenceNumber) })
     .from(estimates)
@@ -131,6 +150,8 @@ async function getEstimateFormMeta(db: DbClient, organizationId: string) {
     customers: customerOptions,
     items: itemOptions,
     nextEstimateNumber: formatEstimateNumber(nextSeq),
+    taxPerItem: prefs?.taxPerItem ?? false,
+    taxTypes: taxTypeOptions,
   };
 }
 
@@ -141,7 +162,10 @@ async function buildNormalizedEstimateItems(
     itemId: string;
     quantity: string;
     unitPrice: string;
+    taxId?: string | null;
   }>,
+  taxTypesById: Map<string, { percent: string }>,
+  globalTaxId: string | null | undefined,
 ) {
   const itemIds = [...new Set(inputItems.map((item) => item.itemId))];
 
@@ -161,6 +185,7 @@ async function buildNormalizedEstimateItems(
   const itemById = new Map(catalogItems.map((item) => [item.id, item]));
 
   let subTotalValue = 0;
+  let taxValue = 0;
 
   const normalizedItems = inputItems.map((inputItem) => {
     const catalogItem = itemById.get(inputItem.itemId);
@@ -181,6 +206,17 @@ async function buildNormalizedEstimateItems(
 
     subTotalValue += lineTotalValue;
 
+    let lineTaxValue = 0;
+    if (inputItem.taxId) {
+      const taxType = taxTypesById.get(inputItem.taxId);
+      if (taxType) {
+        lineTaxValue = Number(
+          (lineTotalValue * (Number(taxType.percent) / 100)).toFixed(3),
+        );
+        taxValue += lineTaxValue;
+      }
+    }
+
     return {
       itemId: catalogItem.id,
       name: catalogItem.name,
@@ -188,11 +224,21 @@ async function buildNormalizedEstimateItems(
       unitName: catalogItem.unitName,
       quantity: toQuantityString(quantityValue),
       price: toMoneyString(unitPriceValue),
+      tax: lineTaxValue > 0 ? toMoneyString(lineTaxValue) : null,
       total: toMoneyString(lineTotalValue),
     };
   });
 
-  const taxValue = 0;
+  // Global tax: applied when no per-item taxes were calculated
+  if (globalTaxId && taxValue === 0) {
+    const taxType = taxTypesById.get(globalTaxId);
+    if (taxType) {
+      taxValue = Number(
+        (subTotalValue * (Number(taxType.percent) / 100)).toFixed(3),
+      );
+    }
+  }
+
   const totalValue = Number((subTotalValue + taxValue).toFixed(3));
 
   return {
@@ -459,10 +505,21 @@ export const estimatesRouter = createTRPCRouter({
         });
       }
 
+      const orgTaxTypes = await ctx.db
+        .select({ id: taxTypes.id, percent: taxTypes.percent })
+        .from(taxTypes)
+        .where(eq(taxTypes.organizationId, ctx.organizationId));
+
+      const taxTypesById = new Map(
+        orgTaxTypes.map((t) => [t.id, { percent: t.percent }]),
+      );
+
       const { normalizedItems, totals } = await buildNormalizedEstimateItems(
         ctx.db,
         ctx.organizationId,
         input.items,
+        taxTypesById,
+        prefs.taxPerItem ? null : input.globalTaxId,
       );
 
       const currencyId = prefs.defaultCurrencyId;
@@ -522,7 +579,7 @@ export const estimatesRouter = createTRPCRouter({
             discountType: "fixed" as const,
             discount: null,
             discountVal: null,
-            tax: null,
+            tax: item.tax,
             total: item.total,
             exchangeRate: null,
             baseDiscountVal: null,
@@ -589,10 +646,21 @@ export const estimatesRouter = createTRPCRouter({
         });
       }
 
+      const orgTaxTypes = await ctx.db
+        .select({ id: taxTypes.id, percent: taxTypes.percent })
+        .from(taxTypes)
+        .where(eq(taxTypes.organizationId, ctx.organizationId));
+
+      const taxTypesById = new Map(
+        orgTaxTypes.map((t) => [t.id, { percent: t.percent }]),
+      );
+
       const { normalizedItems, totals } = await buildNormalizedEstimateItems(
         ctx.db,
         ctx.organizationId,
         input.items,
+        taxTypesById,
+        existing.taxPerItem ? null : input.globalTaxId,
       );
 
       await ctx.db.transaction(async (tx) => {
@@ -637,7 +705,7 @@ export const estimatesRouter = createTRPCRouter({
             discountType: "fixed" as const,
             discount: null,
             discountVal: null,
-            tax: null,
+            tax: item.tax,
             total: item.total,
             exchangeRate: null,
             baseDiscountVal: null,

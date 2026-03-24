@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { CurrencyInput } from "@/components/ui/currency-input";
+import { CustomerPicker } from "@/components/ui/customer-picker";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { NativeSelect } from "@/components/ui/select";
@@ -22,6 +23,7 @@ type DraftItem = {
   itemId: string;
   quantity: string;
   unitPrice: string;
+  taxId: string;
 };
 
 function makeDraftItem(): DraftItem {
@@ -30,6 +32,7 @@ function makeDraftItem(): DraftItem {
     itemId: "",
     quantity: "1",
     unitPrice: "",
+    taxId: "",
   };
 }
 
@@ -52,6 +55,7 @@ export function CreateInvoiceForm() {
   const [dueDate, setDueDate] = useState("");
   const [notes, setNotes] = useState("");
   const [draftItems, setDraftItems] = useState<DraftItem[]>([makeDraftItem()]);
+  const [globalTaxId, setGlobalTaxId] = useState("");
 
   const create = useMutation(
     trpc.invoices.create.mutationOptions({
@@ -79,18 +83,41 @@ export function CreateInvoiceForm() {
     [meta?.items],
   );
 
-  const total = useMemo(() => {
-    return draftItems.reduce((sum, item) => {
+  const taxTypesById = useMemo(
+    () => new Map((meta?.taxTypes ?? []).map((t) => [t.id, t])),
+    [meta?.taxTypes],
+  );
+
+  const { subTotal, taxAmount } = useMemo(() => {
+    let sub = 0;
+    let tax = 0;
+
+    for (const item of draftItems) {
       const quantity = Number(item.quantity);
       const unitPrice = Number(item.unitPrice);
 
-      if (!Number.isFinite(quantity) || !Number.isFinite(unitPrice)) {
-        return sum;
-      }
+      if (!Number.isFinite(quantity) || !Number.isFinite(unitPrice)) continue;
 
-      return sum + quantity * unitPrice;
-    }, 0);
-  }, [draftItems]);
+      const lineTotal = quantity * unitPrice;
+      sub += lineTotal;
+
+      if (meta?.taxPerItem && item.taxId) {
+        const taxType = taxTypesById.get(item.taxId);
+        if (taxType) {
+          tax += lineTotal * (Number(taxType.percent) / 100);
+        }
+      }
+    }
+
+    if (!meta?.taxPerItem && globalTaxId) {
+      const taxType = taxTypesById.get(globalTaxId);
+      if (taxType) {
+        tax = sub * (Number(taxType.percent) / 100);
+      }
+    }
+
+    return { subTotal: sub, taxAmount: tax };
+  }, [draftItems, meta?.taxPerItem, globalTaxId, taxTypesById]);
 
   function updateDraftItem(
     id: string,
@@ -136,9 +163,7 @@ export function CreateInvoiceForm() {
   const validDraftItems = draftItems.filter((item) => item.itemId);
   const canCreate = usage?.canCreate ?? true;
   const hasDependencies =
-    (meta?.customers.length ?? 0) > 0 &&
-    (meta?.items.length ?? 0) > 0 &&
-    Boolean(meta?.defaultCurrency);
+    (meta?.items.length ?? 0) > 0 && Boolean(meta?.defaultCurrency);
 
   if (!canCreate || !hasDependencies || !meta) {
     return (
@@ -154,6 +179,10 @@ export function CreateInvoiceForm() {
       </div>
     );
   }
+
+  const lineItemGridCols = meta.taxPerItem
+    ? "xl:grid-cols-[minmax(0,1.5fr)_140px_220px_180px_auto]"
+    : "xl:grid-cols-[minmax(0,1.5fr)_140px_220px_auto]";
 
   return (
     <div className="space-y-6">
@@ -172,18 +201,12 @@ export function CreateInvoiceForm() {
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <div className="space-y-1.5">
           <Label htmlFor="create-invoice-customer">Customer</Label>
-          <NativeSelect
+          <CustomerPicker
             id="create-invoice-customer"
             value={customerId}
-            onChange={(event) => setCustomerId(event.target.value)}
-          >
-            <option value="">Select a customer</option>
-            {meta.customers.map((customer) => (
-              <option key={customer.id} value={customer.id}>
-                {customer.displayName}
-              </option>
-            ))}
-          </NativeSelect>
+            onValueChange={setCustomerId}
+            required
+          />
         </div>
 
         <div className="space-y-1.5">
@@ -252,7 +275,7 @@ export function CreateInvoiceForm() {
               key={draftItem.id}
               className="rounded-2xl border border-border bg-card p-4"
             >
-              <div className="grid gap-4 xl:grid-cols-[minmax(0,1.5fr)_140px_220px_auto]">
+              <div className={`grid gap-4 ${lineItemGridCols}`}>
                 <div className="space-y-1.5">
                   <Label htmlFor={`create-item-${draftItem.id}`}>
                     Item {index + 1}
@@ -317,6 +340,29 @@ export function CreateInvoiceForm() {
                   ) : null}
                 </div>
 
+                {meta.taxPerItem ? (
+                  <div className="space-y-1.5">
+                    <Label htmlFor={`create-tax-${draftItem.id}`}>Tax</Label>
+                    <NativeSelect
+                      id={`create-tax-${draftItem.id}`}
+                      value={draftItem.taxId}
+                      onChange={(event) =>
+                        updateDraftItem(draftItem.id, (current) => ({
+                          ...current,
+                          taxId: event.target.value,
+                        }))
+                      }
+                    >
+                      <option value="">No tax</option>
+                      {meta.taxTypes.map((t) => (
+                        <option key={t.id} value={t.id}>
+                          {t.name} ({t.percent}%)
+                        </option>
+                      ))}
+                    </NativeSelect>
+                  </div>
+                ) : null}
+
                 <div className="flex items-end justify-between gap-3 xl:flex-col xl:items-end">
                   <div className="text-right">
                     <p className="text-xs uppercase tracking-wide text-muted-foreground/70">
@@ -367,20 +413,49 @@ export function CreateInvoiceForm() {
             <div className="flex items-center justify-between text-muted-foreground">
               <span>Subtotal</span>
               <span className="font-medium text-foreground">
-                {formatCurrencyDisplay(total.toFixed(3), meta.defaultCurrency)}
+                {formatCurrencyDisplay(
+                  subTotal.toFixed(3),
+                  meta.defaultCurrency,
+                )}
               </span>
             </div>
+            {!meta.taxPerItem && meta.taxTypes.length > 0 ? (
+              <div className="flex items-center justify-between gap-3 text-muted-foreground">
+                <Label htmlFor="create-global-tax" className="text-xs">
+                  Tax
+                </Label>
+                <NativeSelect
+                  id="create-global-tax"
+                  value={globalTaxId}
+                  onChange={(e) => setGlobalTaxId(e.target.value)}
+                  className="w-40 text-xs"
+                >
+                  <option value="">No tax</option>
+                  {meta.taxTypes.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.name} ({t.percent}%)
+                    </option>
+                  ))}
+                </NativeSelect>
+              </div>
+            ) : null}
             <div className="flex items-center justify-between text-muted-foreground">
-              <span>Tax</span>
+              <span>Tax amount</span>
               <span className="font-medium text-foreground">
-                {formatCurrencyDisplay("0", meta.defaultCurrency)}
+                {formatCurrencyDisplay(
+                  taxAmount.toFixed(3),
+                  meta.defaultCurrency,
+                )}
               </span>
             </div>
             <Separator />
             <div className="flex items-center justify-between">
               <span className="font-semibold text-foreground">Total</span>
               <span className="text-lg font-semibold text-foreground">
-                {formatCurrencyDisplay(total.toFixed(3), meta.defaultCurrency)}
+                {formatCurrencyDisplay(
+                  (subTotal + taxAmount).toFixed(3),
+                  meta.defaultCurrency,
+                )}
               </span>
             </div>
           </div>
@@ -410,7 +485,9 @@ export function CreateInvoiceForm() {
                 itemId: item.itemId,
                 quantity: item.quantity,
                 unitPrice: item.unitPrice || "0",
+                taxId: item.taxId || null,
               })),
+              globalTaxId: globalTaxId || null,
             })
           }
         >
