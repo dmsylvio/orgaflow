@@ -19,6 +19,7 @@ import {
   taxTypes,
   units,
 } from "@/server/db/schemas";
+import { runWorkflowAutomations } from "@/server/services/automations/run-workflow-automations";
 import { getOrganizationPlan } from "@/server/services/billing/get-organization-plan";
 import { getUsageLimit } from "@/server/services/billing/plan-limits";
 import { sendTransactionalEmail } from "@/server/services/email/resend";
@@ -28,6 +29,7 @@ import {
   publicProcedure,
   requirePermission,
 } from "@/server/trpc/init";
+import { getSessionUserId } from "@/server/trpc/utils";
 
 const invoiceLineItemInputSchema = z.object({
   itemId: z.string().trim().min(1),
@@ -536,6 +538,15 @@ export const invoicesRouter = createTRPCRouter({
           .update(invoices)
           .set({ status: nextStatus, updatedAt: nextUpdatedAt })
           .where(eq(invoices.id, invoice.id));
+
+        await runWorkflowAutomations(ctx.db, {
+          organizationId: invoice.organizationId,
+          triggerDocument: "invoice",
+          triggerStatus: nextStatus,
+          documentId: invoice.id,
+          actorUserId: null,
+          triggeredAt: nextUpdatedAt,
+        });
       }
 
       return {
@@ -900,6 +911,15 @@ export const invoicesRouter = createTRPCRouter({
         return createdInvoice;
       });
 
+      await runWorkflowAutomations(ctx.db, {
+        organizationId: ctx.organizationId,
+        triggerDocument: "invoice",
+        triggerStatus: "DRAFT",
+        documentId: created.id,
+        actorUserId: getSessionUserId(ctx),
+        triggeredAt: new Date(),
+      });
+
       return created;
     }),
 
@@ -1033,7 +1053,6 @@ export const invoicesRouter = createTRPCRouter({
     .input(
       z.object({
         id: z.string().trim().min(1),
-        from: z.string().trim().max(320).optional(),
         to: z.string().trim().email().max(320),
         subject: z.string().trim().min(1).max(200),
         body: z.string().trim().min(1).max(20000),
@@ -1142,7 +1161,6 @@ export const invoicesRouter = createTRPCRouter({
         subject: input.subject,
         html,
         text,
-        from: input.from,
       });
 
       const nextStatus =
@@ -1165,6 +1183,17 @@ export const invoicesRouter = createTRPCRouter({
           ),
         );
 
+      if (nextStatus !== invoice.status) {
+        await runWorkflowAutomations(ctx.db, {
+          organizationId: ctx.organizationId,
+          triggerDocument: "invoice",
+          triggerStatus: nextStatus,
+          documentId: invoice.id,
+          actorUserId: getSessionUserId(ctx),
+          triggeredAt: now,
+        });
+      }
+
       return { ok: true as const, id: invoice.id };
     }),
 
@@ -1185,25 +1214,46 @@ export const invoicesRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const [updated] = await ctx.db
-        .update(invoices)
-        .set({
-          status: input.status,
-          updatedAt: new Date(),
-        })
+      const [existing] = await ctx.db
+        .select({ id: invoices.id, status: invoices.status })
+        .from(invoices)
         .where(
           and(
             eq(invoices.id, input.id),
             eq(invoices.organizationId, ctx.organizationId),
           ),
         )
-        .returning({ id: invoices.id, status: invoices.status });
+        .limit(1);
 
-      if (!updated) {
+      if (!existing) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Invoice not found." });
       }
 
-      return { ok: true as const, ...updated };
+      if (existing.status === input.status) {
+        return { ok: true as const, ...existing };
+      }
+
+      const updatedAt = new Date();
+      await ctx.db
+        .update(invoices)
+        .set({ status: input.status, updatedAt })
+        .where(
+          and(
+            eq(invoices.id, existing.id),
+            eq(invoices.organizationId, ctx.organizationId),
+          ),
+        );
+
+      await runWorkflowAutomations(ctx.db, {
+        organizationId: ctx.organizationId,
+        triggerDocument: "invoice",
+        triggerStatus: input.status,
+        documentId: existing.id,
+        actorUserId: getSessionUserId(ctx),
+        triggeredAt: updatedAt,
+      });
+
+      return { ok: true as const, id: existing.id, status: input.status };
     }),
 
   clone: organizationProcedure
@@ -1350,6 +1400,15 @@ export const invoicesRouter = createTRPCRouter({
         );
 
         return createdInvoice;
+      });
+
+      await runWorkflowAutomations(ctx.db, {
+        organizationId: ctx.organizationId,
+        triggerDocument: "invoice",
+        triggerStatus: "DRAFT",
+        documentId: created.id,
+        actorUserId: getSessionUserId(ctx),
+        triggeredAt: new Date(),
       });
 
       return created;

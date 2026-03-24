@@ -455,6 +455,7 @@ export const settingsRouter = createTRPCRouter({
       const session = await stripe.billingPortal.sessions.create({
         customer: sub.stripeCustomerId,
         return_url: input.returnUrl,
+        locale: "en",
       });
 
       return { url: session.url };

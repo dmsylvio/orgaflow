@@ -26,8 +26,6 @@ type EstimateSendDialogProps = {
   customerEmail: string | null;
 };
 
-const DEFAULT_FROM_EMAIL = "noreply@orgaflow.dev";
-
 export function EstimateSendDialog({
   open,
   onOpenChange,
@@ -38,7 +36,6 @@ export function EstimateSendDialog({
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 
-  const [from, setFrom] = useState("");
   const [to, setTo] = useState(customerEmail ?? "");
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
@@ -63,7 +60,6 @@ export function EstimateSendDialog({
   useEffect(() => {
     if (!open) return;
 
-    setFrom(DEFAULT_FROM_EMAIL);
     setTo(customerEmail ?? "");
     setSubject(`Estimate ${estimateNumber} — Orgaflow`);
     setBody(
@@ -98,33 +94,21 @@ export function EstimateSendDialog({
         </DialogHeader>
 
         <DialogBody className="space-y-4">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label htmlFor="send-estimate-from">From</Label>
-              <Input
-                id="send-estimate-from"
-                value={from}
-                onChange={(e) => setFrom(e.target.value)}
-                placeholder={DEFAULT_FROM_EMAIL}
-                autoComplete="email"
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="send-estimate-to">To</Label>
-              <Input
-                id="send-estimate-to"
-                value={to}
-                onChange={(e) => setTo(e.target.value)}
-                placeholder="customer@email.com"
-                autoComplete="email"
-              />
-              {!customerEmail ? (
-                <p className="text-xs text-muted-foreground">
-                  This customer does not have an email saved yet.
-                </p>
-              ) : null}
-            </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="send-estimate-to">To</Label>
+            <Input
+              id="send-estimate-to"
+              value={to}
+              onChange={(e) => setTo(e.target.value)}
+              placeholder="customer@email.com"
+              autoComplete="email"
+              autoFocus
+            />
+            {!customerEmail ? (
+              <p className="text-xs text-muted-foreground">
+                This customer does not have an email saved yet.
+              </p>
+            ) : null}
           </div>
 
           <div className="space-y-1.5">
@@ -165,7 +149,6 @@ export function EstimateSendDialog({
             onClick={() =>
               send.mutate({
                 id: estimateId,
-                from: from.trim() ? from.trim() : undefined,
                 to: to.trim(),
                 subject: subject.trim(),
                 body: body,

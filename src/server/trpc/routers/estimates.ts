@@ -17,6 +17,7 @@ import {
   taxTypes,
   units,
 } from "@/server/db/schemas";
+import { runWorkflowAutomations } from "@/server/services/automations/run-workflow-automations";
 import { getOrganizationPlan } from "@/server/services/billing/get-organization-plan";
 import { getUsageLimit } from "@/server/services/billing/plan-limits";
 import { sendTransactionalEmail } from "@/server/services/email/resend";
@@ -26,6 +27,7 @@ import {
   publicProcedure,
   requirePermission,
 } from "@/server/trpc/init";
+import { getSessionUserId } from "@/server/trpc/utils";
 
 const estimateLineItemInputSchema = z.object({
   itemId: z.string().trim().min(1),
@@ -548,6 +550,15 @@ export const estimatesRouter = createTRPCRouter({
           .update(estimates)
           .set({ status: nextStatus, updatedAt: nextUpdatedAt })
           .where(eq(estimates.id, estimate.id));
+
+        await runWorkflowAutomations(ctx.db, {
+          organizationId: estimate.organizationId,
+          triggerDocument: "estimate",
+          triggerStatus: nextStatus,
+          documentId: estimate.id,
+          actorUserId: null,
+          triggeredAt: nextUpdatedAt,
+        });
       }
 
       return {
@@ -763,6 +774,15 @@ export const estimatesRouter = createTRPCRouter({
         return createdEstimate;
       });
 
+      await runWorkflowAutomations(ctx.db, {
+        organizationId: ctx.organizationId,
+        triggerDocument: "estimate",
+        triggerStatus: "DRAFT",
+        documentId: created.id,
+        actorUserId: getSessionUserId(ctx),
+        triggeredAt: new Date(),
+      });
+
       return created;
     }),
 
@@ -908,28 +928,49 @@ export const estimatesRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const [updated] = await ctx.db
-        .update(estimates)
-        .set({
-          status: input.status,
-          updatedAt: new Date(),
-        })
+      const [existing] = await ctx.db
+        .select({ id: estimates.id, status: estimates.status })
+        .from(estimates)
         .where(
           and(
             eq(estimates.id, input.id),
             eq(estimates.organizationId, ctx.organizationId),
           ),
         )
-        .returning({ id: estimates.id, status: estimates.status });
+        .limit(1);
 
-      if (!updated) {
+      if (!existing) {
         throw new TRPCError({
           code: "NOT_FOUND",
           message: "Estimate not found.",
         });
       }
 
-      return { ok: true as const, ...updated };
+      if (existing.status === input.status) {
+        return { ok: true as const, ...existing };
+      }
+
+      const updatedAt = new Date();
+      await ctx.db
+        .update(estimates)
+        .set({ status: input.status, updatedAt })
+        .where(
+          and(
+            eq(estimates.id, existing.id),
+            eq(estimates.organizationId, ctx.organizationId),
+          ),
+        );
+
+      await runWorkflowAutomations(ctx.db, {
+        organizationId: ctx.organizationId,
+        triggerDocument: "estimate",
+        triggerStatus: input.status,
+        documentId: existing.id,
+        actorUserId: getSessionUserId(ctx),
+        triggeredAt: updatedAt,
+      });
+
+      return { ok: true as const, id: existing.id, status: input.status };
     }),
 
   sendEmail: organizationProcedure
@@ -937,7 +978,6 @@ export const estimatesRouter = createTRPCRouter({
     .input(
       z.object({
         id: z.string().trim().min(1),
-        from: z.string().trim().max(320).optional(),
         to: z.string().trim().email().max(320),
         subject: z.string().trim().min(1).max(200),
         body: z.string().trim().min(1).max(20000),
@@ -1049,7 +1089,6 @@ export const estimatesRouter = createTRPCRouter({
         subject: input.subject,
         html,
         text,
-        from: input.from,
       });
 
       const nextStatus = estimate.status === "DRAFT" ? "SENT" : estimate.status;
@@ -1068,6 +1107,17 @@ export const estimatesRouter = createTRPCRouter({
             eq(estimates.organizationId, ctx.organizationId),
           ),
         );
+
+      if (nextStatus !== estimate.status) {
+        await runWorkflowAutomations(ctx.db, {
+          organizationId: ctx.organizationId,
+          triggerDocument: "estimate",
+          triggerStatus: nextStatus,
+          documentId: estimate.id,
+          actorUserId: getSessionUserId(ctx),
+          triggeredAt: now,
+        });
+      }
 
       return { ok: true as const, id: estimate.id };
     }),
