@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { FileText, Pencil, Plus, Trash2 } from "lucide-react";
 import NextLink from "next/link";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import {
@@ -10,6 +11,7 @@ import {
   formatCurrencyDisplay,
 } from "@/lib/currency-format";
 import { toast } from "@/lib/toast";
+import { cn } from "@/lib/utils";
 import { useTRPC } from "@/trpc/client";
 import {
   type EstimateStatus,
@@ -37,7 +39,9 @@ type EstimateRecord = {
   itemCount: number;
 };
 
-function EstimateCard({
+type EstimateFilter = "ALL" | "DRAFT" | "SENT";
+
+function EstimateRow({
   estimate,
   deletePendingId,
   onDelete,
@@ -47,95 +51,76 @@ function EstimateCard({
   onDelete: (id: string) => void;
 }) {
   return (
-    <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <div className="flex items-center gap-2">
-            <p className="text-sm font-semibold text-foreground">
-              {estimate.estimateNumber}
-            </p>
-            <EstimateStatusBadge status={estimate.status} />
-          </div>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {estimate.customer.displayName}
+    <tr className="border-b border-border last:border-0">
+      <td className="py-3 pl-4 pr-2 align-top">
+        <div className="space-y-1">
+          <p className="text-sm font-medium text-foreground">
+            {estimate.estimateNumber}
           </p>
+          {estimate.notes ? (
+            <p className="line-clamp-1 max-w-[24ch] text-xs text-muted-foreground">
+              {estimate.notes}
+            </p>
+          ) : null}
         </div>
-
-        <div className="text-right">
-          <p className="text-lg font-semibold text-foreground">
-            {formatCurrencyDisplay(estimate.total, estimate.currency)}
+      </td>
+      <td className="px-2 py-3 align-top">
+        <EstimateStatusBadge status={estimate.status} />
+      </td>
+      <td className="px-2 py-3 align-top">
+        <div className="space-y-1">
+          <p className="text-sm text-foreground">
+            {estimate.customer.displayName}
           </p>
           <p className="text-xs text-muted-foreground">
             {estimate.itemCount} item{estimate.itemCount !== 1 ? "s" : ""}
           </p>
         </div>
-      </div>
-
-      <div className="mt-4 grid gap-3 text-sm text-muted-foreground sm:grid-cols-3">
-        <div>
-          <p className="text-xs uppercase tracking-wide text-muted-foreground/70">
-            Estimate date
-          </p>
-          <p className="mt-1 text-foreground">
-            {formatEstimateDate(estimate.estimateDate) ?? "Not set"}
-          </p>
+      </td>
+      <td className="px-2 py-3 align-top text-sm text-foreground">
+        {formatEstimateDate(estimate.estimateDate) ?? "Not set"}
+      </td>
+      <td className="px-2 py-3 align-top text-sm text-foreground">
+        {formatEstimateDate(estimate.expiryDate) ?? "No expiry"}
+      </td>
+      <td className="px-2 py-3 align-top text-sm font-medium text-foreground">
+        {formatCurrencyDisplay(estimate.total, estimate.currency)}
+      </td>
+      <td className="py-3 pl-2 pr-4 align-top">
+        <div className="flex justify-end gap-1">
+          <Button type="button" variant="ghost" size="icon" asChild>
+            <NextLink href={`/app/estimates/${estimate.id}`}>
+              <FileText className="h-4 w-4" />
+              <span className="sr-only">View estimate</span>
+            </NextLink>
+          </Button>
+          <Button type="button" variant="ghost" size="icon" asChild>
+            <NextLink href={`/app/estimates/edit?id=${estimate.id}`}>
+              <Pencil className="h-4 w-4" />
+              <span className="sr-only">Edit estimate</span>
+            </NextLink>
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            disabled={deletePendingId === estimate.id}
+            onClick={() => onDelete(estimate.id)}
+            className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+          >
+            <Trash2 className="h-4 w-4" />
+            <span className="sr-only">Delete estimate</span>
+          </Button>
         </div>
-        <div>
-          <p className="text-xs uppercase tracking-wide text-muted-foreground/70">
-            Expiry
-          </p>
-          <p className="mt-1 text-foreground">
-            {formatEstimateDate(estimate.expiryDate) ?? "No expiry"}
-          </p>
-        </div>
-        <div>
-          <p className="text-xs uppercase tracking-wide text-muted-foreground/70">
-            Subtotal
-          </p>
-          <p className="mt-1 text-foreground">
-            {formatCurrencyDisplay(estimate.subTotal, estimate.currency)}
-          </p>
-        </div>
-      </div>
-
-      {estimate.notes ? (
-        <div className="mt-4 rounded-xl bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
-          {estimate.notes}
-        </div>
-      ) : null}
-
-      <div className="mt-4 flex flex-wrap items-center justify-end gap-2">
-        <Button type="button" variant="outline" size="sm" asChild>
-          <NextLink href={`/app/estimates/${estimate.id}`}>
-            <FileText className="h-4 w-4" />
-            View
-          </NextLink>
-        </Button>
-        <Button type="button" variant="outline" size="sm" asChild>
-          <NextLink href={`/app/estimates/edit?id=${estimate.id}`}>
-            <Pencil className="h-4 w-4" />
-            Edit
-          </NextLink>
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          disabled={deletePendingId === estimate.id}
-          onClick={() => onDelete(estimate.id)}
-          className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-        >
-          <Trash2 className="h-4 w-4" />
-          Delete
-        </Button>
-      </div>
-    </div>
+      </td>
+    </tr>
   );
 }
 
 export default function EstimatesPage() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
+  const [activeFilter, setActiveFilter] = useState<EstimateFilter>("ALL");
 
   const { data: estimates = [], isPending: estimatesPending } = useQuery(
     trpc.estimates.list.queryOptions(),
@@ -179,11 +164,31 @@ export default function EstimatesPage() {
   const draftCount = estimates.filter(
     (estimate) => estimate.status === "DRAFT",
   ).length;
+  const sentCount = estimates.filter(
+    (estimate) => estimate.status === "SENT",
+  ).length;
   const canCreate = usage?.canCreate ?? true;
-  const hasDependencies =
-    (meta?.customers.length ?? 0) > 0 &&
-    (meta?.items.length ?? 0) > 0 &&
-    Boolean(meta?.defaultCurrency);
+  const hasDependencies = Boolean(meta?.defaultCurrency);
+  const filteredEstimates = (() => {
+    if (activeFilter === "DRAFT") {
+      return estimates.filter((estimate) => estimate.status === "DRAFT");
+    }
+
+    if (activeFilter === "SENT") {
+      return estimates.filter((estimate) => estimate.status === "SENT");
+    }
+
+    return estimates;
+  })();
+  const filterTabs: Array<{
+    value: EstimateFilter;
+    label: string;
+    count: number;
+  }> = [
+    { value: "ALL", label: "All", count: estimates.length },
+    { value: "DRAFT", label: "Draft", count: draftCount },
+    { value: "SENT", label: "Sent", count: sentCount },
+  ];
 
   return (
     <PageShell
@@ -252,15 +257,32 @@ export default function EstimatesPage() {
           </div>
         ) : null}
 
-        {(meta?.customers.length ?? 0) === 0 ? (
-          <div className="rounded-2xl border border-border bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
-            Add at least one customer before creating an estimate.
-          </div>
-        ) : null}
-
-        {(meta?.items.length ?? 0) === 0 ? (
-          <div className="rounded-2xl border border-border bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
-            Add at least one item in your catalog before creating an estimate.
+        {estimates.length > 0 ? (
+          <div
+            role="tablist"
+            aria-label="Estimate status filters"
+            className="flex w-full gap-2 overflow-x-auto rounded-2xl border border-border bg-muted/20 p-2"
+          >
+            {filterTabs.map((tab) => (
+              <button
+                key={tab.value}
+                type="button"
+                role="tab"
+                aria-selected={activeFilter === tab.value}
+                onClick={() => setActiveFilter(tab.value)}
+                className={cn(
+                  "inline-flex min-w-fit items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition-colors",
+                  activeFilter === tab.value
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground hover:bg-card/60 hover:text-foreground",
+                )}
+              >
+                <span>{tab.label}</span>
+                <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                  {tab.count}
+                </span>
+              </button>
+            ))}
           </div>
         ) : null}
 
@@ -276,20 +298,61 @@ export default function EstimatesPage() {
               Create your first estimate to start sharing pricing with clients.
             </p>
           </div>
+        ) : filteredEstimates.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-border bg-muted/20 p-12 text-center">
+            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-muted">
+              <FileText className="h-5 w-5 text-muted-foreground/60" />
+            </div>
+            <p className="text-sm font-medium text-foreground">
+              No {activeFilter.toLowerCase()} estimates
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Try another filter or create a new estimate.
+            </p>
+          </div>
         ) : (
-          <div className="grid gap-4 xl:grid-cols-2">
-            {estimates.map((estimate) => (
-              <EstimateCard
-                key={estimate.id}
-                estimate={estimate}
-                deletePendingId={
-                  deleteEstimate.isPending
-                    ? (deleteEstimate.variables?.id ?? null)
-                    : null
-                }
-                onDelete={(id) => deleteEstimate.mutate({ id })}
-              />
-            ))}
+          <div className="overflow-x-auto rounded-2xl border border-border bg-card">
+            <table className="w-full min-w-[860px]">
+              <thead>
+                <tr className="border-b border-border">
+                  <th className="py-3 pl-4 pr-2 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
+                    Estimate
+                  </th>
+                  <th className="px-2 py-3 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
+                    Status
+                  </th>
+                  <th className="px-2 py-3 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
+                    Customer
+                  </th>
+                  <th className="px-2 py-3 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
+                    Estimate date
+                  </th>
+                  <th className="px-2 py-3 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
+                    Expiry
+                  </th>
+                  <th className="px-2 py-3 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
+                    Total
+                  </th>
+                  <th className="py-3 pl-2 pr-4 text-right text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredEstimates.map((estimate) => (
+                  <EstimateRow
+                    key={estimate.id}
+                    estimate={estimate}
+                    deletePendingId={
+                      deleteEstimate.isPending
+                        ? (deleteEstimate.variables?.id ?? null)
+                        : null
+                    }
+                    onDelete={(id) => deleteEstimate.mutate({ id })}
+                  />
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </div>

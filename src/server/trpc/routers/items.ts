@@ -156,15 +156,21 @@ export const itemsRouter = createTRPCRouter({
         }
       }
 
-      await ctx.db.insert(items).values({
-        organizationId: ctx.organizationId,
-        name: input.name,
-        price: normalizePrice(input.price),
-        unitId,
-        description: input.description ?? null,
-      });
+      const [createdItem] = await ctx.db
+        .insert(items)
+        .values({
+          organizationId: ctx.organizationId,
+          name: input.name,
+          price: normalizePrice(input.price),
+          unitId,
+          description: input.description ?? null,
+        })
+        .returning({
+          id: items.id,
+          name: items.name,
+        });
 
-      return { ok: true as const };
+      return { ok: true as const, ...createdItem };
     }),
 
   update: organizationProcedure

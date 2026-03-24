@@ -26,7 +26,6 @@ const invoiceLineItemInputSchema = z.object({
   itemId: z.string().trim().min(1),
   quantity: z.string().trim().min(1),
   unitPrice: z.string().trim().min(1),
-  taxId: z.string().nullable().optional(),
 });
 
 const invoiceUpsertSchema = z.object({
@@ -35,7 +34,9 @@ const invoiceUpsertSchema = z.object({
   dueDate: z.string().trim().nullable().optional(),
   notes: z.string().trim().max(20000).nullable().optional(),
   items: z.array(invoiceLineItemInputSchema).min(1),
-  globalTaxId: z.string().nullable().optional(),
+  discount: z.string().nullable().optional(),
+  discountFixed: z.boolean().optional(),
+  taxIds: z.array(z.string()).optional(),
 });
 
 function formatInvoiceNumber(seq: number): string {
@@ -100,21 +101,6 @@ async function getInvoiceFormMeta(db: DbClient, organizationId: string) {
     .where(eq(organizationPreferences.organizationId, organizationId))
     .limit(1);
 
-  const [prefs] = await db
-    .select({ taxPerItem: organizationPreferences.taxPerItem })
-    .from(organizationPreferences)
-    .where(eq(organizationPreferences.organizationId, organizationId))
-    .limit(1);
-
-  const customerOptions = await db
-    .select({
-      id: customers.id,
-      displayName: customers.displayName,
-    })
-    .from(customers)
-    .where(eq(customers.organizationId, organizationId))
-    .orderBy(asc(customers.displayName));
-
   const itemOptions = await db
     .select({
       id: items.id,
@@ -147,10 +133,8 @@ async function getInvoiceFormMeta(db: DbClient, organizationId: string) {
 
   return {
     defaultCurrency: currency ?? null,
-    customers: customerOptions,
     items: itemOptions,
     nextInvoiceNumber: formatInvoiceNumber(nextSeq),
-    taxPerItem: prefs?.taxPerItem ?? false,
     taxTypes: taxTypeOptions,
   };
 }
@@ -162,10 +146,7 @@ async function buildNormalizedInvoiceItems(
     itemId: string;
     quantity: string;
     unitPrice: string;
-    taxId?: string | null;
   }>,
-  taxTypesById: Map<string, { percent: string }>,
-  globalTaxId: string | null | undefined,
 ) {
   const itemIds = [...new Set(inputItems.map((item) => item.itemId))];
 
@@ -185,7 +166,6 @@ async function buildNormalizedInvoiceItems(
   const itemById = new Map(catalogItems.map((item) => [item.id, item]));
 
   let subTotalValue = 0;
-  let taxValue = 0;
 
   const normalizedItems = inputItems.map((inputItem) => {
     const catalogItem = itemById.get(inputItem.itemId);
@@ -206,17 +186,6 @@ async function buildNormalizedInvoiceItems(
 
     subTotalValue += lineTotalValue;
 
-    let lineTaxValue = 0;
-    if (inputItem.taxId) {
-      const taxType = taxTypesById.get(inputItem.taxId);
-      if (taxType) {
-        lineTaxValue = Number(
-          (lineTotalValue * (Number(taxType.percent) / 100)).toFixed(3),
-        );
-        taxValue += lineTaxValue;
-      }
-    }
-
     return {
       itemId: catalogItem.id,
       name: catalogItem.name,
@@ -224,30 +193,57 @@ async function buildNormalizedInvoiceItems(
       unitName: catalogItem.unitName,
       quantity: toQuantityString(quantityValue),
       price: toMoneyString(unitPriceValue),
-      tax: lineTaxValue > 0 ? toMoneyString(lineTaxValue) : null,
       total: toMoneyString(lineTotalValue),
     };
   });
 
-  // Global tax: applied when no per-item taxes were calculated
-  if (globalTaxId && taxValue === 0) {
-    const taxType = taxTypesById.get(globalTaxId);
-    if (taxType) {
-      taxValue = Number(
-        (subTotalValue * (Number(taxType.percent) / 100)).toFixed(3),
+  return { normalizedItems, subTotalValue };
+}
+
+async function computeSummaryTotals(
+  db: DbClient,
+  organizationId: string,
+  subTotalValue: number,
+  discountInput: string | null | undefined,
+  discountFixed: boolean,
+  taxIds: string[] | undefined,
+) {
+  const discountStr = discountInput?.trim() ?? "";
+  const discountInputVal = discountStr
+    ? parseNonNegativeDecimal(discountStr, "Discount")
+    : 0;
+
+  const discountValRaw = discountFixed
+    ? discountInputVal
+    : subTotalValue * (discountInputVal / 100);
+  const discountVal = Math.min(discountValRaw, subTotalValue);
+
+  const discountedSub = subTotalValue - discountVal;
+
+  let taxValue = 0;
+  if (taxIds?.length) {
+    const orgTaxTypes = await db
+      .select({ id: taxTypes.id, percent: taxTypes.percent })
+      .from(taxTypes)
+      .where(
+        and(
+          eq(taxTypes.organizationId, organizationId),
+          inArray(taxTypes.id, taxIds),
+        ),
       );
+    for (const t of orgTaxTypes) {
+      taxValue += discountedSub * (Number(t.percent) / 100);
     }
+    taxValue = Number(taxValue.toFixed(3));
   }
 
-  const totalValue = Number((subTotalValue + taxValue).toFixed(3));
+  const totalValue = Number((discountedSub + taxValue).toFixed(3));
 
   return {
-    normalizedItems,
-    totals: {
-      subTotal: toMoneyString(subTotalValue),
-      tax: toMoneyString(taxValue),
-      total: toMoneyString(totalValue),
-    },
+    subTotal: toMoneyString(subTotalValue),
+    discountVal: toMoneyString(discountVal),
+    tax: toMoneyString(taxValue),
+    total: toMoneyString(totalValue),
   };
 }
 
@@ -339,6 +335,8 @@ export const invoicesRouter = createTRPCRouter({
           subTotal: invoices.subTotal,
           total: invoices.total,
           tax: invoices.tax,
+          discount: invoices.discount,
+          discountFixed: invoices.discountFixed,
           createdAt: invoices.createdAt,
           updatedAt: invoices.updatedAt,
           customerId: customers.id,
@@ -399,6 +397,8 @@ export const invoicesRouter = createTRPCRouter({
         subTotal: invoice.subTotal,
         total: invoice.total,
         tax: invoice.tax,
+        discount: invoice.discount,
+        discountFixed: invoice.discountFixed,
         createdAt: invoice.createdAt,
         updatedAt: invoice.updatedAt,
         customer: {
@@ -472,7 +472,6 @@ export const invoicesRouter = createTRPCRouter({
       const [prefs] = await ctx.db
         .select({
           defaultCurrencyId: organizationPreferences.defaultCurrencyId,
-          taxPerItem: organizationPreferences.taxPerItem,
           discountPerItem: organizationPreferences.discountPerItem,
         })
         .from(organizationPreferences)
@@ -505,21 +504,21 @@ export const invoicesRouter = createTRPCRouter({
         });
       }
 
-      const orgTaxTypes = await ctx.db
-        .select({ id: taxTypes.id, percent: taxTypes.percent })
-        .from(taxTypes)
-        .where(eq(taxTypes.organizationId, ctx.organizationId));
+      const { normalizedItems, subTotalValue } =
+        await buildNormalizedInvoiceItems(
+          ctx.db,
+          ctx.organizationId,
+          input.items,
+        );
 
-      const taxTypesById = new Map(
-        orgTaxTypes.map((t) => [t.id, { percent: t.percent }]),
-      );
-
-      const { normalizedItems, totals } = await buildNormalizedInvoiceItems(
+      const discountFixed = input.discountFixed ?? false;
+      const totals = await computeSummaryTotals(
         ctx.db,
         ctx.organizationId,
-        input.items,
-        taxTypesById,
-        prefs.taxPerItem ? null : input.globalTaxId,
+        subTotalValue,
+        input.discount,
+        discountFixed,
+        input.taxIds,
       );
 
       const currencyId = prefs.defaultCurrencyId;
@@ -544,12 +543,12 @@ export const invoicesRouter = createTRPCRouter({
             dueDate: nullableString(input.dueDate) ?? undefined,
             invoiceNumber,
             status: "DRAFT",
-            taxPerItem: prefs.taxPerItem ?? false,
+            taxPerItem: false,
             discountPerItem: prefs.discountPerItem ?? false,
-            discountFixed: false,
+            discountFixed,
             notes: nullableString(input.notes) ?? undefined,
-            discount: undefined,
-            discountVal: undefined,
+            discount: nullableString(input.discount) ?? undefined,
+            discountVal: totals.discountVal,
             subTotal: totals.subTotal,
             total: totals.total,
             tax: totals.tax,
@@ -578,7 +577,7 @@ export const invoicesRouter = createTRPCRouter({
             discountType: "fixed" as const,
             discount: null,
             discountVal: null,
-            tax: item.tax,
+            tax: null,
             total: item.total,
             exchangeRate: null,
             baseDiscountVal: null,
@@ -605,7 +604,6 @@ export const invoicesRouter = createTRPCRouter({
       const [existing] = await ctx.db
         .select({
           id: invoices.id,
-          taxPerItem: invoices.taxPerItem,
         })
         .from(invoices)
         .where(
@@ -641,21 +639,21 @@ export const invoicesRouter = createTRPCRouter({
         });
       }
 
-      const orgTaxTypes = await ctx.db
-        .select({ id: taxTypes.id, percent: taxTypes.percent })
-        .from(taxTypes)
-        .where(eq(taxTypes.organizationId, ctx.organizationId));
+      const { normalizedItems, subTotalValue } =
+        await buildNormalizedInvoiceItems(
+          ctx.db,
+          ctx.organizationId,
+          input.items,
+        );
 
-      const taxTypesById = new Map(
-        orgTaxTypes.map((t) => [t.id, { percent: t.percent }]),
-      );
-
-      const { normalizedItems, totals } = await buildNormalizedInvoiceItems(
+      const discountFixed = input.discountFixed ?? false;
+      const totals = await computeSummaryTotals(
         ctx.db,
         ctx.organizationId,
-        input.items,
-        taxTypesById,
-        existing.taxPerItem ? null : input.globalTaxId,
+        subTotalValue,
+        input.discount,
+        discountFixed,
+        input.taxIds,
       );
 
       await ctx.db.transaction(async (tx) => {
@@ -666,6 +664,9 @@ export const invoicesRouter = createTRPCRouter({
             invoiceDate: input.invoiceDate,
             dueDate: nullableString(input.dueDate) ?? undefined,
             notes: nullableString(input.notes) ?? undefined,
+            discount: nullableString(input.discount) ?? undefined,
+            discountVal: totals.discountVal,
+            discountFixed,
             subTotal: totals.subTotal,
             total: totals.total,
             tax: totals.tax,
@@ -700,7 +701,7 @@ export const invoicesRouter = createTRPCRouter({
             discountType: "fixed" as const,
             discount: null,
             discountVal: null,
-            tax: item.tax,
+            tax: null,
             total: item.total,
             exchangeRate: null,
             baseDiscountVal: null,

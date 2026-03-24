@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { FileText, Pencil, Plus, Trash2 } from "lucide-react";
 import NextLink from "next/link";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import {
@@ -10,6 +11,7 @@ import {
   formatCurrencyDisplay,
 } from "@/lib/currency-format";
 import { toast } from "@/lib/toast";
+import { cn } from "@/lib/utils";
 import { useTRPC } from "@/trpc/client";
 import {
   formatInvoiceDate,
@@ -37,7 +39,9 @@ type InvoiceRecord = {
   itemCount: number;
 };
 
-function InvoiceCard({
+type InvoiceFilter = "ALL" | "DRAFT" | "SENT" | "DUE";
+
+function InvoiceRow({
   invoice,
   deletePendingId,
   onDelete,
@@ -47,95 +51,76 @@ function InvoiceCard({
   onDelete: (id: string) => void;
 }) {
   return (
-    <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <div className="flex items-center gap-2">
-            <p className="text-sm font-semibold text-foreground">
-              {invoice.invoiceNumber}
-            </p>
-            <InvoiceStatusBadge status={invoice.status} />
-          </div>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {invoice.customer.displayName}
+    <tr className="border-b border-border last:border-0">
+      <td className="py-3 pl-4 pr-2 align-top">
+        <div className="space-y-1">
+          <p className="text-sm font-medium text-foreground">
+            {invoice.invoiceNumber}
           </p>
+          {invoice.notes ? (
+            <p className="line-clamp-1 max-w-[24ch] text-xs text-muted-foreground">
+              {invoice.notes}
+            </p>
+          ) : null}
         </div>
-
-        <div className="text-right">
-          <p className="text-lg font-semibold text-foreground">
-            {formatCurrencyDisplay(invoice.total, invoice.currency)}
+      </td>
+      <td className="px-2 py-3 align-top">
+        <InvoiceStatusBadge status={invoice.status} />
+      </td>
+      <td className="px-2 py-3 align-top">
+        <div className="space-y-1">
+          <p className="text-sm text-foreground">
+            {invoice.customer.displayName}
           </p>
           <p className="text-xs text-muted-foreground">
             {invoice.itemCount} item{invoice.itemCount !== 1 ? "s" : ""}
           </p>
         </div>
-      </div>
-
-      <div className="mt-4 grid gap-3 text-sm text-muted-foreground sm:grid-cols-3">
-        <div>
-          <p className="text-xs uppercase tracking-wide text-muted-foreground/70">
-            Invoice date
-          </p>
-          <p className="mt-1 text-foreground">
-            {formatInvoiceDate(invoice.invoiceDate) ?? "Not set"}
-          </p>
+      </td>
+      <td className="px-2 py-3 align-top text-sm text-foreground">
+        {formatInvoiceDate(invoice.invoiceDate) ?? "Not set"}
+      </td>
+      <td className="px-2 py-3 align-top text-sm text-foreground">
+        {formatInvoiceDate(invoice.dueDate) ?? "No due date"}
+      </td>
+      <td className="px-2 py-3 align-top text-sm font-medium text-foreground">
+        {formatCurrencyDisplay(invoice.total, invoice.currency)}
+      </td>
+      <td className="py-3 pl-2 pr-4 align-top">
+        <div className="flex justify-end gap-1">
+          <Button type="button" variant="ghost" size="icon" asChild>
+            <NextLink href={`/app/invoices/${invoice.id}`}>
+              <FileText className="h-4 w-4" />
+              <span className="sr-only">View invoice</span>
+            </NextLink>
+          </Button>
+          <Button type="button" variant="ghost" size="icon" asChild>
+            <NextLink href={`/app/invoices/edit?id=${invoice.id}`}>
+              <Pencil className="h-4 w-4" />
+              <span className="sr-only">Edit invoice</span>
+            </NextLink>
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            disabled={deletePendingId === invoice.id}
+            onClick={() => onDelete(invoice.id)}
+            className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+          >
+            <Trash2 className="h-4 w-4" />
+            <span className="sr-only">Delete invoice</span>
+          </Button>
         </div>
-        <div>
-          <p className="text-xs uppercase tracking-wide text-muted-foreground/70">
-            Due date
-          </p>
-          <p className="mt-1 text-foreground">
-            {formatInvoiceDate(invoice.dueDate) ?? "No due date"}
-          </p>
-        </div>
-        <div>
-          <p className="text-xs uppercase tracking-wide text-muted-foreground/70">
-            Subtotal
-          </p>
-          <p className="mt-1 text-foreground">
-            {formatCurrencyDisplay(invoice.subTotal, invoice.currency)}
-          </p>
-        </div>
-      </div>
-
-      {invoice.notes ? (
-        <div className="mt-4 rounded-xl bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
-          {invoice.notes}
-        </div>
-      ) : null}
-
-      <div className="mt-4 flex flex-wrap items-center justify-end gap-2">
-        <Button type="button" variant="outline" size="sm" asChild>
-          <NextLink href={`/app/invoices/${invoice.id}`}>
-            <FileText className="h-4 w-4" />
-            View
-          </NextLink>
-        </Button>
-        <Button type="button" variant="outline" size="sm" asChild>
-          <NextLink href={`/app/invoices/edit?id=${invoice.id}`}>
-            <Pencil className="h-4 w-4" />
-            Edit
-          </NextLink>
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          disabled={deletePendingId === invoice.id}
-          onClick={() => onDelete(invoice.id)}
-          className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-        >
-          <Trash2 className="h-4 w-4" />
-          Delete
-        </Button>
-      </div>
-    </div>
+      </td>
+    </tr>
   );
 }
 
 export default function InvoicesPage() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
+  const [activeFilter, setActiveFilter] = useState<InvoiceFilter>("ALL");
 
   const { data: invoices = [], isPending: invoicesPending } = useQuery(
     trpc.invoices.list.queryOptions(),
@@ -177,11 +162,39 @@ export default function InvoicesPage() {
   const draftCount = invoices.filter(
     (invoice) => invoice.status === "DRAFT",
   ).length;
+  const sentCount = invoices.filter(
+    (invoice) => invoice.status === "SENT",
+  ).length;
+  const dueCount = invoices.filter((invoice) =>
+    Boolean(invoice.dueDate),
+  ).length;
   const canCreate = usage?.canCreate ?? true;
-  const hasDependencies =
-    (meta?.customers.length ?? 0) > 0 &&
-    (meta?.items.length ?? 0) > 0 &&
-    Boolean(meta?.defaultCurrency);
+  const hasDependencies = Boolean(meta?.defaultCurrency);
+  const filteredInvoices = (() => {
+    if (activeFilter === "DRAFT") {
+      return invoices.filter((invoice) => invoice.status === "DRAFT");
+    }
+
+    if (activeFilter === "SENT") {
+      return invoices.filter((invoice) => invoice.status === "SENT");
+    }
+
+    if (activeFilter === "DUE") {
+      return invoices.filter((invoice) => Boolean(invoice.dueDate));
+    }
+
+    return invoices;
+  })();
+  const filterTabs: Array<{
+    value: InvoiceFilter;
+    label: string;
+    count: number;
+  }> = [
+    { value: "ALL", label: "All", count: invoices.length },
+    { value: "DRAFT", label: "Draft", count: draftCount },
+    { value: "SENT", label: "Sent", count: sentCount },
+    { value: "DUE", label: "Due", count: dueCount },
+  ];
 
   return (
     <PageShell
@@ -250,15 +263,32 @@ export default function InvoicesPage() {
           </div>
         ) : null}
 
-        {(meta?.customers.length ?? 0) === 0 ? (
-          <div className="rounded-2xl border border-border bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
-            Add at least one customer before creating an invoice.
-          </div>
-        ) : null}
-
-        {(meta?.items.length ?? 0) === 0 ? (
-          <div className="rounded-2xl border border-border bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
-            Add at least one item in your catalog before creating an invoice.
+        {invoices.length > 0 ? (
+          <div
+            role="tablist"
+            aria-label="Invoice status filters"
+            className="flex w-full gap-2 overflow-x-auto rounded-2xl border border-border bg-muted/20 p-2"
+          >
+            {filterTabs.map((tab) => (
+              <button
+                key={tab.value}
+                type="button"
+                role="tab"
+                aria-selected={activeFilter === tab.value}
+                onClick={() => setActiveFilter(tab.value)}
+                className={cn(
+                  "inline-flex min-w-fit items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition-colors",
+                  activeFilter === tab.value
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground hover:bg-card/60 hover:text-foreground",
+                )}
+              >
+                <span>{tab.label}</span>
+                <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                  {tab.count}
+                </span>
+              </button>
+            ))}
           </div>
         ) : null}
 
@@ -274,20 +304,61 @@ export default function InvoicesPage() {
               Create your first invoice to start billing clients.
             </p>
           </div>
+        ) : filteredInvoices.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-border bg-muted/20 p-12 text-center">
+            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-muted">
+              <FileText className="h-5 w-5 text-muted-foreground/60" />
+            </div>
+            <p className="text-sm font-medium text-foreground">
+              No {activeFilter.toLowerCase()} invoices
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Try another filter or create a new invoice.
+            </p>
+          </div>
         ) : (
-          <div className="grid gap-4 xl:grid-cols-2">
-            {invoices.map((invoice) => (
-              <InvoiceCard
-                key={invoice.id}
-                invoice={invoice}
-                deletePendingId={
-                  deleteInvoice.isPending
-                    ? (deleteInvoice.variables?.id ?? null)
-                    : null
-                }
-                onDelete={(id) => deleteInvoice.mutate({ id })}
-              />
-            ))}
+          <div className="overflow-x-auto rounded-2xl border border-border bg-card">
+            <table className="w-full min-w-[860px]">
+              <thead>
+                <tr className="border-b border-border">
+                  <th className="py-3 pl-4 pr-2 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
+                    Invoice
+                  </th>
+                  <th className="px-2 py-3 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
+                    Status
+                  </th>
+                  <th className="px-2 py-3 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
+                    Customer
+                  </th>
+                  <th className="px-2 py-3 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
+                    Invoice date
+                  </th>
+                  <th className="px-2 py-3 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
+                    Due date
+                  </th>
+                  <th className="px-2 py-3 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
+                    Total
+                  </th>
+                  <th className="py-3 pl-2 pr-4 text-right text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredInvoices.map((invoice) => (
+                  <InvoiceRow
+                    key={invoice.id}
+                    invoice={invoice}
+                    deletePendingId={
+                      deleteInvoice.isPending
+                        ? (deleteInvoice.variables?.id ?? null)
+                        : null
+                    }
+                    onDelete={(id) => deleteInvoice.mutate({ id })}
+                  />
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </div>

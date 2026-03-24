@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Trash2 } from "lucide-react";
+import { DollarSignIcon, PercentIcon, Plus, Trash2, X } from "lucide-react";
 import NextLink from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -9,11 +9,17 @@ import { Button } from "@/components/ui/button";
 import { CurrencyInput } from "@/components/ui/currency-input";
 import { CustomerPicker } from "@/components/ui/customer-picker";
 import { Input } from "@/components/ui/input";
+import { ItemPicker } from "@/components/ui/item-picker";
 import { Label } from "@/components/ui/label";
-import { NativeSelect } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
+import {
+  NativeSelect,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+} from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
-import { Textarea } from "@/components/ui/textarea";
 import { formatCurrencyDisplay } from "@/lib/currency-format";
 import { toast } from "@/lib/toast";
 import { useTRPC } from "@/trpc/client";
@@ -24,7 +30,6 @@ type DraftItem = {
   itemId: string;
   quantity: string;
   unitPrice: string;
-  taxId: string;
 };
 
 function makeDraftItem(): DraftItem {
@@ -33,7 +38,13 @@ function makeDraftItem(): DraftItem {
     itemId: "",
     quantity: "1",
     unitPrice: "",
-    taxId: "",
+  };
+}
+
+function makeTaxRow(taxId = "") {
+  return {
+    key: `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    taxId,
   };
 }
 
@@ -47,6 +58,9 @@ export function EditInvoiceForm() {
   const { data: meta = null, isPending: metaPending } = useQuery(
     trpc.invoices.getFormMeta.queryOptions(),
   );
+  const { data: itemOptions = [], isPending: itemsPending } = useQuery(
+    trpc.items.list.queryOptions(),
+  );
   const { data: invoice, isPending: invoicePending } = useQuery({
     ...trpc.invoices.getById.queryOptions({ id: invoiceId }),
     enabled: Boolean(invoiceId),
@@ -58,7 +72,13 @@ export function EditInvoiceForm() {
   const [dueDate, setDueDate] = useState("");
   const [notes, setNotes] = useState("");
   const [draftItems, setDraftItems] = useState<DraftItem[]>([makeDraftItem()]);
-  const [globalTaxId, setGlobalTaxId] = useState("");
+  const [discountValue, setDiscountValue] = useState("");
+  const [discountType, setDiscountType] = useState<"fixed" | "percentage">(
+    "fixed",
+  );
+  const [summaryTaxRows, setSummaryTaxRows] = useState<
+    { key: string; taxId: string }[]
+  >([]);
 
   useEffect(() => {
     if (!invoice || initializedForId === invoice.id) {
@@ -76,10 +96,13 @@ export function EditInvoiceForm() {
             itemId: item.itemId ?? "",
             quantity: item.quantity,
             unitPrice: item.price,
-            taxId: "",
           }))
         : [makeDraftItem()],
     );
+    if (invoice.discount) {
+      setDiscountValue(invoice.discount);
+      setDiscountType(invoice.discountFixed ? "fixed" : "percentage");
+    }
     setInitializedForId(invoice.id);
   }, [initializedForId, invoice]);
 
@@ -105,8 +128,8 @@ export function EditInvoiceForm() {
   );
 
   const itemsById = useMemo(
-    () => new Map((meta?.items ?? []).map((item) => [item.id, item])),
-    [meta?.items],
+    () => new Map(itemOptions.map((item) => [item.id, item])),
+    [itemOptions],
   );
 
   const taxTypesById = useMemo(
@@ -116,36 +139,37 @@ export function EditInvoiceForm() {
 
   const displayCurrency = invoice?.currency ?? meta?.defaultCurrency ?? null;
 
-  const { subTotal, taxAmount } = useMemo(() => {
+  const { subTotal, taxRows, grandTotal } = useMemo(() => {
     let sub = 0;
-    let tax = 0;
-
     for (const item of draftItems) {
       const quantity = Number(item.quantity);
       const unitPrice = Number(item.unitPrice);
-
       if (!Number.isFinite(quantity) || !Number.isFinite(unitPrice)) continue;
-
-      const lineTotal = quantity * unitPrice;
-      sub += lineTotal;
-
-      if (meta?.taxPerItem && item.taxId) {
-        const taxType = taxTypesById.get(item.taxId);
-        if (taxType) {
-          tax += lineTotal * (Number(taxType.percent) / 100);
-        }
-      }
+      sub += quantity * unitPrice;
     }
 
-    if (!meta?.taxPerItem && globalTaxId) {
-      const taxType = taxTypesById.get(globalTaxId);
-      if (taxType) {
-        tax = sub * (Number(taxType.percent) / 100);
-      }
-    }
+    const discountInputVal = Number(discountValue) || 0;
+    const rawDiscount =
+      discountType === "fixed"
+        ? discountInputVal
+        : sub * (discountInputVal / 100);
+    const discount = Math.min(rawDiscount, sub);
+    const discounted = sub - discount;
 
-    return { subTotal: sub, taxAmount: tax };
-  }, [draftItems, meta?.taxPerItem, globalTaxId, taxTypesById]);
+    const rows = summaryTaxRows.map(({ key, taxId }) => {
+      const taxType = taxTypesById.get(taxId);
+      const amount = taxType ? discounted * (Number(taxType.percent) / 100) : 0;
+      return { key, taxId, taxType, amount };
+    });
+    const taxTotal = rows.reduce((sum, r) => sum + r.amount, 0);
+
+    return {
+      subTotal: sub,
+      discountAmount: discount,
+      taxRows: rows,
+      grandTotal: discounted + taxTotal,
+    };
+  }, [draftItems, discountValue, discountType, summaryTaxRows, taxTypesById]);
 
   function updateDraftItem(
     id: string,
@@ -158,7 +182,6 @@ export function EditInvoiceForm() {
 
   function handleCatalogItemChange(id: string, itemId: string) {
     const catalogItem = itemsById.get(itemId);
-
     updateDraftItem(id, (current) => ({
       ...current,
       itemId,
@@ -172,12 +195,23 @@ export function EditInvoiceForm() {
 
   function removeDraftItem(id: string) {
     setDraftItems((current) => {
-      if (current.length === 1) {
-        return [makeDraftItem()];
-      }
-
+      if (current.length === 1) return [makeDraftItem()];
       return current.filter((item) => item.id !== id);
     });
+  }
+
+  function addTax() {
+    setSummaryTaxRows((prev) => [...prev, makeTaxRow()]);
+  }
+
+  function updateTaxId(key: string, taxId: string) {
+    setSummaryTaxRows((prev) =>
+      prev.map((row) => (row.key === key ? { ...row, taxId } : row)),
+    );
+  }
+
+  function removeTax(key: string) {
+    setSummaryTaxRows((prev) => prev.filter((row) => row.key !== key));
   }
 
   if (!invoiceId) {
@@ -193,7 +227,14 @@ export function EditInvoiceForm() {
     );
   }
 
-  if (metaPending || invoicePending || !invoice || !meta || !displayCurrency) {
+  if (
+    metaPending ||
+    itemsPending ||
+    invoicePending ||
+    !invoice ||
+    !meta ||
+    !displayCurrency
+  ) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center">
         <Spinner className="size-5 text-primary" label="Loading" />
@@ -202,10 +243,6 @@ export function EditInvoiceForm() {
   }
 
   const validDraftItems = draftItems.filter((item) => item.itemId);
-
-  const lineItemGridCols = meta.taxPerItem
-    ? "xl:grid-cols-[minmax(0,1.5fr)_140px_220px_180px_auto]"
-    : "xl:grid-cols-[minmax(0,1.5fr)_140px_220px_auto]";
 
   return (
     <div className="space-y-6">
@@ -221,17 +258,13 @@ export function EditInvoiceForm() {
             Created {formatInvoiceDate(invoice.invoiceDate)}
           </p>
         </div>
-
-        <div className="flex gap-2">
-          <Button type="button" variant="outline" asChild>
-            <NextLink href={`/app/invoices/${invoice.id}`}>Cancel</NextLink>
-          </Button>
-        </div>
+        <Button type="button" variant="outline" asChild>
+          <NextLink href={`/app/invoices/${invoice.id}`}>Cancel</NextLink>
+        </Button>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <div className="space-y-1.5">
-          <Label htmlFor="edit-invoice-customer">Customer</Label>
+      <div className="grid grid-cols-12 gap-8 mt-6 mb-8">
+        <div className="max-h-[173px] col-span-12 lg:col-span-5 pr-0">
           <CustomerPicker
             id="edit-invoice-customer"
             value={customerId}
@@ -240,36 +273,34 @@ export function EditInvoiceForm() {
           />
         </div>
 
-        <div className="space-y-1.5">
-          <Label htmlFor="edit-invoice-date">Invoice date</Label>
-          <Input
-            id="edit-invoice-date"
-            type="date"
-            value={invoiceDate}
-            onChange={(event) => setInvoiceDate(event.target.value)}
-          />
-        </div>
+        <div className="grid gap-y-6 gap-x-4 grid-cols-1 md:grid-cols-2 col-span-12 lg:col-span-7">
+          <div className="relative w-full text-left">
+            <Label htmlFor="edit-invoice-date">Invoice date</Label>
+            <Input
+              id="edit-invoice-date"
+              type="date"
+              value={invoiceDate}
+              onChange={(event) => setInvoiceDate(event.target.value)}
+            />
+          </div>
 
-        <div className="space-y-1.5">
-          <Label htmlFor="edit-due-date">
-            Due date{" "}
-            <span className="text-xs text-muted-foreground">(optional)</span>
-          </Label>
-          <Input
-            id="edit-due-date"
-            type="date"
-            value={dueDate}
-            onChange={(event) => setDueDate(event.target.value)}
-          />
-        </div>
+          <div className="relative w-full text-left">
+            <Label htmlFor="edit-due-date">
+              Due date{" "}
+              <span className="text-xs text-muted-foreground">(optional)</span>
+            </Label>
+            <Input
+              id="edit-due-date"
+              type="date"
+              value={dueDate}
+              onChange={(event) => setDueDate(event.target.value)}
+            />
+          </div>
 
-        <div className="space-y-1.5">
-          <Label htmlFor="edit-invoice-currency">Currency</Label>
-          <Input
-            id="edit-invoice-currency"
-            value={displayCurrency.code}
-            disabled
-          />
+          <div className="relative w-full text-left">
+            <Label>Invoice number</Label>
+            <Input value={invoice.invoiceNumber} disabled />
+          </div>
         </div>
       </div>
 
@@ -294,192 +325,224 @@ export function EditInvoiceForm() {
           </Button>
         </div>
 
-        {draftItems.map((draftItem, index) => {
-          const catalogItem = draftItem.itemId
-            ? itemsById.get(draftItem.itemId)
-            : null;
-          const lineTotal =
-            Number(draftItem.quantity || 0) * Number(draftItem.unitPrice || 0);
+        <div className="rounded-2xl border border-border bg-card p-4">
+          {draftItems.map((draftItem, index) => {
+            const catalogItem = draftItem.itemId
+              ? itemsById.get(draftItem.itemId)
+              : null;
+            const lineTotal =
+              Number(draftItem.quantity || 0) *
+              Number(draftItem.unitPrice || 0);
 
-          return (
-            <div
-              key={draftItem.id}
-              className="rounded-2xl border border-border bg-card p-4"
-            >
-              <div className={`grid gap-4 ${lineItemGridCols}`}>
-                <div className="space-y-1.5">
-                  <Label htmlFor={`edit-item-${draftItem.id}`}>
-                    Item {index + 1}
-                  </Label>
-                  <NativeSelect
-                    id={`edit-item-${draftItem.id}`}
-                    value={draftItem.itemId}
-                    onChange={(event) =>
-                      handleCatalogItemChange(draftItem.id, event.target.value)
-                    }
-                  >
-                    <option value="">Select an item</option>
-                    {meta.items.map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {item.name}
-                      </option>
-                    ))}
-                  </NativeSelect>
-                  {catalogItem?.description ? (
-                    <p className="text-xs text-muted-foreground">
-                      {catalogItem.description}
-                    </p>
-                  ) : null}
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label htmlFor={`edit-qty-${draftItem.id}`}>Qty</Label>
-                  <Input
-                    id={`edit-qty-${draftItem.id}`}
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={draftItem.quantity}
-                    onChange={(event) =>
-                      updateDraftItem(draftItem.id, (current) => ({
-                        ...current,
-                        quantity: event.target.value,
-                      }))
-                    }
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label htmlFor={`edit-price-${draftItem.id}`}>
-                    Unit price
-                  </Label>
-                  <CurrencyInput
-                    id={`edit-price-${draftItem.id}`}
-                    currency={displayCurrency}
-                    value={draftItem.unitPrice}
-                    onValueChange={(value) =>
-                      updateDraftItem(draftItem.id, (current) => ({
-                        ...current,
-                        unitPrice: value,
-                      }))
-                    }
-                  />
-                  {catalogItem?.unitName ? (
-                    <p className="text-xs text-muted-foreground">
-                      Unit: {catalogItem.unitName}
-                    </p>
-                  ) : null}
-                </div>
-
-                {meta.taxPerItem ? (
+            return (
+              <div key={draftItem.id}>
+                {index > 0 && <hr className="my-4 border-border" />}
+                <div className="grid gap-4 xl:grid-cols-[minmax(0,1.5fr)_140px_220px_auto]">
                   <div className="space-y-1.5">
-                    <Label htmlFor={`edit-tax-${draftItem.id}`}>Tax</Label>
-                    <NativeSelect
-                      id={`edit-tax-${draftItem.id}`}
-                      value={draftItem.taxId}
+                    <Label htmlFor={`edit-item-${draftItem.id}`}>
+                      Item {index + 1}
+                    </Label>
+                    <ItemPicker
+                      id={`edit-item-${draftItem.id}`}
+                      value={draftItem.itemId}
+                      onValueChange={(itemId) =>
+                        handleCatalogItemChange(draftItem.id, itemId)
+                      }
+                    />
+                    {catalogItem?.description ? (
+                      <p className="text-xs text-muted-foreground">
+                        {catalogItem.description}
+                      </p>
+                    ) : null}
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor={`edit-qty-${draftItem.id}`}>Qty</Label>
+                    <Input
+                      id={`edit-qty-${draftItem.id}`}
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={draftItem.quantity}
                       onChange={(event) =>
                         updateDraftItem(draftItem.id, (current) => ({
                           ...current,
-                          taxId: event.target.value,
+                          quantity: event.target.value,
                         }))
                       }
-                    >
-                      <option value="">No tax</option>
-                      {meta.taxTypes.map((t) => (
-                        <option key={t.id} value={t.id}>
-                          {t.name} ({t.percent}%)
-                        </option>
-                      ))}
-                    </NativeSelect>
+                    />
                   </div>
-                ) : null}
 
-                <div className="flex items-end justify-between gap-3 xl:flex-col xl:items-end">
-                  <div className="text-right">
-                    <p className="text-xs uppercase tracking-wide text-muted-foreground/70">
-                      Line total
-                    </p>
-                    <p className="mt-1 text-sm font-semibold text-foreground">
-                      {formatCurrencyDisplay(
-                        Number.isFinite(lineTotal) ? lineTotal.toFixed(3) : "0",
-                        displayCurrency,
-                      )}
-                    </p>
+                  <div className="space-y-1.5">
+                    <Label htmlFor={`edit-price-${draftItem.id}`}>
+                      Unit price
+                    </Label>
+                    <CurrencyInput
+                      id={`edit-price-${draftItem.id}`}
+                      currency={displayCurrency}
+                      value={draftItem.unitPrice}
+                      onValueChange={(value) =>
+                        updateDraftItem(draftItem.id, (current) => ({
+                          ...current,
+                          unitPrice: value,
+                        }))
+                      }
+                    />
+                    {catalogItem?.unitName ? (
+                      <p className="text-xs text-muted-foreground">
+                        Unit: {catalogItem.unitName}
+                      </p>
+                    ) : null}
                   </div>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => removeDraftItem(draftItem.id)}
-                    className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    Remove
-                  </Button>
+
+                  <div className="flex items-end justify-between gap-3 xl:flex-col xl:items-end">
+                    <div className="text-right">
+                      <p className="text-xs uppercase tracking-wide text-muted-foreground/70">
+                        Line total
+                      </p>
+                      <p className="mt-1 text-sm font-semibold text-foreground">
+                        {formatCurrencyDisplay(
+                          Number.isFinite(lineTotal)
+                            ? lineTotal.toFixed(3)
+                            : "0",
+                          displayCurrency,
+                        )}
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeDraftItem(draftItem.id)}
+                      className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Remove
+                    </Button>
+                  </div>
                 </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
         <div className="space-y-1.5">
-          <Label htmlFor="edit-invoice-notes">
+          <Label>
             Notes{" "}
             <span className="text-xs text-muted-foreground">(optional)</span>
           </Label>
-          <Textarea
-            id="edit-invoice-notes"
-            rows={5}
-            value={notes}
-            onChange={(event) => setNotes(event.target.value)}
-          />
+          <RichTextEditor value={notes} onChange={setNotes} />
         </div>
 
         <div className="rounded-2xl border border-border bg-card p-4">
           <p className="text-sm font-semibold text-foreground">Summary</p>
           <div className="mt-4 space-y-3 text-sm">
             <div className="flex items-center justify-between text-muted-foreground">
-              <span>Subtotal</span>
+              <span>Sub Total</span>
               <span className="font-medium text-foreground">
                 {formatCurrencyDisplay(subTotal.toFixed(3), displayCurrency)}
               </span>
             </div>
-            {!meta.taxPerItem && meta.taxTypes.length > 0 ? (
-              <div className="flex items-center justify-between gap-3 text-muted-foreground">
-                <Label htmlFor="edit-global-tax" className="text-xs">
-                  Tax
-                </Label>
-                <NativeSelect
-                  id="edit-global-tax"
-                  value={globalTaxId}
-                  onChange={(e) => setGlobalTaxId(e.target.value)}
-                  className="w-40 text-xs"
+
+            <div className="flex items-center justify-between gap-2">
+              <span className="shrink-0 text-muted-foreground">Discount</span>
+              <div className="flex gap-1">
+                <Input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={discountValue}
+                  onChange={(e) => setDiscountValue(e.target.value)}
+                  className="w-24 text-xs"
+                  placeholder="0"
+                />
+                <Select
+                  value={discountType}
+                  onValueChange={(value) =>
+                    setDiscountType(value as "fixed" | "percentage")
+                  }
                 >
-                  <option value="">No tax</option>
-                  {meta.taxTypes.map((t) => (
-                    <option key={t.id} value={t.id}>
-                      {t.name} ({t.percent}%)
-                    </option>
-                  ))}
-                </NativeSelect>
+                  <SelectTrigger className="w-32 text-xs">
+                    <span className="flex items-center gap-1.5">
+                      {discountType === "fixed" ? (
+                        <DollarSignIcon className="h-3.5 w-3.5" />
+                      ) : (
+                        <PercentIcon className="h-3.5 w-3.5" />
+                      )}
+                      {discountType === "fixed" ? "Fixed" : "Percent"}
+                    </span>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="fixed">
+                      <span className="flex items-center gap-2">
+                        <DollarSignIcon className="h-3.5 w-3.5" />
+                        Fixed
+                      </span>
+                    </SelectItem>
+                    <SelectItem value="percentage">
+                      <span className="flex items-center gap-2">
+                        <PercentIcon className="h-3.5 w-3.5" />
+                        Percent
+                      </span>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-            ) : null}
-            <div className="flex items-center justify-between text-muted-foreground">
-              <span>Tax amount</span>
-              <span className="font-medium text-foreground">
-                {formatCurrencyDisplay(taxAmount.toFixed(3), displayCurrency)}
-              </span>
             </div>
-            <Separator />
+
+            {taxRows.map((row) => (
+              <div key={row.key} className="flex items-center gap-2">
+                <div className="flex flex-1 items-center gap-1">
+                  <NativeSelect
+                    value={row.taxId}
+                    onChange={(e) => updateTaxId(row.key, e.target.value)}
+                    className="flex-1 text-xs"
+                  >
+                    <option value="">Select tax</option>
+                    {meta.taxTypes.map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.name} ({t.percent}%)
+                      </option>
+                    ))}
+                  </NativeSelect>
+                  <button
+                    type="button"
+                    onClick={() => removeTax(row.key)}
+                    className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+                <span className="shrink-0 font-medium text-foreground">
+                  {formatCurrencyDisplay(
+                    row.amount.toFixed(3),
+                    displayCurrency,
+                  )}
+                </span>
+              </div>
+            ))}
+
+            {meta.taxTypes.length > 0 ? (
+              <button
+                type="button"
+                onClick={addTax}
+                className="flex items-center gap-1 text-xs text-primary hover:underline"
+              >
+                <Plus className="h-3 w-3" />
+                Add Tax
+              </button>
+            ) : null}
+
+            <hr className="border-border" />
+
             <div className="flex items-center justify-between">
-              <span className="font-semibold text-foreground">Total</span>
+              <span className="font-semibold text-foreground">
+                Total Amount
+              </span>
               <span className="text-lg font-semibold text-foreground">
-                {formatCurrencyDisplay(
-                  (subTotal + taxAmount).toFixed(3),
-                  displayCurrency,
-                )}
+                {formatCurrencyDisplay(grandTotal.toFixed(3), displayCurrency)}
               </span>
             </div>
           </div>
@@ -505,14 +568,15 @@ export function EditInvoiceForm() {
               customerId,
               invoiceDate,
               dueDate: dueDate || null,
-              notes: notes.trim() || null,
+              notes: notes || null,
               items: validDraftItems.map((item) => ({
                 itemId: item.itemId,
                 quantity: item.quantity,
                 unitPrice: item.unitPrice || "0",
-                taxId: item.taxId || null,
               })),
-              globalTaxId: globalTaxId || null,
+              discount: discountValue || null,
+              discountFixed: discountType === "fixed",
+              taxIds: summaryTaxRows.map((r) => r.taxId).filter(Boolean),
             })
           }
         >
