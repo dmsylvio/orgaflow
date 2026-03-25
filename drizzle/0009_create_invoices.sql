@@ -1,9 +1,17 @@
-CREATE TYPE "public"."invoice_item_discount_type" AS ENUM('fixed', 'percentage');
+DO $$ BEGIN
+  CREATE TYPE "public"."invoice_item_discount_type" AS ENUM('fixed', 'percentage');
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
 --> statement-breakpoint
-CREATE TYPE "public"."invoice_status" AS ENUM('DRAFT', 'PENDING', 'SENT', 'VIEWED', 'PAID', 'OVERDUE', 'VOID');
+DO $$ BEGIN
+  CREATE TYPE "public"."invoice_status" AS ENUM('DRAFT', 'PENDING', 'SENT', 'VIEWED', 'PAID', 'OVERDUE', 'VOID');
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
 --> statement-breakpoint
 
-CREATE TABLE "invoices" (
+CREATE TABLE IF NOT EXISTS "invoices" (
   "id" text PRIMARY KEY NOT NULL,
   "organization_id" text NOT NULL,
   "customer_id" text NOT NULL,
@@ -33,7 +41,7 @@ CREATE TABLE "invoices" (
 );
 --> statement-breakpoint
 
-CREATE TABLE "invoice_items" (
+CREATE TABLE IF NOT EXISTS "invoice_items" (
   "id" text PRIMARY KEY NOT NULL,
   "organization_id" text NOT NULL,
   "invoice_id" text NOT NULL,
@@ -58,47 +66,59 @@ CREATE TABLE "invoice_items" (
 );
 --> statement-breakpoint
 
-ALTER TABLE "invoice_items"
-  ADD CONSTRAINT "invoice_items_organization_id_organizations_id_fk"
-  FOREIGN KEY ("organization_id") REFERENCES "public"."organizations"("id")
-  ON DELETE cascade ON UPDATE no action;
+DO $$ BEGIN
+  ALTER TABLE "invoice_items"
+    ADD CONSTRAINT "invoice_items_organization_id_organizations_id_fk"
+    FOREIGN KEY ("organization_id") REFERENCES "public"."organizations"("id")
+    ON DELETE cascade ON UPDATE no action;
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 --> statement-breakpoint
-ALTER TABLE "invoice_items"
-  ADD CONSTRAINT "invoice_items_invoice_id_invoices_id_fk"
-  FOREIGN KEY ("invoice_id") REFERENCES "public"."invoices"("id")
-  ON DELETE cascade ON UPDATE no action;
+DO $$ BEGIN
+  ALTER TABLE "invoice_items"
+    ADD CONSTRAINT "invoice_items_invoice_id_invoices_id_fk"
+    FOREIGN KEY ("invoice_id") REFERENCES "public"."invoices"("id")
+    ON DELETE cascade ON UPDATE no action;
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 --> statement-breakpoint
-ALTER TABLE "invoice_items"
-  ADD CONSTRAINT "invoice_items_item_id_items_id_fk"
-  FOREIGN KEY ("item_id") REFERENCES "public"."items"("id")
-  ON DELETE set null ON UPDATE no action;
+DO $$ BEGIN
+  ALTER TABLE "invoice_items"
+    ADD CONSTRAINT "invoice_items_item_id_items_id_fk"
+    FOREIGN KEY ("item_id") REFERENCES "public"."items"("id")
+    ON DELETE set null ON UPDATE no action;
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 --> statement-breakpoint
-ALTER TABLE "invoices"
-  ADD CONSTRAINT "invoices_organization_id_organizations_id_fk"
-  FOREIGN KEY ("organization_id") REFERENCES "public"."organizations"("id")
-  ON DELETE cascade ON UPDATE no action;
+DO $$ BEGIN
+  ALTER TABLE "invoices"
+    ADD CONSTRAINT "invoices_organization_id_organizations_id_fk"
+    FOREIGN KEY ("organization_id") REFERENCES "public"."organizations"("id")
+    ON DELETE cascade ON UPDATE no action;
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 --> statement-breakpoint
-ALTER TABLE "invoices"
-  ADD CONSTRAINT "invoices_customer_id_customers_id_fk"
-  FOREIGN KEY ("customer_id") REFERENCES "public"."customers"("id")
-  ON DELETE restrict ON UPDATE no action;
+DO $$ BEGIN
+  ALTER TABLE "invoices"
+    ADD CONSTRAINT "invoices_customer_id_customers_id_fk"
+    FOREIGN KEY ("customer_id") REFERENCES "public"."customers"("id")
+    ON DELETE restrict ON UPDATE no action;
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 --> statement-breakpoint
-ALTER TABLE "invoices"
-  ADD CONSTRAINT "invoices_currency_id_currencies_id_fk"
-  FOREIGN KEY ("currency_id") REFERENCES "public"."currencies"("id")
-  ON DELETE restrict ON UPDATE no action;
+DO $$ BEGIN
+  ALTER TABLE "invoices"
+    ADD CONSTRAINT "invoices_currency_id_currencies_id_fk"
+    FOREIGN KEY ("currency_id") REFERENCES "public"."currencies"("id")
+    ON DELETE restrict ON UPDATE no action;
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 --> statement-breakpoint
 
-CREATE INDEX "invoice_items_org_idx" ON "invoice_items" USING btree ("organization_id");
+CREATE INDEX IF NOT EXISTS "invoice_items_org_idx" ON "invoice_items" USING btree ("organization_id");
 --> statement-breakpoint
-CREATE INDEX "invoice_items_invoice_idx" ON "invoice_items" USING btree ("invoice_id");
+CREATE INDEX IF NOT EXISTS "invoice_items_invoice_idx" ON "invoice_items" USING btree ("invoice_id");
 --> statement-breakpoint
-CREATE INDEX "invoice_items_item_idx" ON "invoice_items" USING btree ("item_id");
+CREATE INDEX IF NOT EXISTS "invoice_items_item_idx" ON "invoice_items" USING btree ("item_id");
 --> statement-breakpoint
-CREATE INDEX "invoices_org_idx" ON "invoices" USING btree ("organization_id");
+CREATE INDEX IF NOT EXISTS "invoices_org_idx" ON "invoices" USING btree ("organization_id");
 --> statement-breakpoint
-CREATE INDEX "invoices_customer_idx" ON "invoices" USING btree ("customer_id");
+CREATE INDEX IF NOT EXISTS "invoices_customer_idx" ON "invoices" USING btree ("customer_id");
 --> statement-breakpoint
-CREATE UNIQUE INDEX "invoices_org_sequence_unique" ON "invoices" USING btree ("organization_id", "sequence_number");
+CREATE UNIQUE INDEX IF NOT EXISTS "invoices_org_sequence_unique" ON "invoices" USING btree ("organization_id", "sequence_number");
 --> statement-breakpoint
-CREATE UNIQUE INDEX "invoices_org_number_unique" ON "invoices" USING btree ("organization_id", "invoice_number");
+CREATE UNIQUE INDEX IF NOT EXISTS "invoices_org_number_unique" ON "invoices" USING btree ("organization_id", "invoice_number");

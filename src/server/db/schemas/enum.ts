@@ -24,6 +24,7 @@ export const invoiceStatusEnum = pgEnum("invoice_status", [
   "PENDING",
   "SENT",
   "VIEWED",
+  "PARTIALLY_PAID",
   "PAID",
   "OVERDUE",
   "VOID",

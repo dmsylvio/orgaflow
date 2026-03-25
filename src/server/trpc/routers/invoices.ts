@@ -1207,6 +1207,7 @@ export const invoicesRouter = createTRPCRouter({
           "PENDING",
           "SENT",
           "VIEWED",
+          "PARTIALLY_PAID",
           "PAID",
           "OVERDUE",
           "VOID",

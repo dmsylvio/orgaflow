@@ -12,6 +12,7 @@ import {
 import { uuidv7 } from "uuidv7";
 import { currencies } from "./currencies";
 import { customers } from "./customers";
+import { invoices } from "./invoices";
 import { organizations } from "./organizations";
 import { paymentModes } from "./payment-modes";
 import { users } from "./users";
@@ -38,6 +39,9 @@ export const payments = pgTable(
     }),
     amount: numeric("amount", { precision: 13, scale: 3 }).notNull(),
     paymentDate: date("payment_date").notNull(),
+    invoiceId: text("invoice_id").references(() => invoices.id, {
+      onDelete: "set null",
+    }),
     invoiceRef: text("invoice_ref"),
     notes: text("notes"),
     createdById: text("created_by_id").references(() => users.id, {
@@ -54,6 +58,7 @@ export const payments = pgTable(
     index("payments_org_idx").on(table.organizationId),
     index("payments_customer_idx").on(table.customerId),
     index("payments_date_idx").on(table.paymentDate),
+    index("payments_invoice_id_idx").on(table.invoiceId),
     uniqueIndex("payments_org_sequence_unique").on(
       table.organizationId,
       table.sequenceNumber,
@@ -65,6 +70,10 @@ export const paymentsRelations = relations(payments, ({ one }) => ({
   organization: one(organizations, {
     fields: [payments.organizationId],
     references: [organizations.id],
+  }),
+  invoice: one(invoices, {
+    fields: [payments.invoiceId],
+    references: [invoices.id],
   }),
   customer: one(customers, {
     fields: [payments.customerId],

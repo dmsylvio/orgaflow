@@ -1,2 +1,2 @@
 ALTER TABLE "tasks"
-  ADD COLUMN "estimated_duration_minutes" integer;
+  ADD COLUMN IF NOT EXISTS "estimated_duration_minutes" integer;

@@ -35,6 +35,7 @@ type Payment = {
   amount: string;
   paymentDate: string;
   notes: string | null;
+  invoiceId: string | null;
   invoiceRef: string | null;
   customerId: string | null;
   paymentModeId: string | null;
@@ -47,7 +48,7 @@ type OrgCurrency = CurrencyFormat;
 type InvoiceOption = {
   id: string;
   invoiceNumber: string;
-  total: string;
+  remaining: string;
   customerId: string;
   customerName: string;
 };
@@ -97,6 +98,8 @@ function PaymentFormFields({
   invoices,
   invoicesDisabled,
   paymentModes,
+  editingPaymentInvoiceId,
+  editingPaymentAmount,
 }: {
   paymentNumber: string;
   amount: string;
@@ -118,6 +121,8 @@ function PaymentFormFields({
   invoices: InvoiceOption[];
   invoicesDisabled: boolean;
   paymentModes: { id: string; name: string }[];
+  editingPaymentInvoiceId?: string | null;
+  editingPaymentAmount?: string;
 }) {
   return (
     <div className="grid grid-cols-2 gap-4">
@@ -185,7 +190,13 @@ function PaymentFormFields({
               const invoice = invoices.find((inv) => inv.id === nextId);
               if (!invoice) return;
 
-              setAmount(invoice.total);
+              let nextAmount = invoice.remaining;
+              if (editingPaymentInvoiceId && editingPaymentInvoiceId === invoice.id) {
+                const current = Number(editingPaymentAmount ?? 0);
+                nextAmount = Number(Number(invoice.remaining) + current).toFixed(3);
+              }
+
+              setAmount(nextAmount);
               setInvoiceRef(invoice.invoiceNumber);
               setCustomerId(invoice.customerId);
             }}
@@ -197,8 +208,8 @@ function PaymentFormFields({
             <option value="">— None —</option>
             {invoices.map((inv) => (
               <option key={inv.id} value={inv.id}>
-                {inv.invoiceNumber} · {inv.customerName} ·{" "}
-                {formatCurrencyDisplay(inv.total, orgCurrency)}
+                {inv.invoiceNumber} · {inv.customerName} · Due{" "}
+                {formatCurrencyDisplay(inv.remaining, orgCurrency)}
               </option>
             ))}
           </select>
@@ -376,6 +387,7 @@ function CreatePaymentDialog({
                 amount,
                 paymentDate,
                 customerId: customerId || null,
+                invoiceId: invoiceId || null,
                 invoiceRef: invoiceRef.trim() || null,
                 paymentModeId: paymentModeId || null,
                 notes: notes || null,
@@ -419,7 +431,7 @@ function EditPaymentDialog({
   const [amount, setAmount] = useState(payment.amount);
   const [paymentDate, setPaymentDate] = useState(payment.paymentDate);
   const [customerId, setCustomerId] = useState(payment.customerId ?? "");
-  const [invoiceId, setInvoiceId] = useState("");
+  const [invoiceId, setInvoiceId] = useState(payment.invoiceId ?? "");
   const [invoiceRef, setInvoiceRef] = useState(payment.invoiceRef ?? "");
   const [paymentModeId, setPaymentModeId] = useState(
     payment.paymentModeId ?? "",
@@ -475,6 +487,8 @@ function EditPaymentDialog({
             invoices={invoices}
             invoicesDisabled={invoicesDisabled}
             paymentModes={paymentModes}
+            editingPaymentInvoiceId={payment.invoiceId}
+            editingPaymentAmount={payment.amount}
           />
         </DialogBody>
         <DialogFooter>
@@ -490,6 +504,7 @@ function EditPaymentDialog({
                 amount,
                 paymentDate,
                 customerId: customerId || null,
+                invoiceId: invoiceId || null,
                 invoiceRef: invoiceRef.trim() || null,
                 paymentModeId: paymentModeId || null,
                 notes: notes || null,
@@ -598,14 +613,16 @@ export default function PaymentsPage() {
   const [editTarget, setEditTarget] = useState<Payment | null>(null);
 
   const invoicesQuery = useQuery({
-    ...trpc.invoices.list.queryOptions(),
+    ...trpc.payments.listInvoiceOptions.queryOptions({
+      includeInvoiceId: editTarget?.invoiceId ?? null,
+    }),
     enabled: createOpen || editTarget !== null,
   });
   const invoices: InvoiceOption[] =
     invoicesQuery.data?.map((inv) => ({
       id: inv.id,
       invoiceNumber: inv.invoiceNumber,
-      total: inv.total,
+      remaining: inv.remaining,
       customerId: inv.customer.id,
       customerName: inv.customer.displayName,
     })) ?? [];

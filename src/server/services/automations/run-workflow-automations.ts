@@ -90,6 +90,8 @@ function domainEventName(document: TriggerDocument, status: string): string {
         return "invoice_sent";
       case "VIEWED":
         return "invoice_viewed";
+      case "PARTIALLY_PAID":
+        return "invoice_partially_paid";
       case "PAID":
         return "invoice_paid";
       case "OVERDUE":

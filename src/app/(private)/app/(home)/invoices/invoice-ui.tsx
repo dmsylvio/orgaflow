@@ -6,6 +6,7 @@ export type InvoiceStatus =
   | "PENDING"
   | "SENT"
   | "VIEWED"
+  | "PARTIALLY_PAID"
   | "PAID"
   | "OVERDUE"
   | "VOID";
@@ -15,6 +16,7 @@ const STATUS_STYLES: Record<InvoiceStatus, string> = {
   PENDING: "bg-amber-100 text-amber-700",
   SENT: "bg-blue-100 text-blue-700",
   VIEWED: "bg-cyan-100 text-cyan-700",
+  PARTIALLY_PAID: "bg-indigo-100 text-indigo-700",
   PAID: "bg-emerald-100 text-emerald-700",
   OVERDUE: "bg-rose-100 text-rose-700",
   VOID: "bg-zinc-100 text-zinc-700",
@@ -56,6 +58,11 @@ export function formatInvoiceDate(value: string | null) {
 }
 
 export function InvoiceStatusBadge({ status }: { status: InvoiceStatus }) {
+  const label = status
+    .split("_")
+    .map((part) => part.charAt(0) + part.slice(1).toLowerCase())
+    .join(" ");
+
   return (
     <span
       className={cn(
@@ -63,7 +70,7 @@ export function InvoiceStatusBadge({ status }: { status: InvoiceStatus }) {
         STATUS_STYLES[status] ?? "bg-muted text-muted-foreground",
       )}
     >
-      {status.charAt(0) + status.slice(1).toLowerCase()}
+      {label}
     </span>
   );
 }
