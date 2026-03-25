@@ -163,7 +163,7 @@ Defines the system that allows clients to view documents without login.
 
 Examples:
 
-    orgaflow.app/p/{token}
+    orgaflow.dev/p/{token}
 
 Supports:
 

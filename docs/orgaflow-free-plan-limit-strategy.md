@@ -72,7 +72,7 @@ Required footer rule:
 
 ```
 Powered by OrgaFlow
-https://orgaflow.app
+https://orgaflow.dev
 ```
 
 This keeps the free tier useful while preserving brand visibility for the SaaS.
@@ -153,4 +153,4 @@ Blocked:
 Branding rule:
 
 - Starter plan documents must include Orgaflow attribution in the footer with
-  https://orgaflow.app
+  https://orgaflow.dev

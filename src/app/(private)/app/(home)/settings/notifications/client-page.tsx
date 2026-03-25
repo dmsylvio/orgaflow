@@ -96,7 +96,7 @@ function SwitchRow({
 // Page
 // ---------------------------------------------------------------------------
 
-const DEFAULT_NOTIFICATION_EMAIL = "noreply@orgaflow.app";
+const DEFAULT_NOTIFICATION_EMAIL = "noreply@orgaflow.dev";
 
 export default function NotificationsPage() {
   const trpc = useTRPC();

@@ -77,7 +77,7 @@ Clients interact with estimates through **public document links**.
 
 Example:
 
-    orgaflow.app/p/{token}
+    orgaflow.dev/p/{token}
 
 Clients can:
 

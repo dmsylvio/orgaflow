@@ -266,7 +266,7 @@ This is one of the strongest strategic features in Orgaflow.
 ### Recommended public link model
 
 ```text
-orgaflow.app/p/{token}
+orgaflow.dev/p/{token}
 ```
 
 ### Why token-based links are better

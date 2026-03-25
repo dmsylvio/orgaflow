@@ -266,7 +266,7 @@ export function EstimatePublicScreen({ token }: { token: string }) {
           <Link
             className="text-primary underline"
             target="_blank"
-            href="https://orgaflow.app"
+            href="https://orgaflow.dev"
           >
             Orgaflow
           </Link>{" "}

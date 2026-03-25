@@ -26,11 +26,11 @@ const PLANS = [
       "Up to 50 customers",
       "Up to 50 estimates",
       "Up to 50 invoices",
-      "Task board (Kanban)",
       "Public estimate & invoice links",
       "Email support",
     ],
     missing: [
+      "Task board (Kanban)",
       "File attachments",
       "Custom branding on exports",
       "Stripe online payments",

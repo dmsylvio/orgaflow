@@ -47,7 +47,7 @@ Instead of exposing resource IDs directly, the system will generate a
 
 Example:
 
-    https://orgaflow.app/p/9c4a2f5c8e7b4d2a9f6
+    https://orgaflow.dev/p/9c4a2f5c8e7b4d2a9f6
 
 Advantages:
 

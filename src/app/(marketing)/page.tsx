@@ -17,9 +17,31 @@ import NextLink from "next/link";
 import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = {
+  title: "Estimates & invoices for small businesses",
   description:
-    "Orgaflow helps small businesses run their client workflow end to end: CRM, estimates, invoices, payments, tasks, and optional automations.",
+    "Orgaflow is an all-in-one CRM to create estimates and invoices, accept payments, manage tasks, and automate workflows for small businesses.",
+  keywords: [
+    "estimate software",
+    "invoice software",
+    "quoting software",
+    "small business CRM",
+    "payments",
+    "tasks",
+    "workflow automation",
+  ],
   alternates: { canonical: "/" },
+  openGraph: {
+    title: "Estimates & invoices for small businesses",
+    description:
+      "Create estimates and invoices, accept payments, manage tasks, and automate workflows in one place.",
+    url: "/",
+    type: "website",
+  },
+  twitter: {
+    title: "Estimates & invoices for small businesses",
+    description:
+      "Create estimates and invoices, accept payments, manage tasks, and automate workflows in one place.",
+  },
 };
 
 /* ─────────────────────────────────────────────

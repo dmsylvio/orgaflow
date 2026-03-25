@@ -265,7 +265,7 @@ function CustomerDialog({
                   onChange={(event) =>
                     updateField("website", event.target.value)
                   }
-                  placeholder="orgaflow.app"
+                  placeholder="orgaflow.dev"
                 />
               </div>
             </div>
