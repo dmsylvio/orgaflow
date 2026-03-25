@@ -1,6 +1,5 @@
 import { Instagram, Layers } from "lucide-react";
 import Link from "next/link";
-import NextLink from "next/link";
 
 const FOOTER_LINKS = {
   Product: [
@@ -72,12 +71,12 @@ export function MarketingFooter() {
               <ul className="flex flex-col gap-2.5">
                 {links.map(({ label, href }) => (
                   <li key={label}>
-                    <NextLink
+                    <Link
                       href={href}
                       className="text-sm text-muted-foreground transition-colors hover:text-foreground"
                     >
                       {label}
-                    </NextLink>
+                    </Link>
                   </li>
                 ))}
               </ul>
