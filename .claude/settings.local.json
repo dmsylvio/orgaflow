@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find /c/Users/slima/Desktop/orgaflow/src/app -name \"page.tsx\" -exec wc -l {} +)",
+      "Bash(ls -lah /c/Users/slima/Desktop/orgaflow/src/app/\\\\\\(private\\\\\\)/app/\\\\\\(home\\\\\\)/)",
+      "Bash(ls -la /c/Users/slima/Desktop/orgaflow/src/app/\\\\\\(private\\\\\\)/app/\\\\\\(home\\\\\\)/settings/billing)",
+      "Bash(ls -la /c/Users/slima/Desktop/orgaflow/src/app/\\\\\\(private\\\\\\)/app/\\\\\\(home\\\\\\)/settings/)",
+      "Bash(grep -h \"createTRPCRouter\" /c/Users/slima/Desktop/orgaflow/src/server/trpc/routers/*.ts)",
+      "Bash(wc -l /c/Users/slima/Desktop/orgaflow/src/app/\\\\\\(private\\\\\\)/app/\\\\\\(home\\\\\\)/estimates/create/page.tsx /c/Users/slima/Desktop/orgaflow/src/app/\\\\\\(private\\\\\\)/app/\\\\\\(home\\\\\\)/estimates/edit/page.tsx /c/Users/slima/Desktop/orgaflow/src/app/\\\\\\(private\\\\\\)/app/\\\\\\(home\\\\\\)/invoices/create/page.tsx /c/Users/slima/Desktop/orgaflow/src/app/\\\\\\(private\\\\\\)/app/\\\\\\(home\\\\\\)/invoices/edit/page.tsx)",
+      "Bash(ls -lah /c/Users/slima/Desktop/orgaflow/src/app/\\\\\\(private\\\\\\)/app/\\\\\\(home\\\\\\)/estimates/)",
+      "Bash(ls -lah /c/Users/slima/Desktop/orgaflow/src/app/\\\\\\(private\\\\\\)/app/\\\\\\(home\\\\\\)/invoices/)",
+      "Bash(ls /c/Users/slima/Desktop/orgaflow/src/app/\\\\\\(private\\\\\\)/app/\\\\\\(home\\\\\\)/estimates/[id]/)",
+      "Bash(grep -h \"export const\" /c/Users/slima/Desktop/orgaflow/src/server/db/schemas/*.ts)",
+      "Bash(ls -lah /c/Users/slima/Desktop/orgaflow/src/app/\\\\\\(auth\\\\\\)/)"
+    ]
+  }
+}
