@@ -1,10 +1,13 @@
 import "server-only";
 
+import { TRPCError } from "@trpc/server";
+import { del } from "@vercel/blob";
 import { and, asc, desc, eq } from "drizzle-orm";
 import { z } from "zod";
 import {
   currencies,
   customers,
+  documentFiles,
   expenseCategories,
   expenses,
   organizationPreferences,
@@ -19,6 +22,71 @@ import {
 import { getSessionUserId } from "@/server/trpc/utils";
 
 export const expensesRouter = createTRPCRouter({
+  getById: organizationProcedure
+    .use(requirePermission("expense:view"))
+    .input(z.object({ id: z.string().min(1) }))
+    .query(async ({ ctx, input }) => {
+      const [row] = await ctx.db
+        .select({
+          id: expenses.id,
+          amount: expenses.amount,
+          expenseDate: expenses.expenseDate,
+          notes: expenses.notes,
+          createdAt: expenses.createdAt,
+          categoryId: expenses.categoryId,
+          customerId: expenses.customerId,
+          paymentModeId: expenses.paymentModeId,
+          currencyId: expenses.currencyId,
+          categoryName: expenseCategories.name,
+          customerDisplayName: customers.displayName,
+          paymentModeName: paymentModes.name,
+          currencyCode: currencies.code,
+          currencySymbol: currencies.symbol,
+          currencyPrecision: currencies.precision,
+          currencyThousandSeparator: currencies.thousandSeparator,
+          currencyDecimalSeparator: currencies.decimalSeparator,
+          currencySwapSymbol: currencies.swapCurrencySymbol,
+        })
+        .from(expenses)
+        .leftJoin(
+          expenseCategories,
+          eq(expenses.categoryId, expenseCategories.id),
+        )
+        .leftJoin(customers, eq(expenses.customerId, customers.id))
+        .leftJoin(paymentModes, eq(expenses.paymentModeId, paymentModes.id))
+        .leftJoin(currencies, eq(expenses.currencyId, currencies.id))
+        .where(
+          and(
+            eq(expenses.id, input.id),
+            eq(expenses.organizationId, ctx.organizationId),
+          ),
+        )
+        .limit(1);
+
+      if (!row) throw new TRPCError({ code: "NOT_FOUND" });
+
+      const files = await ctx.db
+        .select({
+          id: documentFiles.id,
+          fileName: documentFiles.fileName,
+          mimeType: documentFiles.mimeType,
+          fileSize: documentFiles.fileSize,
+          storageKey: documentFiles.storageKey,
+          createdAt: documentFiles.createdAt,
+        })
+        .from(documentFiles)
+        .where(
+          and(
+            eq(documentFiles.organizationId, ctx.organizationId),
+            eq(documentFiles.resourceType, "expense"),
+            eq(documentFiles.resourceId, input.id),
+          ),
+        )
+        .orderBy(asc(documentFiles.createdAt));
+
+      return { ...row, files };
+    }),
+
   list: organizationProcedure
     .use(requirePermission("expense:view"))
     .query(async ({ ctx }) => {
@@ -62,18 +130,22 @@ export const expensesRouter = createTRPCRouter({
         .where(eq(organizationPreferences.organizationId, ctx.organizationId))
         .limit(1);
 
-      await ctx.db.insert(expenses).values({
-        organizationId: ctx.organizationId,
-        amount: input.amount,
-        expenseDate: input.expenseDate,
-        notes: input.notes ?? null,
-        categoryId: input.categoryId ?? null,
-        customerId: input.customerId ?? null,
-        paymentModeId: input.paymentModeId ?? null,
-        currencyId: prefs?.defaultCurrencyId ?? null,
-        createdById: userId,
-      });
-      return { ok: true as const };
+      const [created] = await ctx.db
+        .insert(expenses)
+        .values({
+          organizationId: ctx.organizationId,
+          amount: input.amount,
+          expenseDate: input.expenseDate,
+          notes: input.notes ?? null,
+          categoryId: input.categoryId ?? null,
+          customerId: input.customerId ?? null,
+          paymentModeId: input.paymentModeId ?? null,
+          currencyId: prefs?.defaultCurrencyId ?? null,
+          createdById: userId,
+        })
+        .returning({ id: expenses.id });
+
+      return { ok: true as const, id: created.id };
     }),
 
   update: organizationProcedure
@@ -114,6 +186,22 @@ export const expensesRouter = createTRPCRouter({
     .use(requirePermission("expense:delete"))
     .input(z.object({ id: z.string().min(1) }))
     .mutation(async ({ ctx, input }) => {
+      // Delete associated files from blob storage
+      const files = await ctx.db
+        .select({ storageKey: documentFiles.storageKey })
+        .from(documentFiles)
+        .where(
+          and(
+            eq(documentFiles.organizationId, ctx.organizationId),
+            eq(documentFiles.resourceType, "expense"),
+            eq(documentFiles.resourceId, input.id),
+          ),
+        );
+
+      for (const file of files) {
+        await del(file.storageKey).catch(() => null);
+      }
+
       await ctx.db
         .delete(expenses)
         .where(
@@ -122,6 +210,57 @@ export const expensesRouter = createTRPCRouter({
             eq(expenses.organizationId, ctx.organizationId),
           ),
         );
+      return { ok: true as const };
+    }),
+
+  listFiles: organizationProcedure
+    .use(requirePermission("expense:view"))
+    .input(z.object({ expenseId: z.string().min(1) }))
+    .query(async ({ ctx, input }) => {
+      return ctx.db
+        .select({
+          id: documentFiles.id,
+          fileName: documentFiles.fileName,
+          mimeType: documentFiles.mimeType,
+          fileSize: documentFiles.fileSize,
+          storageKey: documentFiles.storageKey,
+          createdAt: documentFiles.createdAt,
+        })
+        .from(documentFiles)
+        .where(
+          and(
+            eq(documentFiles.organizationId, ctx.organizationId),
+            eq(documentFiles.resourceType, "expense"),
+            eq(documentFiles.resourceId, input.expenseId),
+          ),
+        )
+        .orderBy(asc(documentFiles.createdAt));
+    }),
+
+  deleteFile: organizationProcedure
+    .use(requirePermission("expense:edit"))
+    .input(z.object({ fileId: z.string().min(1) }))
+    .mutation(async ({ ctx, input }) => {
+      const [file] = await ctx.db
+        .select({ storageKey: documentFiles.storageKey })
+        .from(documentFiles)
+        .where(
+          and(
+            eq(documentFiles.id, input.fileId),
+            eq(documentFiles.organizationId, ctx.organizationId),
+          ),
+        )
+        .limit(1);
+
+      if (!file) {
+        throw new TRPCError({ code: "NOT_FOUND" });
+      }
+
+      await del(file.storageKey).catch(() => null);
+      await ctx.db
+        .delete(documentFiles)
+        .where(eq(documentFiles.id, input.fileId));
+
       return { ok: true as const };
     }),
 

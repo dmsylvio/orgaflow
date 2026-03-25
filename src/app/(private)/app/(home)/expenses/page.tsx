@@ -1,7 +1,8 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Pencil, Plus, Trash2, Upload } from "lucide-react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
+import NextLink from "next/link";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { CurrencyInput } from "@/components/ui/currency-input";
@@ -24,22 +25,16 @@ import {
 import { toast } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { useTRPC } from "@/trpc/client";
+import {
+  EditExpenseDialog,
+  type ExpenseRecord,
+  PendingReceiptField,
+  uploadFile,
+} from "./edit-dialog";
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
-
-type Expense = {
-  id: string;
-  amount: string;
-  expenseDate: string;
-  notes: string | null;
-  categoryId: string | null;
-  customerId: string | null;
-  paymentModeId: string | null;
-  currencyId: string | null;
-  createdAt: Date;
-};
 
 type OrgCurrency = CurrencyFormat;
 
@@ -64,33 +59,10 @@ function today() {
 }
 
 // ---------------------------------------------------------------------------
-// Receipt placeholder
+// Form fields (Create only — Edit lives in edit-dialog.tsx)
 // ---------------------------------------------------------------------------
 
-function ReceiptField() {
-  return (
-    <div className="rounded-lg border border-dashed border-border bg-muted/30 p-4">
-      <div className="flex items-center gap-3">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border bg-background">
-          <Upload className="h-4 w-4 text-muted-foreground" />
-        </div>
-        <div>
-          <p className="text-sm font-medium text-foreground">Receipt Upload</p>
-          <p className="text-xs text-muted-foreground">
-            File attachments are not yet available. This feature will be enabled
-            in a future update.
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Form fields
-// ---------------------------------------------------------------------------
-
-function ExpenseFormFields({
+function CreateFormFields({
   amount,
   setAmount,
   expenseDate,
@@ -107,6 +79,8 @@ function ExpenseFormFields({
   categories,
   customers,
   paymentModes,
+  pendingFiles,
+  setPendingFiles,
 }: {
   amount: string;
   setAmount: (v: string) => void;
@@ -120,14 +94,15 @@ function ExpenseFormFields({
   setCustomerId: (v: string) => void;
   paymentModeId: string;
   setPaymentModeId: (v: string) => void;
-  orgCurrency: OrgCurrency;
+  orgCurrency: OrgCurrency | null;
   categories: { id: string; name: string }[];
   customers: { id: string; displayName: string }[];
   paymentModes: { id: string; name: string }[];
+  pendingFiles: File[];
+  setPendingFiles: (files: File[]) => void;
 }) {
   return (
-    <div className="grid grid-cols-2 gap-4">
-      {/* Category */}
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
       <div className="space-y-1.5">
         <Label htmlFor="ef-category">Category</Label>
         <select
@@ -145,7 +120,6 @@ function ExpenseFormFields({
         </select>
       </div>
 
-      {/* Date */}
       <div className="space-y-1.5">
         <Label htmlFor="ef-date">Date *</Label>
         <Input
@@ -156,7 +130,6 @@ function ExpenseFormFields({
         />
       </div>
 
-      {/* Amount */}
       <div className="space-y-1.5">
         <Label htmlFor="ef-amount">Amount *</Label>
         <CurrencyInput
@@ -167,22 +140,6 @@ function ExpenseFormFields({
         />
       </div>
 
-      {/* Currency — locked to org default */}
-      <div className="space-y-1.5">
-        <Label htmlFor="ef-currency">Currency</Label>
-        <Input
-          id="ef-currency"
-          value={
-            orgCurrency
-              ? `${orgCurrency.code} (${orgCurrency.symbol})`
-              : "Not configured"
-          }
-          disabled
-          className="bg-muted text-muted-foreground"
-        />
-      </div>
-
-      {/* Customer */}
       <div className="space-y-1.5">
         <Label htmlFor="ef-customer">
           Customer{" "}
@@ -203,7 +160,6 @@ function ExpenseFormFields({
         </select>
       </div>
 
-      {/* Payment Mode */}
       <div className="space-y-1.5">
         <Label htmlFor="ef-mode">Payment Mode</Label>
         <select
@@ -221,8 +177,7 @@ function ExpenseFormFields({
         </select>
       </div>
 
-      {/* Notes */}
-      <div className="col-span-2 space-y-1.5">
+      <div className="sm:col-span-3 space-y-1.5">
         <Label>
           Notes{" "}
           <span className="text-xs text-muted-foreground">(optional)</span>
@@ -231,16 +186,19 @@ function ExpenseFormFields({
           value={notes}
           onChange={setNotes}
           placeholder="Additional notes…"
+          className="min-h-28"
         />
       </div>
 
-      {/* Receipt */}
-      <div className="col-span-2 space-y-1.5">
+      <div className="sm:col-span-3 space-y-1.5">
         <Label>
           Receipt{" "}
           <span className="text-xs text-muted-foreground">(optional)</span>
         </Label>
-        <ReceiptField />
+        <PendingReceiptField
+          pendingFiles={pendingFiles}
+          onChange={setPendingFiles}
+        />
       </div>
     </div>
   );
@@ -262,7 +220,7 @@ function CreateExpenseDialog({
   open: boolean;
   onOpenChange: (v: boolean) => void;
   onSuccess: () => void;
-  orgCurrency: OrgCurrency;
+  orgCurrency: OrgCurrency | null;
   categories: { id: string; name: string }[];
   customers: { id: string; displayName: string }[];
   paymentModes: { id: string; name: string }[];
@@ -274,24 +232,45 @@ function CreateExpenseDialog({
   const [categoryId, setCategoryId] = useState("");
   const [customerId, setCustomerId] = useState("");
   const [paymentModeId, setPaymentModeId] = useState("");
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  const [uploading, setUploading] = useState(false);
+
+  function reset() {
+    setAmount("");
+    setExpenseDate(today());
+    setNotes("");
+    setCategoryId("");
+    setCustomerId("");
+    setPaymentModeId("");
+    setPendingFiles([]);
+  }
 
   const create = useMutation(
     trpc.expenses.create.mutationOptions({
-      onSuccess: () => {
+      onSuccess: async (data) => {
+        if (pendingFiles.length > 0) {
+          setUploading(true);
+          try {
+            for (const file of pendingFiles) {
+              await uploadFile(file, "expense", data.id);
+            }
+          } catch {
+            toast.error("Expense saved, but some files failed to upload.");
+          } finally {
+            setUploading(false);
+          }
+        }
         onSuccess();
         onOpenChange(false);
-        setAmount("");
-        setExpenseDate(today());
-        setNotes("");
-        setCategoryId("");
-        setCustomerId("");
-        setPaymentModeId("");
+        reset();
         toast.success("Expense added.");
       },
       onError: (e) =>
         toast.error("Couldn't add expense", { description: e.message }),
     }),
   );
+
+  const isBusy = create.isPending || uploading;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -300,7 +279,7 @@ function CreateExpenseDialog({
           <DialogTitle>Add Expense</DialogTitle>
         </DialogHeader>
         <DialogBody>
-          <ExpenseFormFields
+          <CreateFormFields
             amount={amount}
             setAmount={setAmount}
             expenseDate={expenseDate}
@@ -317,6 +296,8 @@ function CreateExpenseDialog({
             categories={categories}
             customers={customers}
             paymentModes={paymentModes}
+            pendingFiles={pendingFiles}
+            setPendingFiles={setPendingFiles}
           />
         </DialogBody>
         <DialogFooter>
@@ -324,8 +305,8 @@ function CreateExpenseDialog({
             Cancel
           </Button>
           <Button
-            loading={create.isPending}
-            disabled={create.isPending || !amount.trim() || !expenseDate}
+            loading={isBusy}
+            disabled={isBusy || !amount.trim() || !expenseDate}
             onClick={() =>
               create.mutate({
                 amount,
@@ -338,104 +319,6 @@ function CreateExpenseDialog({
             }
           >
             Add Expense
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Edit Dialog
-// ---------------------------------------------------------------------------
-
-function EditExpenseDialog({
-  expense,
-  open,
-  onOpenChange,
-  onSuccess,
-  orgCurrency,
-  categories,
-  customers,
-  paymentModes,
-}: {
-  expense: Expense;
-  open: boolean;
-  onOpenChange: (v: boolean) => void;
-  onSuccess: () => void;
-  orgCurrency: OrgCurrency;
-  categories: { id: string; name: string }[];
-  customers: { id: string; displayName: string }[];
-  paymentModes: { id: string; name: string }[];
-}) {
-  const trpc = useTRPC();
-  const [amount, setAmount] = useState(expense.amount);
-  const [expenseDate, setExpenseDate] = useState(expense.expenseDate);
-  const [notes, setNotes] = useState(expense.notes ?? "");
-  const [categoryId, setCategoryId] = useState(expense.categoryId ?? "");
-  const [customerId, setCustomerId] = useState(expense.customerId ?? "");
-  const [paymentModeId, setPaymentModeId] = useState(
-    expense.paymentModeId ?? "",
-  );
-
-  const update = useMutation(
-    trpc.expenses.update.mutationOptions({
-      onSuccess: () => {
-        onSuccess();
-        onOpenChange(false);
-        toast.success("Expense updated.");
-      },
-      onError: (e) =>
-        toast.error("Couldn't update expense", { description: e.message }),
-    }),
-  );
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl">
-        <DialogHeader>
-          <DialogTitle>Edit Expense</DialogTitle>
-        </DialogHeader>
-        <DialogBody>
-          <ExpenseFormFields
-            amount={amount}
-            setAmount={setAmount}
-            expenseDate={expenseDate}
-            setExpenseDate={setExpenseDate}
-            notes={notes}
-            setNotes={setNotes}
-            categoryId={categoryId}
-            setCategoryId={setCategoryId}
-            customerId={customerId}
-            setCustomerId={setCustomerId}
-            paymentModeId={paymentModeId}
-            setPaymentModeId={setPaymentModeId}
-            orgCurrency={orgCurrency}
-            categories={categories}
-            customers={customers}
-            paymentModes={paymentModes}
-          />
-        </DialogBody>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button
-            loading={update.isPending}
-            disabled={update.isPending || !amount.trim() || !expenseDate}
-            onClick={() =>
-              update.mutate({
-                id: expense.id,
-                amount,
-                expenseDate,
-                notes: notes || null,
-                categoryId: categoryId || null,
-                customerId: customerId || null,
-                paymentModeId: paymentModeId || null,
-              })
-            }
-          >
-            Save Changes
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -457,22 +340,32 @@ function ExpenseRow({
   onDelete,
   isDeletePending,
 }: {
-  expense: Expense;
+  expense: ExpenseRecord;
   categoryName?: string;
   customerName?: string;
   paymentModeName?: string;
-  currency: OrgCurrency;
-  onEdit: (e: Expense) => void;
+  currency: OrgCurrency | null;
+  onEdit: (e: ExpenseRecord) => void;
   onDelete: (id: string) => void;
   isDeletePending: boolean;
 }) {
   return (
     <tr className="group border-b border-border last:border-0">
       <td className="py-3 pl-4 pr-2 text-sm text-muted-foreground whitespace-nowrap">
-        {formatDate(expense.expenseDate)}
+        <NextLink
+          href={`/app/expenses/${expense.id}`}
+          className="hover:text-foreground hover:underline underline-offset-2"
+        >
+          {formatDate(expense.expenseDate)}
+        </NextLink>
       </td>
       <td className="py-3 px-2 text-sm font-medium text-foreground whitespace-nowrap">
-        {formatCurrencyDisplay(expense.amount, currency)}
+        <NextLink
+          href={`/app/expenses/${expense.id}`}
+          className="hover:underline underline-offset-2"
+        >
+          {formatCurrencyDisplay(expense.amount, currency)}
+        </NextLink>
       </td>
       <td className="py-3 px-2 text-sm text-muted-foreground">
         {categoryName ?? <span className="italic opacity-40">—</span>}
@@ -536,7 +429,7 @@ export default function ExpensesPage() {
   );
 
   const [createOpen, setCreateOpen] = useState(false);
-  const [editTarget, setEditTarget] = useState<Expense | null>(null);
+  const [editTarget, setEditTarget] = useState<ExpenseRecord | null>(null);
 
   const categoryMap = new Map(categories.map((c) => [c.id, c.name]));
   const customerMap = new Map(customers.map((c) => [c.id, c.displayName]));

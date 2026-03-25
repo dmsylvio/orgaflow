@@ -73,8 +73,7 @@ export function RichTextEditor({
     },
     editorProps: {
       attributes: {
-        class:
-          "min-h-[200px] px-3 py-2 text-sm text-foreground focus:outline-none",
+        class: "px-3 py-2 text-sm text-foreground focus:outline-none min-h-52",
       },
     },
     immediatelyRender: false,

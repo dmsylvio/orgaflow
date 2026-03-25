@@ -4,6 +4,7 @@ export * from "./automation-rules";
 export * from "./billing";
 export * from "./currencies";
 export * from "./customers";
+export * from "./document-files";
 export * from "./enum";
 export * from "./estimate-items";
 export * from "./estimates";

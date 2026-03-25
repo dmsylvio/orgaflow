@@ -41,7 +41,7 @@ const PLAN_ORDER: Plan[] = ["starter", "growth", "scale"];
 const PLAN_PRICES: Record<Plan, { monthly: string; annual: string }> = {
   starter: { monthly: "$0", annual: "$0" },
   growth: { monthly: "$19.99/mo", annual: "$167.99/yr" },
-  scale: { monthly: "$29.99/mo", annual: "$209.99/yr" },
+  scale: { monthly: "$24.99/mo", annual: "$209.99/yr" },
 };
 
 const PLAN_STORAGE_BYTES: Record<Plan, number | null> = {

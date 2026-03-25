@@ -1,16 +1,22 @@
 # Orgaflow — Roadmap de Pendências
 
-> Última atualização: 2026-03-24
+> Última atualização: 2026-03-25
+
+---
+
+## ✅ Concluído
+
+### 1. Upload de Anexos / Recibos
+- Implementado upload via Vercel Blob (`@vercel/blob`)
+- Tabela `document_files` criada (resource_type: expense | estimate | invoice)
+- API route `POST /api/upload` com validação de auth, org, tipo e tamanho
+- UI de upload nas páginas de Expenses (criar e editar)
+- Página de detalhe do expense (`/app/expenses/[id]`) com visualização de arquivos
+- **Escopo atual**: Expenses ✅ | Estimates (em progresso) | Invoices (pendente)
 
 ---
 
 ## Prioridade Alta — Funcionalidades incompletas/stub
-
-### 1. Upload de Anexos / Recibos
-- **Onde**: `src/app/(private)/app/(home)/expenses/page.tsx` — botão desabilitado com placeholder "not yet available"
-- **O que falta**: Implementar upload de arquivos (S3/Vercel Blob), salvar referência no banco, exibir na UI
-- **Escopo**: Expenses (recibos) → Estimates e Invoices (anexos gerais)
-- Arquitetura de referência: `docs/document-attachments-strategy.md`
 
 ### 2. Página de Settings com roteamento dinâmico
 - **Onde**: `src/app/(private)/app/(home)/settings/[section]/page.tsx` — renderiza `<MockAppPage>` (stub)
@@ -77,17 +83,17 @@
 
 ## Resumo
 
-| # | Feature | Prioridade | Esforço |
-|---|---------|------------|---------|
-| 1 | Upload de anexos/recibos | Alta | Médio |
-| 2 | Settings routing dinâmico | Alta | Baixo |
-| 3 | Notificações conectadas | Alta | Baixo |
-| 4 | Exportação PDF | Alta | Médio |
-| 5 | Relatórios / Analytics | Alta | Alto |
-| 6 | Stripe Connect (pagamento online) | Média | Alto |
-| 7 | Multi-currency com cotação | Média | Médio |
-| 8 | Busca e filtros avançados | Média | Médio |
-| 9 | Log de atividade / auditoria | Média-baixa | Médio |
-| 10 | Operações em lote | Média-baixa | Baixo |
-| 11 | Templates/branding de documentos | Média-baixa | Alto |
-| 12 | Invoices recorrentes | Baixa | Alto |
+| # | Feature | Status | Prioridade | Esforço |
+|---|---------|--------|------------|---------|
+| 1 | Upload de anexos/recibos | ✅ Concluído | Alta | Médio |
+| 2 | Settings routing dinâmico | 🔲 Pendente | Alta | Baixo |
+| 3 | Notificações conectadas | 🔲 Pendente | Alta | Baixo |
+| 4 | Exportação PDF | 🔲 Pendente | Alta | Médio |
+| 5 | Relatórios / Analytics | 🔲 Pendente | Alta | Alto |
+| 6 | Stripe Connect (pagamento online) | 🔲 Pendente | Média | Alto |
+| 7 | Multi-currency com cotação | 🔲 Pendente | Média | Médio |
+| 8 | Busca e filtros avançados | 🔲 Pendente | Média | Médio |
+| 9 | Log de atividade / auditoria | 🔲 Pendente | Média-baixa | Médio |
+| 10 | Operações em lote | 🔲 Pendente | Média-baixa | Baixo |
+| 11 | Templates/branding de documentos | 🔲 Pendente | Média-baixa | Alto |
+| 12 | Invoices recorrentes | 🔲 Pendente | Baixa | Alto |

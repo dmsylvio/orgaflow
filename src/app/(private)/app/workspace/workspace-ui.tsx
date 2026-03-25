@@ -78,7 +78,7 @@ const WORKSPACE_PLAN_OPTIONS: readonly WorkspacePlanOption[] = [
     badgeVariant: "soft",
     icon: <Zap className="h-5 w-5" />,
     iconColor: "bg-amber-500/10 text-amber-600",
-    priceMonthly: "$29.99",
+    priceMonthly: "$24.99",
     priceAnnual: "$209.99",
     summary:
       "Daily operations with online card payments, automations, tasks, advanced reporting, and higher user capacity.",

@@ -11,7 +11,14 @@
       "Bash(ls -lah /c/Users/slima/Desktop/orgaflow/src/app/\\\\\\(private\\\\\\)/app/\\\\\\(home\\\\\\)/invoices/)",
       "Bash(ls /c/Users/slima/Desktop/orgaflow/src/app/\\\\\\(private\\\\\\)/app/\\\\\\(home\\\\\\)/estimates/[id]/)",
       "Bash(grep -h \"export const\" /c/Users/slima/Desktop/orgaflow/src/server/db/schemas/*.ts)",
-      "Bash(ls -lah /c/Users/slima/Desktop/orgaflow/src/app/\\\\\\(auth\\\\\\)/)"
+      "Bash(ls -lah /c/Users/slima/Desktop/orgaflow/src/app/\\\\\\(auth\\\\\\)/)",
+      "Bash(find /Users/sylviolima/Desktop/projects/orgaflow/src/server/trpc/routers -type f -name *.ts)",
+      "Bash(pnpm add:*)",
+      "Bash(pnpm biome:*)",
+      "Bash(pnpm db:push)",
+      "Bash(pnpm drizzle-kit:*)",
+      "Bash(find /Users/sylviolima/Desktop/projects/orgaflow/src/app -path *estimates* -o -path *invoices*)",
+      "Bash(find /Users/sylviolima/Desktop/projects/orgaflow/src -type f -name *attachment* -o -name *file*)"
     ]
   }
 }

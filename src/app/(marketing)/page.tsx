@@ -309,7 +309,7 @@ export default function LandingPage() {
 
         <div className="relative mx-auto max-w-5xl px-6 text-center">
           {/* badge */}
-          <div className="mb-7 inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/8 px-4 py-1.5 text-xs font-semibold text-primary">
+          <div className="mb-7 inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/8 px-4 py-2.5 text-xs font-semibold text-primary">
             <span className="relative flex h-2 w-2">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-60" />
               <span className="relative h-2 w-2 rounded-full bg-primary" />
