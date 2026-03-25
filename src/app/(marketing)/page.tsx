@@ -12,8 +12,15 @@ import {
   Users,
   Zap,
 } from "lucide-react";
+import type { Metadata } from "next";
 import NextLink from "next/link";
 import { Button } from "@/components/ui/button";
+
+export const metadata: Metadata = {
+  description:
+    "Orgaflow helps small businesses run their client workflow end to end: CRM, estimates, invoices, payments, tasks, and optional automations.",
+  alternates: { canonical: "/" },
+};
 
 /* ─────────────────────────────────────────────
    Data

@@ -3,8 +3,9 @@ import NextLink from "next/link";
 import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = {
-  title: "Changelog — Orgaflow",
+  title: "Changelog",
   description: "What's new in Orgaflow. Every update, fix, and improvement.",
+  alternates: { canonical: "/changelog" },
 };
 
 interface ChangelogEntry {

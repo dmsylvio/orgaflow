@@ -2,7 +2,6 @@ import {
   ArrowRight,
   Globe,
   Heart,
-  Lightbulb,
   Shield,
   Target,
   Users,
@@ -13,9 +12,10 @@ import NextLink from "next/link";
 import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = {
-  title: "About Us — Orgaflow",
+  title: "About",
   description:
     "Learn about the team and mission behind Orgaflow — the client workflow platform built for small businesses.",
+  alternates: { canonical: "/about" },
 };
 
 const VALUES = [

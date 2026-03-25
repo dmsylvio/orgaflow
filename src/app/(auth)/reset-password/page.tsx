@@ -1,4 +1,11 @@
+import type { Metadata } from "next";
 import { ResetPasswordForm } from "./reset-password-form";
+
+export const metadata: Metadata = {
+  title: "Reset password",
+  description: "Set a new password for your Orgaflow account.",
+  robots: { index: false, follow: false },
+};
 
 interface ResetPasswordPageProps {
   searchParams: Promise<{ token?: string }>;

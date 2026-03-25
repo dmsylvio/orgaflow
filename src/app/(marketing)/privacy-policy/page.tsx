@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import NextLink from "next/link";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy — Orgaflow",
+  title: "Privacy Policy",
   description: "How Orgaflow collects, uses, and protects your personal data.",
+  alternates: { canonical: "/privacy-policy" },
 };
 
 const LAST_UPDATED = "March 24, 2026";

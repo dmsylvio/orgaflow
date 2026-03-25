@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { MockAppPage } from "../../mock-app-page";
 
 interface SettingsSectionPageProps {
@@ -9,6 +10,13 @@ function formatSectionTitle(section: string): string {
     .split("-")
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
+}
+
+export async function generateMetadata({
+  params,
+}: SettingsSectionPageProps): Promise<Metadata> {
+  const { section } = await params;
+  return { title: `Settings: ${formatSectionTitle(section)}` };
 }
 
 export default async function SettingsSectionPage({

@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import NextLink from "next/link";
 
 export const metadata: Metadata = {
-  title: "Cookie Policy — Orgaflow",
+  title: "Cookie Policy",
   description: "How Orgaflow uses cookies and similar tracking technologies.",
+  alternates: { canonical: "/cookie-policy" },
 };
 
 const LAST_UPDATED = "March 24, 2026";

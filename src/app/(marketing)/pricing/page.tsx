@@ -4,9 +4,10 @@ import NextLink from "next/link";
 import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = {
-  title: "Pricing — Orgaflow",
+  title: "Pricing",
   description:
     "Simple, transparent pricing for every stage of your business.",
+  alternates: { canonical: "/pricing" },
 };
 
 const PLANS = [

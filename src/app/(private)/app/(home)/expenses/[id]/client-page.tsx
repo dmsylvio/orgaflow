@@ -111,6 +111,7 @@ export default function ExpenseDetailPage() {
 
   const currency = expense.currencyCode
     ? {
+        id: expense.currencyCode,
         code: expense.currencyCode,
         symbol: expense.currencySymbol ?? "",
         precision: expense.currencyPrecision ?? 2,

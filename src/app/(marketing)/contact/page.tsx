@@ -6,9 +6,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
 export const metadata: Metadata = {
-  title: "Contact — Orgaflow",
+  title: "Contact",
   description:
     "Get in touch with the Orgaflow team. We'd love to hear from you.",
+  alternates: { canonical: "/contact" },
 };
 
 const CONTACT_ITEMS = [

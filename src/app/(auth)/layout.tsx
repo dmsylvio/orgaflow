@@ -7,7 +7,13 @@ import {
   Zap,
 } from "lucide-react";
 import NextLink from "next/link";
+import type { Metadata } from "next";
 import type { ReactNode } from "react";
+
+export const metadata: Metadata = {
+  title: "Account",
+  robots: { index: false, follow: false },
+};
 
 const FEATURES = [
   { Icon: Users,        text: "Full CRM — clients, history, and activity" },

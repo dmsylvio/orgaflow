@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import NextLink from "next/link";
 
 export const metadata: Metadata = {
-  title: "Terms of Service — Orgaflow",
+  title: "Terms of Service",
   description: "The terms and conditions governing your use of Orgaflow.",
+  alternates: { canonical: "/terms-of-service" },
 };
 
 const LAST_UPDATED = "March 24, 2026";

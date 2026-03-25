@@ -1,7 +1,6 @@
 import {
   BarChart3,
   CheckCircle2,
-  Clock,
   CreditCard,
   FileSearch,
   FileText,
@@ -18,9 +17,10 @@ import NextLink from "next/link";
 import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = {
-  title: "Roadmap — Orgaflow",
+  title: "Roadmap",
   description:
     "See what we're building next. Our public roadmap shows upcoming features and their priorities.",
+  alternates: { canonical: "/roadmap" },
 };
 
 type Status = "in-progress" | "planned" | "considering";

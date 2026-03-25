@@ -1,6 +1,12 @@
 import { redirect } from "next/navigation";
+import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { auth } from "../../../../auth";
+
+export const metadata: Metadata = {
+  title: "App",
+  robots: { index: false, follow: false },
+};
 
 /**
  * Raiz da área com acesso restrito: todas as rotas em `/app/*`.
