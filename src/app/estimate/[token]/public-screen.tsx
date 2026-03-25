@@ -29,6 +29,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  RichTextContent,
+  RichTextEditor,
+} from "@/components/ui/rich-text-editor";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
 import { formatCurrencyDisplay } from "@/lib/currency-format";
@@ -60,6 +64,15 @@ function formatBytes(bytes: number) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+/** Quantities are stored with fixed decimals; trim trailing zeros for display. */
+function formatQuantityDisplay(quantity: string): string {
+  const s = quantity.trim();
+  if (!s) return s;
+  if (!s.includes(".")) return s;
+  const trimmed = s.replace(/0+$/, "").replace(/\.$/, "");
+  return trimmed.length > 0 ? trimmed : "0";
+}
+
 // ---------------------------------------------------------------------------
 // Attachment carousel
 // ---------------------------------------------------------------------------
@@ -83,9 +96,7 @@ function AttachmentCarousel({ files }: { files: FileItem[] }) {
   return (
     <div className="rounded-2xl border border-border bg-card p-5">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-sm font-semibold text-foreground">
-          Attachments
-        </h2>
+        <h2 className="text-sm font-semibold text-foreground">Attachments</h2>
         <span className="text-xs text-muted-foreground">
           {index + 1} / {files.length}
         </span>
@@ -167,7 +178,7 @@ function RejectDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>Reject Estimate</DialogTitle>
         </DialogHeader>
@@ -175,12 +186,11 @@ function RejectDialog({
           <p className="text-sm text-muted-foreground">
             Please let us know why you are rejecting this estimate (optional).
           </p>
-          <textarea
+          <RichTextEditor
             value={reason}
-            onChange={(e) => setReason(e.target.value)}
+            onChange={setReason}
             placeholder="Reason for rejection…"
-            rows={4}
-            className="mt-3 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            className="mt-3 w-full"
           />
         </DialogBody>
         <DialogFooter>
@@ -298,8 +308,7 @@ export function EstimatePublicScreen({ token }: { token: string }) {
   }
 
   const { estimate, expiresAt } = data;
-  const canDecide =
-    estimate.status === "SENT" || estimate.status === "VIEWED";
+  const canDecide = estimate.status === "SENT" || estimate.status === "VIEWED";
 
   return (
     <div className="min-h-dvh bg-muted/20 px-4 py-10">
@@ -348,11 +357,15 @@ export function EstimatePublicScreen({ token }: { token: string }) {
                     You rejected this estimate.
                   </p>
                 </div>
-                {estimate.rejectionReason && (
-                  <p className="pl-8 text-sm text-red-700 dark:text-red-400">
-                    Reason: {estimate.rejectionReason}
-                  </p>
-                )}
+                {estimate.rejectionReason ? (
+                  <div className="space-y-1 pl-8 text-sm text-red-700 dark:text-red-400">
+                    <p className="font-medium">Reason</p>
+                    <RichTextContent
+                      html={estimate.rejectionReason}
+                      className="text-red-700 dark:text-red-400 prose-headings:text-red-800 prose-headings:dark:text-red-300"
+                    />
+                  </div>
+                ) : null}
               </div>
             )}
 
@@ -429,7 +442,9 @@ export function EstimatePublicScreen({ token }: { token: string }) {
                     <div className="mt-3 grid gap-3 text-sm text-muted-foreground sm:grid-cols-3">
                       <div>
                         Qty:{" "}
-                        <span className="text-foreground">{item.quantity}</span>
+                        <span className="text-foreground">
+                          {formatQuantityDisplay(item.quantity)}
+                        </span>
                       </div>
                       <div>
                         Unit price:{" "}
