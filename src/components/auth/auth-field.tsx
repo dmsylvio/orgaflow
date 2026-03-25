@@ -13,7 +13,9 @@ export function AuthField({ id, label, error, children }: AuthFieldProps) {
 
   return (
     <div className="flex flex-col gap-1.5">
-      <Label htmlFor={id}>{label}</Label>
+      <Label htmlFor={id} className="text-sm font-medium text-foreground">
+        {label}
+      </Label>
       {children}
       {error && errorId ? (
         <p id={errorId} className="text-xs text-destructive" role="alert">

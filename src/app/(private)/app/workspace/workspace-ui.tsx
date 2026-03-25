@@ -57,7 +57,7 @@ const WORKSPACE_PLAN_OPTIONS: readonly WorkspacePlanOption[] = [
     icon: <Star className="h-5 w-5" />,
     iconColor: "bg-violet-500/10 text-violet-600",
     priceMonthly: "$19.99",
-    priceAnnual: "$214.99",
+    priceAnnual: "$167.99",
     summary:
       "For freelancers and small businesses that outgrow Starter limits and need attachments, public links, approvals, and branding.",
     limits: [
@@ -78,8 +78,8 @@ const WORKSPACE_PLAN_OPTIONS: readonly WorkspacePlanOption[] = [
     badgeVariant: "soft",
     icon: <Zap className="h-5 w-5" />,
     iconColor: "bg-amber-500/10 text-amber-600",
-    priceMonthly: "$24.99",
-    priceAnnual: "$239.99",
+    priceMonthly: "$29.99",
+    priceAnnual: "$209.99",
     summary:
       "Daily operations with online card payments, automations, tasks, advanced reporting, and higher user capacity.",
     limits: [
@@ -287,7 +287,7 @@ export function PlanScroll({
                 {interval === "monthly" ? "Monthly" : "Annual"}
                 {interval === "annual" && (
                   <span className="ml-1.5 text-xs font-semibold text-primary">
-                    Save 10%
+                    Save 30%
                   </span>
                 )}
               </button>

@@ -41,15 +41,15 @@ Internally, billing and product code must use the canonical plan ids: `starter`,
 # 2. Orgaflow Pricing Structure
 
 Orgaflow Starter - $0
-Orgaflow Growth - $19.99/mo or $214.99/year
-Orgaflow Scale - $24.99/mo or $239.99/year
+Orgaflow Growth - $19.99/mo or $167.99/year
+Orgaflow Scale - $29.99/mo or $209.99/year
 
 The small price difference between **Orgaflow Growth** and **Orgaflow Scale** encourages users to upgrade to Orgaflow Scale.
 
 The annual pricing should preserve the same logic:
 
-- **Growth Annual** offers a moderate discount for commitment.
-- **Scale Annual** offers a stronger discount so it remains the best value option.
+- **Growth Annual** offers a **30% discount** for commitment.
+- **Scale Annual** matches the **30% discount** and remains the best value option.
 - The annual gap stays intentionally small to reinforce the decoy effect.
 
 ---
@@ -98,7 +98,7 @@ The goal of the Starter plan is:
 
 ---
 
-# 4. Orgaflow Growth Plan - $19.99/mo or $214.99/year
+# 4. Orgaflow Growth Plan - $19.99/mo or $167.99/year
 
 The Orgaflow Growth plan is designed for freelancers and small businesses that require more functionality but do not yet need advanced automation or integrated payments.
 
@@ -136,11 +136,11 @@ This encourages users to upgrade to the Orgaflow Scale plan.
 
 ## Annual Pricing Logic
 
-`$214.99/year` gives the user a meaningful annual discount while keeping Growth clearly below Scale in perceived value.
+`$167.99/year` gives the user a meaningful annual discount while keeping Growth clearly below Scale in perceived value.
 
 ---
 
-# 5. Orgaflow Scale Plan - $24.99/mo or $239.99/year (Most Popular)
+# 5. Orgaflow Scale Plan - $29.99/mo or $209.99/year (Most Popular)
 
 The Orgaflow Scale plan is the primary revenue driver.
 
@@ -176,7 +176,7 @@ This becomes a strong motivation to upgrade.
 
 ## Annual Pricing Logic
 
-`$239.99/year` keeps the annual gap against Growth at only `$25/year`.
+`$209.99/year` keeps the annual gap against Growth at only `$42/year`.
 
 That makes Orgaflow Scale feel like the obvious better deal for teams already willing to pay for the product.
 
@@ -229,7 +229,7 @@ Orgaflow Starter - $0
 
 ---
 
-Orgaflow Growth - $19.99/mo or $214.99/year
+Orgaflow Growth - $19.99/mo or $167.99/year
 
 - Unlimited invoices
 - Unlimited estimates
@@ -244,7 +244,7 @@ Orgaflow Growth - $19.99/mo or $214.99/year
 
 ---
 
-Orgaflow Scale - Most Popular - $24.99/mo or $239.99/year
+Orgaflow Scale - Most Popular - $29.99/mo or $209.99/year
 
 - Everything in Growth
 - Stripe payments
@@ -300,10 +300,10 @@ The Scale plan should always appear as the best value option.
 
 Recommended annual pricing:
 
-- **Growth Annual**: $214.99/year
-- **Scale Annual**: $239.99/year
+- **Growth Annual**: $167.99/year
+- **Scale Annual**: $209.99/year
 
-This keeps the annual gap between **Growth** and **Scale** at only **$25/year**, making **Scale** feel like the obvious better deal for companies already considering a paid plan.
+This keeps the annual gap between **Growth** and **Scale** at only **$42/year**, making **Scale** feel like the obvious better deal for companies already considering a paid plan.
 
 This combination of usage limits, feature gating, and behavioral pricing psychology will maximize conversion while keeping the product accessible to new users.
 
@@ -327,7 +327,7 @@ Orgaflow Starter is the free plan to get started with Orgaflow. Ideal for freela
 
 ### Short description (Stripe)
 
-Orgaflow Growth plan — $19.99/month or $214.99/year. Everything in Orgaflow Starter with unlimited invoices, estimates, and customers, plus attachments, public invoice links, estimate approvals, custom branding, and activity timeline, while keeping payments as manual registration.
+Orgaflow Growth plan — $19.99/month or $167.99/year. Everything in Orgaflow Starter with unlimited invoices, estimates, and customers, plus attachments, public invoice links, estimate approvals, custom branding, and activity timeline, while keeping payments as manual registration.
 
 ### Extended description (website)
 
@@ -339,7 +339,7 @@ Orgaflow Growth is the plan for freelancers and small businesses operating at a 
 
 ### Short description (Stripe)
 
-Orgaflow Scale — $24.99/month or $239.99/year. Everything in Orgaflow Growth plus Stripe online payments, workflow automations (optional, status-based triggers), automatic task creation from those automations, advanced reporting, priority support, up to 10 users, and 10 GB attachment storage, built for teams running their daily operations on Orgaflow.
+Orgaflow Scale — $29.99/month or $209.99/year. Everything in Orgaflow Growth plus Stripe online payments, workflow automations (optional, status-based triggers), automatic task creation from those automations, advanced reporting, priority support, up to 10 users, and 10 GB attachment storage, built for teams running their daily operations on Orgaflow.
 
 ### Extended description (website)
 
