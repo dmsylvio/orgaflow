@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Pencil, Plus, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { CurrencyInput } from "@/components/ui/currency-input";
 import {
@@ -44,6 +44,14 @@ type Payment = {
 
 type OrgCurrency = CurrencyFormat;
 
+type InvoiceOption = {
+  id: string;
+  invoiceNumber: string;
+  total: string;
+  customerId: string;
+  customerName: string;
+};
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -76,6 +84,8 @@ function PaymentFormFields({
   setPaymentDate,
   customerId,
   setCustomerId,
+  invoiceId,
+  setInvoiceId,
   invoiceRef,
   setInvoiceRef,
   paymentModeId,
@@ -84,6 +94,8 @@ function PaymentFormFields({
   setNotes,
   orgCurrency,
   customers,
+  invoices,
+  invoicesDisabled,
   paymentModes,
 }: {
   paymentNumber: string;
@@ -93,6 +105,8 @@ function PaymentFormFields({
   setPaymentDate: (v: string) => void;
   customerId: string;
   setCustomerId: (v: string) => void;
+  invoiceId: string;
+  setInvoiceId: (v: string) => void;
   invoiceRef: string;
   setInvoiceRef: (v: string) => void;
   paymentModeId: string;
@@ -101,6 +115,8 @@ function PaymentFormFields({
   setNotes: (v: string) => void;
   orgCurrency: OrgCurrency;
   customers: { id: string; displayName: string }[];
+  invoices: InvoiceOption[];
+  invoicesDisabled: boolean;
   paymentModes: { id: string; name: string }[];
 }) {
   return (
@@ -148,18 +164,72 @@ function PaymentFormFields({
         </select>
       </div>
 
-      {/* Invoice ref */}
+      {/* Invoice (optional) */}
       <div className="space-y-1.5">
-        <Label htmlFor="pf-invoice">
+        <Label htmlFor="pf-invoice-select">
           Invoice{" "}
           <span className="text-xs text-muted-foreground">(optional)</span>
         </Label>
+
+        <div className="flex items-center gap-2">
+          <select
+            id="pf-invoice-select"
+            value={invoiceId}
+            disabled={invoicesDisabled}
+            onChange={(e) => {
+              const nextId = e.target.value;
+              setInvoiceId(nextId);
+
+              if (!nextId) return;
+
+              const invoice = invoices.find((inv) => inv.id === nextId);
+              if (!invoice) return;
+
+              setAmount(invoice.total);
+              setInvoiceRef(invoice.invoiceNumber);
+              setCustomerId(invoice.customerId);
+            }}
+            className={cn(
+              "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
+              invoicesDisabled && "opacity-60",
+            )}
+          >
+            <option value="">— None —</option>
+            {invoices.map((inv) => (
+              <option key={inv.id} value={inv.id}>
+                {inv.invoiceNumber} · {inv.customerName} ·{" "}
+                {formatCurrencyDisplay(inv.total, orgCurrency)}
+              </option>
+            ))}
+          </select>
+
+          {invoiceId ? (
+            <button
+              type="button"
+              title="Clear invoice"
+              onClick={() => {
+                setInvoiceId("");
+                setInvoiceRef("");
+              }}
+              className="rounded-md border border-input bg-transparent px-2.5 py-2 text-xs text-muted-foreground shadow-xs transition-colors hover:bg-accent hover:text-foreground"
+            >
+              Clear
+            </button>
+          ) : null}
+        </div>
+
         <Input
           id="pf-invoice"
           value={invoiceRef}
           onChange={(e) => setInvoiceRef(e.target.value)}
-          placeholder="Invoice #"
+          placeholder="Invoice reference (optional)"
         />
+
+        {invoiceId ? (
+          <p className="text-xs text-muted-foreground">
+            Amount and customer were filled from the selected invoice.
+          </p>
+        ) : null}
       </div>
 
       {/* Amount */}
@@ -217,6 +287,8 @@ function CreatePaymentDialog({
   onSuccess,
   orgCurrency,
   customers,
+  invoices,
+  invoicesDisabled,
   paymentModes,
 }: {
   open: boolean;
@@ -224,6 +296,8 @@ function CreatePaymentDialog({
   onSuccess: () => void;
   orgCurrency: OrgCurrency;
   customers: { id: string; displayName: string }[];
+  invoices: InvoiceOption[];
+  invoicesDisabled: boolean;
   paymentModes: { id: string; name: string }[];
 }) {
   const trpc = useTRPC();
@@ -236,6 +310,7 @@ function CreatePaymentDialog({
   const [amount, setAmount] = useState("");
   const [paymentDate, setPaymentDate] = useState(today());
   const [customerId, setCustomerId] = useState("");
+  const [invoiceId, setInvoiceId] = useState("");
   const [invoiceRef, setInvoiceRef] = useState("");
   const [paymentModeId, setPaymentModeId] = useState("");
   const [notes, setNotes] = useState("");
@@ -248,6 +323,7 @@ function CreatePaymentDialog({
         setAmount("");
         setPaymentDate(today());
         setCustomerId("");
+        setInvoiceId("");
         setInvoiceRef("");
         setPaymentModeId("");
         setNotes("");
@@ -273,6 +349,8 @@ function CreatePaymentDialog({
             setPaymentDate={setPaymentDate}
             customerId={customerId}
             setCustomerId={setCustomerId}
+            invoiceId={invoiceId}
+            setInvoiceId={setInvoiceId}
             invoiceRef={invoiceRef}
             setInvoiceRef={setInvoiceRef}
             paymentModeId={paymentModeId}
@@ -281,6 +359,8 @@ function CreatePaymentDialog({
             setNotes={setNotes}
             orgCurrency={orgCurrency}
             customers={customers}
+            invoices={invoices}
+            invoicesDisabled={invoicesDisabled}
             paymentModes={paymentModes}
           />
         </DialogBody>
@@ -321,6 +401,8 @@ function EditPaymentDialog({
   onSuccess,
   orgCurrency,
   customers,
+  invoices,
+  invoicesDisabled,
   paymentModes,
 }: {
   payment: Payment;
@@ -329,17 +411,29 @@ function EditPaymentDialog({
   onSuccess: () => void;
   orgCurrency: OrgCurrency;
   customers: { id: string; displayName: string }[];
+  invoices: InvoiceOption[];
+  invoicesDisabled: boolean;
   paymentModes: { id: string; name: string }[];
 }) {
   const trpc = useTRPC();
   const [amount, setAmount] = useState(payment.amount);
   const [paymentDate, setPaymentDate] = useState(payment.paymentDate);
   const [customerId, setCustomerId] = useState(payment.customerId ?? "");
+  const [invoiceId, setInvoiceId] = useState("");
   const [invoiceRef, setInvoiceRef] = useState(payment.invoiceRef ?? "");
   const [paymentModeId, setPaymentModeId] = useState(
     payment.paymentModeId ?? "",
   );
   const [notes, setNotes] = useState(payment.notes ?? "");
+
+  useEffect(() => {
+    if (invoiceId) return;
+    if (!invoiceRef.trim()) return;
+    const match = invoices.find((inv) => inv.invoiceNumber === invoiceRef);
+    if (!match) return;
+    // Preselect the invoice in the dropdown, but don't override the current amount.
+    setInvoiceId(match.id);
+  }, [invoiceId, invoiceRef, invoices]);
 
   const update = useMutation(
     trpc.payments.update.mutationOptions({
@@ -368,6 +462,8 @@ function EditPaymentDialog({
             setPaymentDate={setPaymentDate}
             customerId={customerId}
             setCustomerId={setCustomerId}
+            invoiceId={invoiceId}
+            setInvoiceId={setInvoiceId}
             invoiceRef={invoiceRef}
             setInvoiceRef={setInvoiceRef}
             paymentModeId={paymentModeId}
@@ -376,6 +472,8 @@ function EditPaymentDialog({
             setNotes={setNotes}
             orgCurrency={orgCurrency}
             customers={customers}
+            invoices={invoices}
+            invoicesDisabled={invoicesDisabled}
             paymentModes={paymentModes}
           />
         </DialogBody>
@@ -498,6 +596,20 @@ export default function PaymentsPage() {
 
   const [createOpen, setCreateOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Payment | null>(null);
+
+  const invoicesQuery = useQuery({
+    ...trpc.invoices.list.queryOptions(),
+    enabled: createOpen || editTarget !== null,
+  });
+  const invoices: InvoiceOption[] =
+    invoicesQuery.data?.map((inv) => ({
+      id: inv.id,
+      invoiceNumber: inv.invoiceNumber,
+      total: inv.total,
+      customerId: inv.customer.id,
+      customerName: inv.customer.displayName,
+    })) ?? [];
+  const invoicesDisabled = invoicesQuery.isLoading || invoicesQuery.isError;
 
   const customerMap = new Map(customers.map((c) => [c.id, c.displayName]));
   const modeMap = new Map(paymentModes.map((m) => [m.id, m.name]));
@@ -652,6 +764,8 @@ export default function PaymentsPage() {
         onSuccess={invalidate}
         orgCurrency={orgCurrency}
         customers={customers}
+        invoices={invoices}
+        invoicesDisabled={invoicesDisabled}
         paymentModes={paymentModes}
       />
 
@@ -665,6 +779,8 @@ export default function PaymentsPage() {
           onSuccess={invalidate}
           orgCurrency={orgCurrency}
           customers={customers}
+          invoices={invoices}
+          invoicesDisabled={invoicesDisabled}
           paymentModes={paymentModes}
         />
       ) : null}
