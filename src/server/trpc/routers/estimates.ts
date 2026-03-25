@@ -9,6 +9,7 @@ import type { DbClient } from "@/server/db";
 import {
   currencies,
   customers,
+  documentFiles,
   estimateItems,
   estimates,
   items,
@@ -467,6 +468,7 @@ export const estimatesRouter = createTRPCRouter({
           estimateDate: estimates.estimateDate,
           expiryDate: estimates.expiryDate,
           notes: estimates.notes,
+          rejectionReason: estimates.rejectionReason,
           subTotal: estimates.subTotal,
           total: estimates.total,
           tax: estimates.tax,
@@ -540,6 +542,24 @@ export const estimatesRouter = createTRPCRouter({
         )
         .orderBy(asc(estimateItems.createdAt));
 
+      const publicFiles = await ctx.db
+        .select({
+          id: documentFiles.id,
+          fileName: documentFiles.fileName,
+          storageKey: documentFiles.storageKey,
+          mimeType: documentFiles.mimeType,
+          fileSize: documentFiles.fileSize,
+        })
+        .from(documentFiles)
+        .where(
+          and(
+            eq(documentFiles.resourceType, "estimate"),
+            eq(documentFiles.resourceId, estimate.id),
+            eq(documentFiles.isPublic, true),
+          ),
+        )
+        .orderBy(asc(documentFiles.createdAt));
+
       let nextStatus = estimate.status;
       let nextUpdatedAt = estimate.updatedAt;
 
@@ -597,8 +617,155 @@ export const estimatesRouter = createTRPCRouter({
             swapCurrencySymbol: estimate.currencySwapSymbol,
           },
           items: lineItems,
+          files: publicFiles,
+          rejectionReason: estimate.rejectionReason ?? null,
         },
       };
+    }),
+
+  approvePublic: publicProcedure
+    .input(z.string().trim().min(1))
+    .mutation(async ({ ctx, input }) => {
+      const token = input;
+
+      const [estimate] = await ctx.db
+        .select({
+          id: estimates.id,
+          organizationId: estimates.organizationId,
+          status: estimates.status,
+          publicLinkCreatedAt: estimates.publicLinkCreatedAt,
+          publicLinksExpireEnabled:
+            organizationPreferences.publicLinksExpireEnabled,
+          publicLinksExpireDays: organizationPreferences.publicLinksExpireDays,
+        })
+        .from(estimates)
+        .leftJoin(
+          organizationPreferences,
+          eq(organizationPreferences.organizationId, estimates.organizationId),
+        )
+        .where(eq(estimates.publicLinkToken, token))
+        .limit(1);
+
+      if (!estimate || !estimate.publicLinkCreatedAt) {
+        throw new TRPCError({ code: "NOT_FOUND" });
+      }
+
+      const expireEnabled = estimate.publicLinksExpireEnabled ?? true;
+      const expireDays = estimate.publicLinksExpireDays ?? 7;
+      const expiresAt = expireEnabled
+        ? new Date(
+            estimate.publicLinkCreatedAt.getTime() +
+              expireDays * 24 * 60 * 60 * 1000,
+          )
+        : null;
+
+      if (expiresAt && expiresAt <= new Date()) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Link expired" });
+      }
+
+      if (
+        estimate.status !== "SENT" &&
+        estimate.status !== "VIEWED"
+      ) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Estimate cannot be approved in its current state.",
+        });
+      }
+
+      const now = new Date();
+      await ctx.db
+        .update(estimates)
+        .set({ status: "APPROVED", updatedAt: now })
+        .where(eq(estimates.id, estimate.id));
+
+      await runWorkflowAutomations(ctx.db, {
+        organizationId: estimate.organizationId,
+        triggerDocument: "estimate",
+        triggerStatus: "APPROVED",
+        documentId: estimate.id,
+        actorUserId: null,
+        triggeredAt: now,
+      });
+
+      return { ok: true };
+    }),
+
+  rejectPublic: publicProcedure
+    .input(
+      z.object({
+        token: z.string().trim().min(1),
+        reason: z.string().trim().max(2000).optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { token, reason } = input;
+
+      const [estimate] = await ctx.db
+        .select({
+          id: estimates.id,
+          organizationId: estimates.organizationId,
+          status: estimates.status,
+          publicLinkCreatedAt: estimates.publicLinkCreatedAt,
+          publicLinksExpireEnabled:
+            organizationPreferences.publicLinksExpireEnabled,
+          publicLinksExpireDays: organizationPreferences.publicLinksExpireDays,
+        })
+        .from(estimates)
+        .leftJoin(
+          organizationPreferences,
+          eq(organizationPreferences.organizationId, estimates.organizationId),
+        )
+        .where(eq(estimates.publicLinkToken, token))
+        .limit(1);
+
+      if (!estimate || !estimate.publicLinkCreatedAt) {
+        throw new TRPCError({ code: "NOT_FOUND" });
+      }
+
+      const expireEnabled = estimate.publicLinksExpireEnabled ?? true;
+      const expireDays = estimate.publicLinksExpireDays ?? 7;
+      const expiresAt = expireEnabled
+        ? new Date(
+            estimate.publicLinkCreatedAt.getTime() +
+              expireDays * 24 * 60 * 60 * 1000,
+          )
+        : null;
+
+      if (expiresAt && expiresAt <= new Date()) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Link expired" });
+      }
+
+      if (
+        estimate.status !== "SENT" &&
+        estimate.status !== "VIEWED"
+      ) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Estimate cannot be rejected in its current state.",
+        });
+      }
+
+      const now = new Date();
+      await ctx.db
+        .update(estimates)
+        .set({
+          status: "REJECTED",
+          rejectionReason: reason ?? null,
+          updatedAt: now,
+        })
+        .where(eq(estimates.id, estimate.id));
+
+      await runWorkflowAutomations(ctx.db, {
+        organizationId: estimate.organizationId,
+        triggerDocument: "estimate",
+        triggerStatus: "REJECTED",
+        documentId: estimate.id,
+        actorUserId: null,
+        triggeredAt: now,
+      });
+
+      return { ok: true };
     }),
 
   getUsage: organizationProcedure
@@ -1132,6 +1299,84 @@ export const estimatesRouter = createTRPCRouter({
           and(
             eq(estimates.id, input.id),
             eq(estimates.organizationId, ctx.organizationId),
+          ),
+        );
+
+      return { ok: true as const };
+    }),
+
+  listFiles: organizationProcedure
+    .use(requirePermission("estimate:view"))
+    .input(z.object({ estimateId: z.string().trim().min(1) }))
+    .query(async ({ ctx, input }) => {
+      return ctx.db
+        .select({
+          id: documentFiles.id,
+          fileName: documentFiles.fileName,
+          storageKey: documentFiles.storageKey,
+          mimeType: documentFiles.mimeType,
+          fileSize: documentFiles.fileSize,
+          isPublic: documentFiles.isPublic,
+        })
+        .from(documentFiles)
+        .where(
+          and(
+            eq(documentFiles.resourceType, "estimate"),
+            eq(documentFiles.resourceId, input.estimateId),
+            eq(documentFiles.organizationId, ctx.organizationId),
+          ),
+        )
+        .orderBy(asc(documentFiles.createdAt));
+    }),
+
+  deleteFile: organizationProcedure
+    .use(requirePermission("estimate:edit"))
+    .input(z.object({ fileId: z.string().trim().min(1) }))
+    .mutation(async ({ ctx, input }) => {
+      const { del } = await import("@vercel/blob");
+
+      const [file] = await ctx.db
+        .select({
+          id: documentFiles.id,
+          storageKey: documentFiles.storageKey,
+        })
+        .from(documentFiles)
+        .where(
+          and(
+            eq(documentFiles.id, input.fileId),
+            eq(documentFiles.organizationId, ctx.organizationId),
+          ),
+        )
+        .limit(1);
+
+      if (!file) {
+        throw new TRPCError({ code: "NOT_FOUND" });
+      }
+
+      await del(file.storageKey);
+      await ctx.db
+        .delete(documentFiles)
+        .where(eq(documentFiles.id, file.id));
+
+      return { ok: true as const };
+    }),
+
+  toggleFileVisibility: organizationProcedure
+    .use(requirePermission("estimate:edit"))
+    .input(
+      z.object({
+        fileId: z.string().trim().min(1),
+        isPublic: z.boolean(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      await ctx.db
+        .update(documentFiles)
+        .set({ isPublic: input.isPublic })
+        .where(
+          and(
+            eq(documentFiles.id, input.fileId),
+            eq(documentFiles.organizationId, ctx.organizationId),
           ),
         );
 

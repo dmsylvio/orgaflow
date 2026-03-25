@@ -47,6 +47,7 @@ export const estimates = pgTable(
     discountPerItem: boolean("discount_per_item").notNull().default(false),
     discountFixed: boolean("discount_fixed").notNull().default(false),
     notes: text("notes"),
+    rejectionReason: text("rejection_reason"),
     discount: numeric("discount", { precision: 13, scale: 3 }),
     discountVal: numeric("discount_val", { precision: 13, scale: 3 }),
     subTotal: numeric("sub_total", { precision: 13, scale: 3 }).notNull(),

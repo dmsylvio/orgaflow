@@ -18,7 +18,8 @@
       "Bash(pnpm db:push)",
       "Bash(pnpm drizzle-kit:*)",
       "Bash(find /Users/sylviolima/Desktop/projects/orgaflow/src/app -path *estimates* -o -path *invoices*)",
-      "Bash(find /Users/sylviolima/Desktop/projects/orgaflow/src -type f -name *attachment* -o -name *file*)"
+      "Bash(find /Users/sylviolima/Desktop/projects/orgaflow/src -type f -name *attachment* -o -name *file*)",
+      "Bash(pnpm tsc:*)"
     ]
   }
 }

@@ -115,6 +115,24 @@ async function handleUpload(request: Request) {
     }
   }
 
+  if (resourceType === "estimate") {
+    const { estimates } = await import("@/server/db/schemas");
+    const [row] = await db
+      .select({ id: estimates.id })
+      .from(estimates)
+      .where(
+        and(
+          eq(estimates.id, resourceId as string),
+          eq(estimates.organizationId, organizationId),
+        ),
+      )
+      .limit(1);
+
+    if (!row) {
+      return Response.json({ error: "Resource not found" }, { status: 404 });
+    }
+  }
+
   const blob = await put(
     `${organizationId}/${resourceType}/${resourceId as string}/${Date.now()}-${file.name}`,
     file,
