@@ -39,17 +39,6 @@ function EstimateFilesSection({ estimateId }: { estimateId: string }) {
     }),
   );
 
-  const toggleVisibility = useMutation(
-    trpc.estimates.toggleFileVisibility.mutationOptions({
-      onSuccess: () =>
-        queryClient.invalidateQueries(
-          trpc.estimates.listFiles.queryOptions({ estimateId }),
-        ),
-      onError: (e) =>
-        toast.error("Couldn't update file", { description: e.message }),
-    }),
-  );
-
   async function handleFiles(selected: FileList | null) {
     if (!selected || selected.length === 0) return;
     setUploading(true);
@@ -146,20 +135,6 @@ function EstimateFilesSection({ estimateId }: { estimateId: string }) {
                 <span className="shrink-0 text-xs text-muted-foreground">
                   {formatBytes(file.fileSize)}
                 </span>
-                <label className="flex shrink-0 items-center gap-1 text-xs text-muted-foreground">
-                  <input
-                    type="checkbox"
-                    checked={file.isPublic}
-                    onChange={(e) =>
-                      toggleVisibility.mutate({
-                        fileId: file.id,
-                        isPublic: e.target.checked,
-                      })
-                    }
-                    className="h-3.5 w-3.5"
-                  />
-                  Client visible
-                </label>
                 <button
                   type="button"
                   disabled={deleteFile.isPending}

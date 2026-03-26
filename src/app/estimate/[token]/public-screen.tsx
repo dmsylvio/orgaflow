@@ -4,23 +4,15 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   CalendarClock,
   CheckCircle2,
-  ChevronLeft,
-  ChevronRight,
+  Download,
   FileText,
+  ImageIcon,
   TriangleAlert,
   XCircle,
 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import {
   Dialog,
   DialogBody,
@@ -39,9 +31,12 @@ import { formatCurrencyDisplay } from "@/lib/currency-format";
 import { toast } from "@/lib/toast";
 import { useTRPC } from "@/trpc/client";
 
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
 function formatDate(value: string | null | undefined): string {
   if (!value) return "—";
-
   return new Date(`${value}T00:00:00`).toLocaleDateString(undefined, {
     month: "short",
     day: "numeric",
@@ -51,7 +46,6 @@ function formatDate(value: string | null | undefined): string {
 
 function formatDateTime(value: Date | null | undefined): string {
   if (!value) return "No expiration";
-
   return new Intl.DateTimeFormat(undefined, {
     dateStyle: "medium",
     timeStyle: "short",
@@ -64,17 +58,15 @@ function formatBytes(bytes: number) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-/** Quantities are stored with fixed decimals; trim trailing zeros for display. */
 function formatQuantityDisplay(quantity: string): string {
   const s = quantity.trim();
-  if (!s) return s;
-  if (!s.includes(".")) return s;
+  if (!s || !s.includes(".")) return s;
   const trimmed = s.replace(/0+$/, "").replace(/\.$/, "");
   return trimmed.length > 0 ? trimmed : "0";
 }
 
 // ---------------------------------------------------------------------------
-// Attachment carousel
+// File grid
 // ---------------------------------------------------------------------------
 
 type FileItem = {
@@ -85,77 +77,49 @@ type FileItem = {
   fileSize: number;
 };
 
-function AttachmentCarousel({ files }: { files: FileItem[] }) {
-  const [index, setIndex] = useState(0);
-  if (files.length === 0) return null;
-
-  const file = files[index];
+function FileCard({ file }: { file: FileItem }) {
   const isImage = file.mimeType.startsWith("image/");
-  const isPdf = file.mimeType === "application/pdf";
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-5">
-      <div className="flex items-center justify-between gap-3">
-        <h2 className="text-sm font-semibold text-foreground">Attachments</h2>
-        <span className="text-xs text-muted-foreground">
-          {index + 1} / {files.length}
-        </span>
-      </div>
-
-      <div className="mt-4 overflow-hidden rounded-xl border border-border bg-muted/30">
+    <a
+      href={file.storageKey}
+      target="_blank"
+      rel="noreferrer"
+      className="group flex flex-col overflow-hidden rounded-xl border border-border bg-background transition-shadow hover:shadow-md"
+    >
+      {/* Preview area */}
+      <div className="flex h-36 items-center justify-center overflow-hidden bg-muted/40">
         {isImage ? (
           // biome-ignore lint/performance/noImgElement: public user-uploaded image
           <img
             src={file.storageKey}
             alt={file.fileName}
-            className="max-h-96 w-full object-contain"
-          />
-        ) : isPdf ? (
-          <iframe
-            src={file.storageKey}
-            title={file.fileName}
-            className="h-96 w-full"
+            className="h-full w-full object-cover transition-transform group-hover:scale-105"
           />
         ) : (
-          <div className="flex h-40 flex-col items-center justify-center gap-3 text-muted-foreground">
-            <FileText className="h-10 w-10" />
-            <p className="text-sm">{file.fileName}</p>
+          <div className="flex flex-col items-center gap-2 text-muted-foreground/50">
+            {file.mimeType === "application/pdf" ? (
+              <FileText className="h-10 w-10" />
+            ) : (
+              <ImageIcon className="h-10 w-10" />
+            )}
           </div>
         )}
       </div>
 
-      <div className="mt-3 flex items-center justify-between gap-3">
-        <a
-          href={file.storageKey}
-          target="_blank"
-          rel="noreferrer"
-          className="min-w-0 flex-1 truncate text-sm text-foreground underline-offset-2 hover:underline"
-        >
-          {file.fileName}
-        </a>
-        <span className="shrink-0 text-xs text-muted-foreground">
-          {formatBytes(file.fileSize)}
-        </span>
-        <div className="flex gap-1">
-          <button
-            type="button"
-            disabled={index === 0}
-            onClick={() => setIndex((i) => i - 1)}
-            className="rounded p-1 text-muted-foreground hover:text-foreground disabled:opacity-30"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </button>
-          <button
-            type="button"
-            disabled={index === files.length - 1}
-            onClick={() => setIndex((i) => i + 1)}
-            className="rounded p-1 text-muted-foreground hover:text-foreground disabled:opacity-30"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </button>
+      {/* Info row */}
+      <div className="flex items-center gap-2 px-3 py-2.5">
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-xs font-medium text-foreground">
+            {file.fileName}
+          </p>
+          <p className="text-[10px] text-muted-foreground">
+            {formatBytes(file.fileSize)}
+          </p>
         </div>
+        <Download className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50 transition-colors group-hover:text-primary" />
       </div>
-    </div>
+    </a>
   );
 }
 
@@ -185,6 +149,7 @@ function RejectDialog({
         <DialogBody>
           <p className="text-sm text-muted-foreground">
             Please let us know why you are rejecting this estimate (optional).
+            This message will be sent back to the sender.
           </p>
           <RichTextEditor
             value={reason}
@@ -208,6 +173,44 @@ function RejectDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Error / state screens
+// ---------------------------------------------------------------------------
+
+function StateScreen({
+  icon: Icon,
+  iconClass,
+  title,
+  description,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  iconClass: string;
+  title: string;
+  description: string;
+}) {
+  return (
+    <div className="flex min-h-dvh items-center justify-center bg-muted/20 px-4 py-10">
+      <div className="w-full max-w-sm text-center">
+        <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-border bg-background shadow-sm">
+          <Icon className={`h-7 w-7 ${iconClass}`} />
+        </div>
+        <h1 className="mb-2 text-xl font-semibold text-foreground">{title}</h1>
+        <p className="text-sm text-muted-foreground">{description}</p>
+        <p className="mt-8 text-xs text-muted-foreground/50">
+          Powered by{" "}
+          <Link
+            className="text-primary underline underline-offset-2"
+            target="_blank"
+            href="https://orgaflow.dev"
+          >
+            Orgaflow
+          </Link>
+        </p>
+      </div>
+    </div>
   );
 }
 
@@ -261,49 +264,23 @@ export function EstimatePublicScreen({ token }: { token: string }) {
 
   if (data.status === "invalid") {
     return (
-      <div className="flex min-h-dvh items-center justify-center bg-muted/20 px-4 py-10">
-        <Card className="w-full max-w-xl shadow-md">
-          <CardHeader className="space-y-3">
-            <Badge variant="soft" className="w-fit gap-1.5">
-              <TriangleAlert className="h-3.5 w-3.5" />
-              Invalid link
-            </Badge>
-            <div className="space-y-1">
-              <CardTitle className="text-2xl font-semibold tracking-tight">
-                Estimate link not found
-              </CardTitle>
-              <CardDescription>
-                This estimate link is invalid or has been disabled. Ask the
-                sender for a new link.
-              </CardDescription>
-            </div>
-          </CardHeader>
-        </Card>
-      </div>
+      <StateScreen
+        icon={TriangleAlert}
+        iconClass="text-amber-500"
+        title="Estimate link not found"
+        description="This estimate link is invalid or has been disabled. Ask the sender for a new link."
+      />
     );
   }
 
   if (data.status === "expired") {
     return (
-      <div className="flex min-h-dvh items-center justify-center bg-muted/20 px-4 py-10">
-        <Card className="w-full max-w-xl shadow-md">
-          <CardHeader className="space-y-3">
-            <Badge variant="destructive" className="w-fit gap-1.5">
-              <CalendarClock className="h-3.5 w-3.5" />
-              Link expired
-            </Badge>
-            <div className="space-y-1">
-              <CardTitle className="text-2xl font-semibold tracking-tight">
-                This estimate link has expired
-              </CardTitle>
-              <CardDescription>
-                It expired on {formatDateTime(data.expiresAt)}. Ask the sender
-                to resend the estimate.
-              </CardDescription>
-            </div>
-          </CardHeader>
-        </Card>
-      </div>
+      <StateScreen
+        icon={CalendarClock}
+        iconClass="text-rose-500"
+        title="This link has expired"
+        description={`It expired on ${formatDateTime(data.expiresAt)}. Ask the sender to resend the estimate.`}
+      />
     );
   }
 
@@ -311,237 +288,284 @@ export function EstimatePublicScreen({ token }: { token: string }) {
   const canDecide = estimate.status === "SENT" || estimate.status === "VIEWED";
 
   return (
-    <div className="min-h-dvh bg-muted/20 px-4 py-10">
-      <div className="mx-auto w-full max-w-4xl">
-        <Card className="shadow-md">
-          <CardHeader className="space-y-3">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <Badge variant="soft" className="w-fit gap-1.5">
-                <FileText className="h-3.5 w-3.5" />
+    <>
+      {/* Page — add bottom padding when sticky bar is shown */}
+      <div
+        className={`min-h-dvh bg-muted/20 px-4 py-10 ${canDecide ? "pb-36" : ""}`}
+      >
+        <div className="mx-auto w-full max-w-3xl space-y-5">
+
+          {/* ── Header ────────────────────────────────────────── */}
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
                 Estimate
-              </Badge>
-
-              <div className="text-xs text-muted-foreground">
-                {expiresAt ? (
-                  <>Link expires {formatDateTime(expiresAt)}</>
-                ) : (
-                  <span>No link expiration</span>
-                )}
-              </div>
-            </div>
-
-            <div className="space-y-1">
-              <CardTitle className="text-2xl font-semibold tracking-tight">
+              </p>
+              <h1 className="mt-1 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
                 {estimate.estimateNumber}
-              </CardTitle>
-              <CardDescription>{estimate.organization.name}</CardDescription>
+              </h1>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {estimate.organization.name}
+              </p>
             </div>
-          </CardHeader>
+            {expiresAt && (
+              <p className="rounded-full border border-border bg-background px-3 py-1 text-xs text-muted-foreground">
+                Link expires {formatDateTime(expiresAt)}
+              </p>
+            )}
+          </div>
 
-          <CardContent className="space-y-6">
-            {/* Already decided banner */}
-            {estimate.status === "APPROVED" && (
-              <div className="flex items-center gap-3 rounded-xl border border-green-200 bg-green-50 px-4 py-3 dark:border-green-900 dark:bg-green-950">
-                <CheckCircle2 className="h-5 w-5 shrink-0 text-green-600 dark:text-green-400" />
-                <p className="text-sm font-medium text-green-800 dark:text-green-300">
-                  You approved this estimate.
+          {/* ── Decision banners ──────────────────────────────── */}
+          {estimate.status === "APPROVED" && (
+            <div className="flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 dark:border-emerald-900 dark:bg-emerald-950/50">
+              <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600 dark:text-emerald-400" />
+              <div>
+                <p className="text-sm font-semibold text-emerald-800 dark:text-emerald-300">
+                  You approved this estimate
+                </p>
+                <p className="text-xs text-emerald-700/80 dark:text-emerald-400/80">
+                  The sender has been notified of your approval.
                 </p>
               </div>
-            )}
+            </div>
+          )}
 
-            {estimate.status === "REJECTED" && (
-              <div className="space-y-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 dark:border-red-900 dark:bg-red-950">
-                <div className="flex items-center gap-3">
-                  <XCircle className="h-5 w-5 shrink-0 text-red-600 dark:text-red-400" />
-                  <p className="text-sm font-medium text-red-800 dark:text-red-300">
-                    You rejected this estimate.
+          {estimate.status === "REJECTED" && (
+            <div className="rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 dark:border-rose-900 dark:bg-rose-950/50">
+              <div className="flex items-center gap-3">
+                <XCircle className="h-5 w-5 shrink-0 text-rose-600 dark:text-rose-400" />
+                <div>
+                  <p className="text-sm font-semibold text-rose-800 dark:text-rose-300">
+                    You rejected this estimate
+                  </p>
+                  <p className="text-xs text-rose-700/80 dark:text-rose-400/80">
+                    The sender has been notified.
                   </p>
                 </div>
-                {estimate.rejectionReason ? (
-                  <div className="space-y-1 pl-8 text-sm text-red-700 dark:text-red-400">
-                    <p className="font-medium">Reason</p>
-                    <RichTextContent
-                      html={estimate.rejectionReason}
-                      className="text-red-700 dark:text-red-400 prose-headings:text-red-800 prose-headings:dark:text-red-300"
-                    />
-                  </div>
-                ) : null}
               </div>
-            )}
+              {estimate.rejectionReason && (
+                <div className="ml-8 mt-3 rounded-xl border border-rose-200/60 bg-rose-100/50 px-4 py-3 dark:border-rose-800 dark:bg-rose-900/30">
+                  <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-rose-700 dark:text-rose-400">
+                    Your reason
+                  </p>
+                  <RichTextContent
+                    html={estimate.rejectionReason}
+                    className="text-sm text-rose-800 dark:text-rose-300"
+                  />
+                </div>
+              )}
+            </div>
+          )}
 
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-              <div className="rounded-2xl border border-border bg-card p-4">
-                <p className="text-xs uppercase tracking-wide text-muted-foreground/70">
-                  Estimate date
-                </p>
-                <p className="mt-1 text-sm font-semibold text-foreground">
-                  {formatDate(estimate.estimateDate)}
-                </p>
+          {/* ── Summary cards ─────────────────────────────────── */}
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div className="rounded-2xl border border-border bg-background p-4">
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
+                Date
+              </p>
+              <p className="mt-1.5 text-sm font-semibold text-foreground">
+                {formatDate(estimate.estimateDate)}
+              </p>
+            </div>
+            <div className="rounded-2xl border border-border bg-background p-4">
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
+                Expires
+              </p>
+              <p className="mt-1.5 text-sm font-semibold text-foreground">
+                {formatDate(estimate.expiryDate)}
+              </p>
+            </div>
+            <div className="rounded-2xl border border-border bg-background p-4">
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
+                Subtotal
+              </p>
+              <p className="mt-1.5 text-sm font-semibold text-foreground">
+                {formatCurrencyDisplay(estimate.subTotal, estimate.currency)}
+              </p>
+            </div>
+            {/* Total — highlighted */}
+            <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4">
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-primary/70">
+                Total
+              </p>
+              <p className="mt-1.5 text-base font-bold text-primary">
+                {formatCurrencyDisplay(estimate.total, estimate.currency)}
+              </p>
+            </div>
+          </div>
+
+          {/* ── Attachments ───────────────────────────────────── */}
+          {estimate.files.length > 0 && (
+            <div className="rounded-2xl border border-border bg-background p-5">
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-sm font-semibold text-foreground">
+                  Attachments
+                </h2>
+                <span className="text-xs text-muted-foreground">
+                  {estimate.files.length} file
+                  {estimate.files.length !== 1 ? "s" : ""}
+                </span>
               </div>
-              <div className="rounded-2xl border border-border bg-card p-4">
-                <p className="text-xs uppercase tracking-wide text-muted-foreground/70">
-                  Expiry
-                </p>
-                <p className="mt-1 text-sm font-semibold text-foreground">
-                  {formatDate(estimate.expiryDate)}
-                </p>
-              </div>
-              <div className="rounded-2xl border border-border bg-card p-4">
-                <p className="text-xs uppercase tracking-wide text-muted-foreground/70">
-                  Subtotal
-                </p>
-                <p className="mt-1 text-sm font-semibold text-foreground">
-                  {formatCurrencyDisplay(estimate.subTotal, estimate.currency)}
-                </p>
-              </div>
-              <div className="rounded-2xl border border-border bg-card p-4">
-                <p className="text-xs uppercase tracking-wide text-muted-foreground/70">
-                  Total
-                </p>
-                <p className="mt-1 text-sm font-semibold text-foreground">
-                  {formatCurrencyDisplay(estimate.total, estimate.currency)}
-                </p>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+                {estimate.files.map((file) => (
+                  <FileCard key={file.id} file={file} />
+                ))}
               </div>
             </div>
+          )}
 
-            {/* Attachments carousel */}
-            {estimate.files.length > 0 && (
-              <AttachmentCarousel files={estimate.files} />
-            )}
+          {/* ── Line items ────────────────────────────────────── */}
+          <div className="rounded-2xl border border-border bg-background">
+            {/* Table header */}
+            <div className="grid grid-cols-[1fr_auto] gap-4 border-b border-border px-5 py-3 sm:grid-cols-[1fr_80px_100px_100px]">
+              <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
+                Item
+              </p>
+              <p className="hidden text-right text-xs font-semibold uppercase tracking-widest text-muted-foreground/60 sm:block">
+                Qty
+              </p>
+              <p className="hidden text-right text-xs font-semibold uppercase tracking-widest text-muted-foreground/60 sm:block">
+                Unit price
+              </p>
+              <p className="text-right text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
+                Total
+              </p>
+            </div>
 
-            <div className="rounded-2xl border border-border bg-card p-5">
-              <div className="flex items-center justify-between gap-3">
-                <h2 className="text-lg font-semibold text-foreground">
-                  Line items
-                </h2>
-                <p className="text-sm text-muted-foreground">
-                  {estimate.items.length} item
-                  {estimate.items.length !== 1 ? "s" : ""}
-                </p>
-              </div>
-
-              <div className="mt-4 space-y-4">
+            {estimate.items.length === 0 ? (
+              <p className="px-5 py-8 text-center text-sm text-muted-foreground">
+                No line items.
+              </p>
+            ) : (
+              <div className="divide-y divide-border">
                 {estimate.items.map((item) => (
-                  <div key={item.id} className="rounded-xl bg-muted/30 p-4">
-                    <div className="flex flex-wrap items-start justify-between gap-3">
-                      <div>
-                        <p className="text-sm font-semibold text-foreground">
-                          {item.name}
+                  <div
+                    key={item.id}
+                    className="grid grid-cols-[1fr_auto] gap-4 px-5 py-4 sm:grid-cols-[1fr_80px_100px_100px]"
+                  >
+                    <div>
+                      <p className="text-sm font-medium text-foreground">
+                        {item.name}
+                      </p>
+                      {item.description && (
+                        <p className="mt-0.5 text-xs text-muted-foreground">
+                          {item.description}
                         </p>
-                        {item.description ? (
-                          <p className="mt-1 text-sm text-muted-foreground">
-                            {item.description}
-                          </p>
-                        ) : null}
-                      </div>
-                      <p className="text-sm font-semibold text-foreground">
-                        {formatCurrencyDisplay(item.total, estimate.currency)}
+                      )}
+                      {/* Mobile: show qty + price inline */}
+                      <p className="mt-1 text-xs text-muted-foreground sm:hidden">
+                        {formatQuantityDisplay(item.quantity)}
+                        {item.unitName ? ` ${item.unitName}` : ""} ×{" "}
+                        {formatCurrencyDisplay(item.price, estimate.currency)}
                       </p>
                     </div>
-
-                    <div className="mt-3 grid gap-3 text-sm text-muted-foreground sm:grid-cols-3">
-                      <div>
-                        Qty:{" "}
-                        <span className="text-foreground">
-                          {formatQuantityDisplay(item.quantity)}
+                    <p className="hidden self-center text-right text-sm text-muted-foreground sm:block">
+                      {formatQuantityDisplay(item.quantity)}
+                      {item.unitName && (
+                        <span className="ml-1 text-xs text-muted-foreground/60">
+                          {item.unitName}
                         </span>
-                      </div>
-                      <div>
-                        Unit price:{" "}
-                        <span className="text-foreground">
-                          {formatCurrencyDisplay(item.price, estimate.currency)}
-                        </span>
-                      </div>
-                      <div>
-                        Unit:{" "}
-                        <span className="text-foreground">
-                          {item.unitName ?? "—"}
-                        </span>
-                      </div>
-                    </div>
+                      )}
+                    </p>
+                    <p className="hidden self-center text-right text-sm text-muted-foreground sm:block">
+                      {formatCurrencyDisplay(item.price, estimate.currency)}
+                    </p>
+                    <p className="self-center text-right text-sm font-semibold text-foreground">
+                      {formatCurrencyDisplay(item.total, estimate.currency)}
+                    </p>
                   </div>
                 ))}
               </div>
+            )}
 
-              {estimate.items.length === 0 ? (
-                <p className="mt-4 text-sm text-muted-foreground">
-                  This estimate has no line items.
-                </p>
-              ) : null}
-
-              <Separator className="my-5" />
-
-              <div className="ml-auto max-w-sm space-y-3 text-sm">
-                <div className="flex items-center justify-between text-muted-foreground">
+            {/* Totals */}
+            <div className="border-t border-border px-5 py-4">
+              <div className="ml-auto max-w-xs space-y-2 text-sm">
+                <div className="flex justify-between text-muted-foreground">
                   <span>Subtotal</span>
                   <span className="font-medium text-foreground">
-                    {formatCurrencyDisplay(
-                      estimate.subTotal,
-                      estimate.currency,
-                    )}
+                    {formatCurrencyDisplay(estimate.subTotal, estimate.currency)}
                   </span>
                 </div>
-                <div className="flex items-center justify-between text-muted-foreground">
+                <div className="flex justify-between text-muted-foreground">
                   <span>Tax</span>
                   <span className="font-medium text-foreground">
                     {formatCurrencyDisplay(estimate.tax, estimate.currency)}
                   </span>
                 </div>
                 <Separator />
-                <div className="flex items-center justify-between">
-                  <span className="font-semibold text-foreground">Total</span>
-                  <span className="text-lg font-semibold text-foreground">
+                <div className="flex justify-between font-semibold text-foreground">
+                  <span>Total</span>
+                  <span className="text-base text-primary">
                     {formatCurrencyDisplay(estimate.total, estimate.currency)}
                   </span>
                 </div>
               </div>
             </div>
+          </div>
 
-            {estimate.notes ? (
-              <div className="rounded-2xl border border-border bg-card p-5">
-                <h2 className="text-lg font-semibold text-foreground">Notes</h2>
-                <p className="mt-3 whitespace-pre-wrap text-sm text-muted-foreground">
-                  {estimate.notes}
-                </p>
-              </div>
-            ) : null}
+          {/* ── Notes ─────────────────────────────────────────── */}
+          {estimate.notes && (
+            <div className="rounded-2xl border border-border bg-background px-5 py-5">
+              <h2 className="mb-3 text-sm font-semibold text-foreground">
+                Notes
+              </h2>
+              <RichTextContent
+                html={estimate.notes}
+                className="text-sm text-muted-foreground"
+              />
+            </div>
+          )}
 
-            {/* Approve / Reject actions */}
-            {canDecide && (
-              <div className="flex flex-wrap justify-end gap-3 border-t border-border pt-4">
-                <Button
-                  variant="outline"
-                  onClick={() => setRejectOpen(true)}
-                  disabled={approve.isPending || reject.isPending}
-                >
-                  <XCircle className="h-4 w-4" />
-                  Reject
-                </Button>
-                <Button
-                  onClick={() => approve.mutate(token)}
-                  loading={approve.isPending}
-                  disabled={approve.isPending || reject.isPending}
-                >
-                  <CheckCircle2 className="h-4 w-4" />
-                  Approve
-                </Button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <p className="mt-6 text-center text-xs text-muted-foreground">
-          Powered by{" "}
-          <Link
-            className="text-primary underline"
-            target="_blank"
-            href="https://orgaflow.dev"
-          >
-            Orgaflow
-          </Link>{" "}
-          platform.
-        </p>
+          {/* ── Footer ────────────────────────────────────────── */}
+          <p className="pb-2 text-center text-xs text-muted-foreground/50">
+            Powered by{" "}
+            <Link
+              className="text-primary/70 underline underline-offset-2 hover:text-primary"
+              target="_blank"
+              href="https://orgaflow.dev"
+            >
+              Orgaflow
+            </Link>
+          </p>
+        </div>
       </div>
+
+      {/* ── Sticky action bar ─────────────────────────────────── */}
+      {canDecide && (
+        <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background/95 px-4 py-4 shadow-[0_-4px_24px_rgba(0,0,0,0.06)] backdrop-blur-sm">
+          <div className="mx-auto flex w-full max-w-3xl flex-wrap items-center justify-between gap-4">
+            <div>
+              <p className="text-sm font-semibold text-foreground">
+                Ready to respond?
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Approve to proceed, or reject with a reason.
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                onClick={() => setRejectOpen(true)}
+                disabled={approve.isPending || reject.isPending}
+                className="gap-2"
+              >
+                <XCircle className="h-4 w-4 text-rose-500" />
+                Reject
+              </Button>
+              <Button
+                onClick={() => approve.mutate(token)}
+                loading={approve.isPending}
+                disabled={approve.isPending || reject.isPending}
+                className="gap-2 bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-600 dark:hover:bg-emerald-700"
+              >
+                <CheckCircle2 className="h-4 w-4" />
+                Approve Estimate
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <RejectDialog
         open={rejectOpen}
@@ -549,6 +573,6 @@ export function EstimatePublicScreen({ token }: { token: string }) {
         isPending={reject.isPending}
         onConfirm={(reason) => reject.mutate({ token, reason })}
       />
-    </div>
+    </>
   );
 }

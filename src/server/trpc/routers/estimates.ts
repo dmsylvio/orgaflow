@@ -555,7 +555,6 @@ export const estimatesRouter = createTRPCRouter({
           and(
             eq(documentFiles.resourceType, "estimate"),
             eq(documentFiles.resourceId, estimate.id),
-            eq(documentFiles.isPublic, true),
           ),
         )
         .orderBy(asc(documentFiles.createdAt));
