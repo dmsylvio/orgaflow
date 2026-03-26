@@ -23,7 +23,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/roadmap" },
 };
 
-type Status = "in-progress" | "planned" | "considering";
+type Status = "shipped" | "in-progress" | "planned" | "considering";
 
 interface RoadmapItem {
   id: number;
@@ -41,13 +41,23 @@ const ITEMS: RoadmapItem[] = [
     Icon: Paperclip,
     title: "File Attachments",
     description:
-      "Attach receipts, contracts, and files to expenses, estimates, and invoices. Stored securely with per-plan quotas (1 GB on Growth, 10 GB on Scale).",
-    status: "in-progress",
+      "Attach receipts, contracts, and files to expenses, estimates, and invoices. Client-visible toggle controls what appears on public estimate pages.",
+    status: "shipped",
     effort: "Medium",
     category: "Core",
   },
   {
-    id: 4,
+    id: 2,
+    Icon: CheckCircle2,
+    title: "Client Approve / Reject Flow",
+    description:
+      "Clients can approve or reject estimates directly from the public link. Rejection includes an optional rich-text reason shown back to the sender.",
+    status: "shipped",
+    effort: "Medium",
+    category: "Core",
+  },
+  {
+    id: 3,
     Icon: FileText,
     title: "PDF Export",
     description:
@@ -57,7 +67,7 @@ const ITEMS: RoadmapItem[] = [
     category: "Core",
   },
   {
-    id: 5,
+    id: 4,
     Icon: BarChart3,
     title: "Reports & Analytics",
     description:
@@ -67,7 +77,7 @@ const ITEMS: RoadmapItem[] = [
     category: "Analytics",
   },
   {
-    id: 3,
+    id: 5,
     Icon: Mail,
     title: "Notification System",
     description:
@@ -77,7 +87,7 @@ const ITEMS: RoadmapItem[] = [
     category: "Communication",
   },
   {
-    id: 2,
+    id: 6,
     Icon: Settings,
     title: "Expanded Settings",
     description:
@@ -162,6 +172,12 @@ const STATUS_CONFIG: Record<
   Status,
   { label: string; dot: string; badge: string; text: string }
 > = {
+  shipped: {
+    label: "Shipped",
+    dot: "bg-emerald-500",
+    badge: "bg-emerald-50 border-emerald-200",
+    text: "text-emerald-700",
+  },
   "in-progress": {
     label: "In Progress",
     dot: "bg-primary",
@@ -193,6 +209,11 @@ const EFFORT_CONFIG: Record<
 
 const COLUMNS: { status: Status; title: string; description: string }[] = [
   {
+    status: "shipped",
+    title: "Recently Shipped",
+    description: "Released in the last cycle",
+  },
+  {
     status: "in-progress",
     title: "In Progress",
     description: "Actively being built",
@@ -210,7 +231,7 @@ const COLUMNS: { status: Status; title: string; description: string }[] = [
 ];
 
 export default function RoadmapPage() {
-  const lastUpdated = "March 24, 2026";
+  const lastUpdated = "March 25, 2026";
 
   return (
     <div className="overflow-hidden">
@@ -262,7 +283,7 @@ export default function RoadmapPage() {
 
       {/* Board */}
       <section className="mx-auto max-w-7xl px-6 pb-28">
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
           {COLUMNS.map(({ status, title }) => {
             const cfg = STATUS_CONFIG[status];
             const items = ITEMS.filter((i) => i.status === status);

@@ -1,19 +1,154 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Pencil } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { ArrowLeft, FileText, Paperclip, Pencil, Trash2, Upload } from "lucide-react";
 import NextLink from "next/link";
 import { useParams } from "next/navigation";
+import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
 import { formatCurrencyDisplay } from "@/lib/currency-format";
+import { toast } from "@/lib/toast";
 import { useTRPC } from "@/trpc/client";
+import { formatBytes, uploadFile } from "../../expenses/edit-dialog";
 import {
   formatInvoiceDate,
   InvoiceStatusBadge,
   PageShell,
 } from "../invoice-ui";
+
+function InvoiceFilesSection({ invoiceId }: { invoiceId: string }) {
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const filesQuery = useQuery(
+    trpc.invoices.listFiles.queryOptions({ invoiceId }),
+  );
+
+  const deleteFile = useMutation(
+    trpc.invoices.deleteFile.mutationOptions({
+      onSuccess: () =>
+        queryClient.invalidateQueries(
+          trpc.invoices.listFiles.queryOptions({ invoiceId }),
+        ),
+      onError: (e) =>
+        toast.error("Couldn't delete file", { description: e.message }),
+    }),
+  );
+
+  async function handleFiles(selected: FileList | null) {
+    if (!selected || selected.length === 0) return;
+    setUploading(true);
+    try {
+      for (const file of Array.from(selected)) {
+        await uploadFile(file, "invoice", invoiceId);
+      }
+      await queryClient.invalidateQueries(
+        trpc.invoices.listFiles.queryOptions({ invoiceId }),
+      );
+      toast.success("File uploaded.");
+    } catch (err) {
+      toast.error("Upload failed", {
+        description: err instanceof Error ? err.message : undefined,
+      });
+    } finally {
+      setUploading(false);
+      if (inputRef.current) inputRef.current.value = "";
+    }
+  }
+
+  const files = filesQuery.data ?? [];
+
+  return (
+    <div className="rounded-2xl border border-border bg-card p-5">
+      <div className="flex items-center gap-2">
+        <Paperclip className="h-4 w-4 text-muted-foreground" />
+        <h2 className="text-sm font-semibold text-foreground">Attachments</h2>
+        <span className="ml-auto text-xs text-muted-foreground">
+          {files.length} file{files.length !== 1 ? "s" : ""}
+        </span>
+      </div>
+
+      <div className="mt-4 space-y-3">
+        <input
+          ref={inputRef}
+          type="file"
+          className="hidden"
+          accept=".pdf,.png,.jpg,.jpeg,.gif,.svg,.webp,.docx,.zip"
+          multiple
+          onChange={(e) => handleFiles(e.target.files)}
+        />
+        <button
+          type="button"
+          onClick={() => inputRef.current?.click()}
+          disabled={uploading}
+          className="flex w-full items-center gap-3 rounded-lg border border-dashed border-border bg-muted/30 p-4 transition-colors hover:bg-muted/50 disabled:opacity-60"
+        >
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border bg-background">
+            {uploading ? (
+              <Spinner className="h-4 w-4 text-primary" />
+            ) : (
+              <Upload className="h-4 w-4 text-muted-foreground" />
+            )}
+          </div>
+          <div className="text-left">
+            <p className="text-sm font-medium text-foreground">
+              {uploading ? "Uploading…" : "Upload Attachment"}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              PDF, PNG, JPG, SVG, DOCX, ZIP — max 25 MB
+            </p>
+          </div>
+        </button>
+
+        {filesQuery.isLoading && (
+          <div className="flex justify-center py-2">
+            <Spinner className="h-4 w-4 text-primary" />
+          </div>
+        )}
+
+        {files.length > 0 && (
+          <ul className="space-y-1.5">
+            {files.map((file) => (
+              <li
+                key={file.id}
+                className="flex items-center gap-2 rounded-md border border-border bg-muted/30 px-3 py-2 text-sm"
+              >
+                {file.mimeType.startsWith("image/") ? (
+                  <Paperclip className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                ) : (
+                  <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                )}
+                <a
+                  href={file.storageKey}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="min-w-0 flex-1 truncate text-foreground underline-offset-2 hover:underline"
+                >
+                  {file.fileName}
+                </a>
+                <span className="shrink-0 text-xs text-muted-foreground">
+                  {formatBytes(file.fileSize)}
+                </span>
+                <button
+                  type="button"
+                  disabled={deleteFile.isPending}
+                  onClick={() => deleteFile.mutate({ fileId: file.id })}
+                  className="ml-1 shrink-0 rounded p-0.5 text-muted-foreground/50 hover:text-destructive disabled:opacity-40"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export default function InvoiceDetailPage() {
   const trpc = useTRPC();
@@ -188,6 +323,8 @@ export default function InvoiceDetailPage() {
             </p>
           </div>
         ) : null}
+
+        <InvoiceFilesSection invoiceId={invoiceId} />
       </div>
     </PageShell>
   );

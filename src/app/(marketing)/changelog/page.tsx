@@ -21,6 +21,22 @@ interface ChangelogEntry {
 
 const ENTRIES: ChangelogEntry[] = [
   {
+    version: "1.0.0",
+    date: "March 25, 2026",
+    badge: "minor",
+    summary: "File attachments across all documents, client approve/reject flow, and Notes/Files tabs.",
+    changes: [
+      { type: "new", text: "File attachments on expenses, estimates, and invoices — upload PDFs, images, and documents stored securely via Vercel Blob." },
+      { type: "new", text: "Clients can now approve or reject estimates directly from the public estimate link." },
+      { type: "new", text: "Rejection modal with optional rich-text reason. Rejection reason is displayed on the public page after submission." },
+      { type: "new", text: "Attachment carousel on the public estimate page — clients see images, PDF preview, and downloadable files." },
+      { type: "new", text: "\"Client visible\" toggle per attachment in the admin — controls which files appear on the public estimate page." },
+      { type: "new", text: "Notes / Files tab switcher in create and edit forms for estimates and invoices. Files in create forms are uploaded right after saving." },
+      { type: "improved", text: "Expense detail page (/app/expenses/[id]) now shows receipts with download and delete." },
+      { type: "improved", text: "Estimate and invoice detail pages now have a full attachments section with upload, delete, and visibility control." },
+    ],
+  },
+  {
     version: "0.9.0",
     date: "March 24, 2026",
     badge: "minor",

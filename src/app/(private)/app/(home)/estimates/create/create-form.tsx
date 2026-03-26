@@ -1,10 +1,10 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { DollarSign, Percent, Plus, Trash2, X } from "lucide-react";
+import { DollarSign, FileText, Paperclip, Percent, Plus, Trash2, Upload, X } from "lucide-react";
 import NextLink from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { CurrencyInput } from "@/components/ui/currency-input";
 import { CustomerPicker } from "@/components/ui/customer-picker";
@@ -14,9 +14,11 @@ import { Label } from "@/components/ui/label";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { NativeSelect } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatCurrencyDisplay } from "@/lib/currency-format";
 import { toast } from "@/lib/toast";
 import { useTRPC } from "@/trpc/client";
+import { formatBytes, uploadFile } from "../../expenses/edit-dialog";
 
 type DraftItem = {
   id: string;
@@ -85,6 +87,8 @@ export function CreateEstimateForm() {
   );
   const [expiryDateTouched, setExpiryDateTouched] = useState(false);
   const [notes, setNotes] = useState("");
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [draftItems, setDraftItems] = useState<DraftItem[]>([makeDraftItem()]);
   const [discountValue, setDiscountValue] = useState("");
   const [discountType, setDiscountType] = useState<"fixed" | "percentage">(
@@ -96,15 +100,17 @@ export function CreateEstimateForm() {
 
   const create = useMutation(
     trpc.estimates.create.mutationOptions({
-      onSuccess: (created) => {
+      onSuccess: async (created) => {
         queryClient.invalidateQueries(trpc.estimates.list.queryOptions());
         queryClient.invalidateQueries(trpc.estimates.getUsage.queryOptions());
         queryClient.invalidateQueries(
           trpc.estimates.getFormMeta.queryOptions(),
         );
-        queryClient.invalidateQueries(
-          trpc.estimates.getById.queryOptions({ id: created.id }),
-        );
+        if (pendingFiles.length > 0) {
+          for (const file of pendingFiles) {
+            await uploadFile(file, "estimate", created.id).catch(() => null);
+          }
+        }
         toast.success("Estimate created.", {
           description: `${created.estimateNumber} is ready in draft status.`,
         });
@@ -429,17 +435,97 @@ export function CreateEstimateForm() {
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
-        <div className="space-y-1.5">
-          <Label>
-            Notes{" "}
-            <span className="text-xs text-muted-foreground">(optional)</span>
-          </Label>
-          <RichTextEditor
-            value={notes}
-            onChange={setNotes}
-            placeholder="Add a note that will travel with this estimate."
-          />
-        </div>
+        <Tabs defaultValue="notes">
+          <TabsList>
+            <TabsTrigger value="notes">Notes</TabsTrigger>
+            <TabsTrigger value="files">
+              Files
+              {pendingFiles.length > 0 && (
+                <span className="ml-1 rounded-full bg-primary px-1.5 py-0.5 text-[10px] leading-none text-primary-foreground">
+                  {pendingFiles.length}
+                </span>
+              )}
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="notes">
+            <RichTextEditor
+              value={notes}
+              onChange={setNotes}
+              placeholder="Add a note that will travel with this estimate."
+            />
+          </TabsContent>
+
+          <TabsContent value="files" className="space-y-3">
+            <input
+              ref={fileInputRef}
+              type="file"
+              className="hidden"
+              accept=".pdf,.png,.jpg,.jpeg,.gif,.svg,.webp,.docx,.zip"
+              multiple
+              onChange={(e) => {
+                const selected = Array.from(e.target.files ?? []);
+                if (selected.length) {
+                  setPendingFiles((prev) => [...prev, ...selected]);
+                }
+                if (fileInputRef.current) fileInputRef.current.value = "";
+              }}
+            />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="flex w-full items-center gap-3 rounded-lg border border-dashed border-border bg-muted/30 p-4 transition-colors hover:bg-muted/50"
+            >
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border bg-background">
+                <Upload className="h-4 w-4 text-muted-foreground" />
+              </div>
+              <div className="text-left">
+                <p className="text-sm font-medium text-foreground">Add Attachment</p>
+                <p className="text-xs text-muted-foreground">
+                  PDF, PNG, JPG, SVG, DOCX, ZIP — max 25 MB
+                </p>
+              </div>
+            </button>
+
+            {pendingFiles.length > 0 && (
+              <ul className="space-y-1.5">
+                {pendingFiles.map((file, idx) => (
+                  <li
+                    key={`${file.name}-${idx}`}
+                    className="flex items-center gap-2 rounded-md border border-border bg-muted/30 px-3 py-2 text-sm"
+                  >
+                    {file.type.startsWith("image/") ? (
+                      <Paperclip className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                    ) : (
+                      <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                    )}
+                    <span className="min-w-0 flex-1 truncate text-foreground">
+                      {file.name}
+                    </span>
+                    <span className="shrink-0 text-xs text-muted-foreground">
+                      {formatBytes(file.size)}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setPendingFiles((prev) => prev.filter((_, i) => i !== idx))
+                      }
+                      className="ml-1 shrink-0 rounded p-0.5 text-muted-foreground/50 hover:text-destructive"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            {pendingFiles.length === 0 && (
+              <p className="text-xs text-muted-foreground">
+                Files will be uploaded when you save the estimate.
+              </p>
+            )}
+          </TabsContent>
+        </Tabs>
 
         <div className="rounded-2xl border border-border bg-card p-4">
           <p className="text-sm font-semibold text-foreground">Summary</p>

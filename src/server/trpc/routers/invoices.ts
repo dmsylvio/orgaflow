@@ -9,6 +9,7 @@ import type { DbClient } from "@/server/db";
 import {
   currencies,
   customers,
+  documentFiles,
   estimateItems,
   estimates,
   invoiceItems,
@@ -1427,6 +1428,58 @@ export const invoicesRouter = createTRPCRouter({
             eq(invoices.organizationId, ctx.organizationId),
           ),
         );
+
+      return { ok: true as const };
+    }),
+
+  listFiles: organizationProcedure
+    .use(requirePermission("invoice:view"))
+    .input(z.object({ invoiceId: z.string().trim().min(1) }))
+    .query(async ({ ctx, input }) => {
+      return ctx.db
+        .select({
+          id: documentFiles.id,
+          fileName: documentFiles.fileName,
+          storageKey: documentFiles.storageKey,
+          mimeType: documentFiles.mimeType,
+          fileSize: documentFiles.fileSize,
+        })
+        .from(documentFiles)
+        .where(
+          and(
+            eq(documentFiles.resourceType, "invoice"),
+            eq(documentFiles.resourceId, input.invoiceId),
+            eq(documentFiles.organizationId, ctx.organizationId),
+          ),
+        )
+        .orderBy(asc(documentFiles.createdAt));
+    }),
+
+  deleteFile: organizationProcedure
+    .use(requirePermission("invoice:edit"))
+    .input(z.object({ fileId: z.string().trim().min(1) }))
+    .mutation(async ({ ctx, input }) => {
+      const { del } = await import("@vercel/blob");
+
+      const [file] = await ctx.db
+        .select({ id: documentFiles.id, storageKey: documentFiles.storageKey })
+        .from(documentFiles)
+        .where(
+          and(
+            eq(documentFiles.id, input.fileId),
+            eq(documentFiles.organizationId, ctx.organizationId),
+          ),
+        )
+        .limit(1);
+
+      if (!file) {
+        throw new TRPCError({ code: "NOT_FOUND" });
+      }
+
+      await del(file.storageKey);
+      await ctx.db
+        .delete(documentFiles)
+        .where(eq(documentFiles.id, file.id));
 
       return { ok: true as const };
     }),
