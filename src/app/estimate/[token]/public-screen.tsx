@@ -534,7 +534,7 @@ export function EstimatePublicScreen({ token }: { token: string }) {
       {/* ── Sticky action bar ─────────────────────────────────── */}
       {canDecide && (
         <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background/95 px-4 py-4 shadow-[0_-4px_24px_rgba(0,0,0,0.06)] backdrop-blur-sm">
-          <div className="mx-auto flex w-full max-w-3xl flex-wrap items-center justify-between gap-4">
+          <div className="mx-auto flex w-full max-w-3xl flex-col items-center gap-3 text-center">
             <div>
               <p className="text-sm font-semibold text-foreground">
                 Ready to respond?

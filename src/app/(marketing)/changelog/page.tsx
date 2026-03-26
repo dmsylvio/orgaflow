@@ -21,6 +21,22 @@ interface ChangelogEntry {
 
 const ENTRIES: ChangelogEntry[] = [
   {
+    version: "1.1.0",
+    date: "March 26, 2026",
+    badge: "minor",
+    summary: "Redesigned public estimate page — professional document layout, all attachments visible, sticky approve/reject bar.",
+    changes: [
+      { type: "improved", text: "Public estimate page fully redesigned: clean document-style layout with clear typography hierarchy, summary cards, and a branded footer." },
+      { type: "improved", text: "All attached files are now always visible to the client on the public estimate page — no more per-file visibility toggle." },
+      { type: "improved", text: "Attachments displayed as a responsive card grid with image thumbnails, file icons, names, sizes, and direct download links." },
+      { type: "improved", text: "Approve / Reject actions moved to a sticky bar at the bottom of the screen — always accessible without scrolling." },
+      { type: "improved", text: "Notes on the public page now render rich text (HTML) instead of plain text, matching what was written in the editor." },
+      { type: "improved", text: "Rejection reason on the public page is rendered as rich text inside a highlighted banner." },
+      { type: "improved", text: "Line items redesigned as a clean table with divider rows instead of individual card backgrounds." },
+      { type: "improved", text: "Total amount visually highlighted in the summary cards with primary color to draw immediate attention." },
+    ],
+  },
+  {
     version: "1.0.0",
     date: "March 25, 2026",
     badge: "minor",
@@ -29,11 +45,10 @@ const ENTRIES: ChangelogEntry[] = [
       { type: "new", text: "File attachments on expenses, estimates, and invoices — upload PDFs, images, and documents stored securely via Vercel Blob." },
       { type: "new", text: "Clients can now approve or reject estimates directly from the public estimate link." },
       { type: "new", text: "Rejection modal with optional rich-text reason. Rejection reason is displayed on the public page after submission." },
-      { type: "new", text: "Attachment carousel on the public estimate page — clients see images, PDF preview, and downloadable files." },
-      { type: "new", text: "\"Client visible\" toggle per attachment in the admin — controls which files appear on the public estimate page." },
+      { type: "new", text: "Attachment grid on the public estimate page — clients see image thumbnails, file icons, and downloadable files." },
       { type: "new", text: "Notes / Files tab switcher in create and edit forms for estimates and invoices. Files in create forms are uploaded right after saving." },
       { type: "improved", text: "Expense detail page (/app/expenses/[id]) now shows receipts with download and delete." },
-      { type: "improved", text: "Estimate and invoice detail pages now have a full attachments section with upload, delete, and visibility control." },
+      { type: "improved", text: "Estimate and invoice detail pages now have a full attachments section with upload and delete." },
     ],
   },
   {

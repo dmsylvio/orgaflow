@@ -445,7 +445,7 @@ export function CreateInvoiceForm() {
               ref={fileInputRef}
               type="file"
               className="hidden"
-              accept=".pdf,.png,.jpg,.jpeg,.gif,.svg,.webp,.docx,.zip"
+              accept=".png,.jpg,.jpeg,.gif,.webp"
               multiple
               onChange={(e) => {
                 const selected = Array.from(e.target.files ?? []);
@@ -463,7 +463,7 @@ export function CreateInvoiceForm() {
               </div>
               <div className="text-left">
                 <p className="text-sm font-medium text-foreground">Add Attachment</p>
-                <p className="text-xs text-muted-foreground">PDF, PNG, JPG, SVG, DOCX, ZIP — max 25 MB</p>
+                <p className="text-xs text-muted-foreground">PNG, JPG, GIF, WebP — max 25 MB</p>
               </div>
             </button>
 

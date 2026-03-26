@@ -57,6 +57,16 @@ const ITEMS: RoadmapItem[] = [
     category: "Core",
   },
   {
+    id: 13,
+    Icon: FileText,
+    title: "Public Estimate Page Redesign",
+    description:
+      "Professional document-style layout for client-facing estimate pages. Sticky approve/reject bar, rich-text notes, attachment grid with thumbnails, and highlighted totals.",
+    status: "shipped",
+    effort: "Low",
+    category: "UX",
+  },
+  {
     id: 3,
     Icon: FileText,
     title: "PDF Export",
@@ -231,7 +241,7 @@ const COLUMNS: { status: Status; title: string; description: string }[] = [
 ];
 
 export default function RoadmapPage() {
-  const lastUpdated = "March 25, 2026";
+  const lastUpdated = "March 26, 2026";
 
   return (
     <div className="overflow-hidden">

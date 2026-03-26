@@ -79,7 +79,7 @@ function EstimateFilesSection({ estimateId }: { estimateId: string }) {
           ref={inputRef}
           type="file"
           className="hidden"
-          accept=".pdf,.png,.jpg,.jpeg,.gif,.svg,.webp,.docx,.zip"
+          accept=".png,.jpg,.jpeg,.gif,.webp"
           multiple
           onChange={(e) => handleFiles(e.target.files)}
         />
@@ -101,7 +101,7 @@ function EstimateFilesSection({ estimateId }: { estimateId: string }) {
               {uploading ? "Uploading…" : "Upload Attachment"}
             </p>
             <p className="text-xs text-muted-foreground">
-              PDF, PNG, JPG, SVG, DOCX, ZIP — max 25 MB
+              PNG, JPG, GIF, WebP — max 25 MB
             </p>
           </div>
         </button>

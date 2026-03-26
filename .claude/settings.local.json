@@ -20,7 +20,12 @@
       "Bash(find /Users/sylviolima/Desktop/projects/orgaflow/src/app -path *estimates* -o -path *invoices*)",
       "Bash(find /Users/sylviolima/Desktop/projects/orgaflow/src -type f -name *attachment* -o -name *file*)",
       "Bash(pnpm tsc:*)",
-      "Bash(pnpm build:*)"
+      "Bash(pnpm build:*)",
+      "Bash(for f:*)",
+      "Bash(do)",
+      "Bash(sed -i '' 's/accept=\"\"\\\\.pdf,\\\\.png,\\\\.jpg,\\\\.jpeg,\\\\.gif,\\\\.svg,\\\\.webp,\\\\.docx,\\\\.zip\"\"/accept=\"\".png,.jpg,.jpeg,.gif,.webp\"\"/g' \"/Users/sylviolima/Desktop/projects/orgaflow/$f\")",
+      "Bash(done)",
+      "Bash(sed -i '' 's/PDF, PNG, JPG, SVG, DOCX, ZIP — max 25 MB/PNG, JPG, GIF, WebP — max 25 MB/g' \"/Users/sylviolima/Desktop/projects/orgaflow/$f\")"
     ]
   }
 }

@@ -486,7 +486,7 @@ export function EditInvoiceForm() {
               ref={fileInputRef}
               type="file"
               className="hidden"
-              accept=".pdf,.png,.jpg,.jpeg,.gif,.svg,.webp,.docx,.zip"
+              accept=".png,.jpg,.jpeg,.gif,.webp"
               multiple
               onChange={(e) => handleFiles(e.target.files)}
             />
@@ -508,7 +508,7 @@ export function EditInvoiceForm() {
                   {uploading ? "Uploading…" : "Add Attachment"}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  PDF, PNG, JPG, SVG, DOCX, ZIP — max 25 MB
+                  PNG, JPG, GIF, WebP — max 25 MB
                 </p>
               </div>
             </button>
