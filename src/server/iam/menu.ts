@@ -119,12 +119,6 @@ export const settingsMenu: SettingsMenuItem[] = [
     ownerOnly: true,
   },
   {
-    key: "customization",
-    label: "Customization",
-    href: "/app/settings/customization",
-    ownerOnly: true,
-  },
-  {
     key: "roles",
     label: "Roles",
     href: "/app/settings/roles",

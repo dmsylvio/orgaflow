@@ -24,6 +24,7 @@ import { runWorkflowAutomations } from "@/server/services/automations/run-workfl
 import { getOrganizationPlan } from "@/server/services/billing/get-organization-plan";
 import { getUsageLimit } from "@/server/services/billing/plan-limits";
 import { sendTransactionalEmail } from "@/server/services/email/resend";
+import { sendViewedNotification } from "@/server/services/notifications/send-viewed-notification";
 import {
   createTRPCRouter,
   organizationProcedure,
@@ -547,6 +548,15 @@ export const invoicesRouter = createTRPCRouter({
           documentId: invoice.id,
           actorUserId: null,
           triggeredAt: nextUpdatedAt,
+        });
+
+        void sendViewedNotification({
+          db: ctx.db,
+          organizationId: invoice.organizationId,
+          documentType: "invoice",
+          documentNumber: invoice.invoiceNumber,
+          customerName: invoice.customerName,
+          documentUrl: `${getAppBaseUrl()}/app/invoices/${invoice.id}`,
         });
       }
 

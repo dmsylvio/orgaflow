@@ -1,10 +1,5 @@
-import type { Metadata } from "next";
-import { MockAppPage } from "../mock-app-page";
-
-export const metadata: Metadata = {
-  title: "Settings",
-};
+import { redirect } from "next/navigation";
 
 export default function SettingsHomePage() {
-  return <MockAppPage title="Settings" />;
+  redirect("/app/settings/company");
 }

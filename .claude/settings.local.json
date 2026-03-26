@@ -25,7 +25,13 @@
       "Bash(do)",
       "Bash(sed -i '' 's/accept=\"\"\\\\.pdf,\\\\.png,\\\\.jpg,\\\\.jpeg,\\\\.gif,\\\\.svg,\\\\.webp,\\\\.docx,\\\\.zip\"\"/accept=\"\".png,.jpg,.jpeg,.gif,.webp\"\"/g' \"/Users/sylviolima/Desktop/projects/orgaflow/$f\")",
       "Bash(done)",
-      "Bash(sed -i '' 's/PDF, PNG, JPG, SVG, DOCX, ZIP — max 25 MB/PNG, JPG, GIF, WebP — max 25 MB/g' \"/Users/sylviolima/Desktop/projects/orgaflow/$f\")"
+      "Bash(sed -i '' 's/PDF, PNG, JPG, SVG, DOCX, ZIP — max 25 MB/PNG, JPG, GIF, WebP — max 25 MB/g' \"/Users/sylviolima/Desktop/projects/orgaflow/$f\")",
+      "Bash(for dir:*)",
+      "Bash(do basename:*)",
+      "Read(//Users/sylviolima/Desktop/projects/orgaflow/$dir/**)",
+      "Bash(xargs ls:*)",
+      "Bash(ls -la /Users/sylviolima/Desktop/projects/orgaflow/src/app/\\\\\\(private\\\\\\)/app/\\\\\\(home\\\\\\)/settings/)",
+      "Bash(ls /Users/sylviolima/Desktop/projects/orgaflow/src/app/\\\\\\(private\\\\\\)/app/\\\\\\(home\\\\\\)/settings/)"
     ]
   }
 }
