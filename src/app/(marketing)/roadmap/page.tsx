@@ -71,8 +71,8 @@ const ITEMS: RoadmapItem[] = [
     Icon: FileText,
     title: "PDF Export",
     description:
-      "Download estimates and invoices as professional PDFs — both from the internal dashboard and from the client-facing public pages.",
-    status: "in-progress",
+      "Download estimates and invoices as professional PDFs — from the admin dashboard and directly from the client-facing public page.",
+    status: "shipped",
     effort: "Medium",
     category: "Core",
   },
@@ -81,17 +81,37 @@ const ITEMS: RoadmapItem[] = [
     Icon: BarChart3,
     title: "Reports & Analytics",
     description:
-      "Revenue by period, estimate approval rates, expenses by category, and profitability per client. Visual charts included.",
-    status: "in-progress",
+      "Revenue vs expenses chart, estimate approval rates, invoice status breakdown, and top customers — with a 3/6/12-month period selector.",
+    status: "shipped",
     effort: "High",
     category: "Analytics",
   },
   {
+    id: 14,
+    Icon: Mail,
+    title: "Document Viewed Notifications",
+    description:
+      "Email notifications when a client opens an estimate or invoice for the first time. Configurable per toggle in Settings → Notifications.",
+    status: "shipped",
+    effort: "Low",
+    category: "Communication",
+  },
+  {
+    id: 15,
+    Icon: Settings,
+    title: "Settings Routing",
+    description:
+      "Settings home now redirects directly to Company Settings. Dead links removed and unknown routes return a proper 404.",
+    status: "shipped",
+    effort: "Low",
+    category: "Platform",
+  },
+  {
     id: 5,
     Icon: Mail,
-    title: "Notification System",
+    title: "Extended Notifications",
     description:
-      "Email notifications for key events: invoice due, estimate approved or rejected, payment received, and more. Configurable per user.",
+      "More notification triggers: estimate approved or rejected, invoice due, payment received. Configurable per event with per-user preferences.",
     status: "planned",
     effort: "Low",
     category: "Communication",
@@ -101,7 +121,7 @@ const ITEMS: RoadmapItem[] = [
     Icon: Settings,
     title: "Expanded Settings",
     description:
-      "Full settings coverage across all sections including dynamic routing. Currently some settings sections are stubs.",
+      "Deeper settings coverage: document branding, custom number formats, and additional customization options.",
     status: "planned",
     effort: "Low",
     category: "Platform",
@@ -241,7 +261,7 @@ const COLUMNS: { status: Status; title: string; description: string }[] = [
 ];
 
 export default function RoadmapPage() {
-  const lastUpdated = "March 26, 2026";
+  const lastUpdated = "March 26, 2026 (v1.2.0)";
 
   return (
     <div className="overflow-hidden">

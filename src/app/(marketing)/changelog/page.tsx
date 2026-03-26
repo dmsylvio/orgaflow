@@ -21,6 +21,20 @@ interface ChangelogEntry {
 
 const ENTRIES: ChangelogEntry[] = [
   {
+    version: "1.2.0",
+    date: "March 26, 2026",
+    badge: "minor",
+    summary: "PDF export, reports & analytics, notification emails, and settings routing.",
+    changes: [
+      { type: "new", text: "PDF export for estimates and invoices — download from the admin detail pages or directly from the public client-facing page." },
+      { type: "new", text: "Reports page (/app/reports) with revenue vs expenses bar chart, estimate and invoice status pie charts, and top 5 customers by revenue." },
+      { type: "new", text: "Period selector on reports (3, 6, or 12 months) for revenue, expenses, and top customers." },
+      { type: "new", text: "Notification emails: owners receive an email when a client views an estimate or invoice for the first time. Configurable per toggle in Settings → Notifications." },
+      { type: "improved", text: "Settings home page now redirects directly to Company Settings instead of showing a stub screen." },
+      { type: "fixed", text: "Removed dead 'Customization' link from settings sidebar (section was not yet implemented)." },
+    ],
+  },
+  {
     version: "1.1.0",
     date: "March 26, 2026",
     badge: "minor",

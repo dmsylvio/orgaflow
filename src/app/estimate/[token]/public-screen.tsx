@@ -5,6 +5,7 @@ import {
   CalendarClock,
   CheckCircle2,
   Download,
+  FileDown,
   FileText,
   ImageIcon,
   TriangleAlert,
@@ -308,11 +309,21 @@ export function EstimatePublicScreen({ token }: { token: string }) {
                 {estimate.organization.name}
               </p>
             </div>
-            {expiresAt && (
-              <p className="rounded-full border border-border bg-background px-3 py-1 text-xs text-muted-foreground">
-                Link expires {formatDateTime(expiresAt)}
-              </p>
-            )}
+            <div className="flex flex-wrap items-center gap-2">
+              {expiresAt && (
+                <p className="rounded-full border border-border bg-background px-3 py-1 text-xs text-muted-foreground">
+                  Link expires {formatDateTime(expiresAt)}
+                </p>
+              )}
+              <a
+                href={`/api/pdf/estimate/public/${token}`}
+                download
+                className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-muted"
+              >
+                <FileDown className="h-3.5 w-3.5" />
+                Download PDF
+              </a>
+            </div>
           </div>
 
           {/* ── Decision banners ──────────────────────────────── */}

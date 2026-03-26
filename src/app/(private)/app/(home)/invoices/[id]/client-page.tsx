@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, FileText, Paperclip, Pencil, Trash2, Upload } from "lucide-react";
+import { ArrowLeft, Download, FileText, Paperclip, Pencil, Trash2, Upload } from "lucide-react";
 import NextLink from "next/link";
 import { useParams } from "next/navigation";
 import { useRef, useState } from "react";
@@ -188,6 +188,12 @@ export default function InvoiceDetailPage() {
                 <ArrowLeft className="h-4 w-4" />
                 Back
               </NextLink>
+            </Button>
+            <Button type="button" variant="outline" asChild>
+              <a href={`/api/pdf/invoice/${invoice.id}`} download>
+                <Download className="h-4 w-4" />
+                PDF
+              </a>
             </Button>
             <Button type="button" asChild>
               <NextLink href={`/app/invoices/edit?id=${invoice.id}`}>

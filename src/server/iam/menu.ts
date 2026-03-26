@@ -88,6 +88,13 @@ export const appMenu: MainMenuItem[] = [
     feature: "kanban",
   },
   {
+    key: "reports",
+    label: "Reports",
+    href: "/app/reports",
+    group: 2,
+    permissions: ["dashboard:view"],
+  },
+  {
     key: "settings-entry",
     label: "Settings",
     href: "/app/settings",
