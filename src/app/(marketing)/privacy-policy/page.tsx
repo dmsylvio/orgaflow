@@ -5,6 +5,16 @@ export const metadata: Metadata = {
   title: "Privacy Policy",
   description: "How Orgaflow collects, uses, and protects your personal data.",
   alternates: { canonical: "/privacy-policy" },
+  openGraph: {
+    title: "Privacy Policy — Orgaflow",
+    description: "How Orgaflow collects, uses, and protects your personal data.",
+    url: "/privacy-policy",
+    type: "website",
+  },
+  twitter: {
+    title: "Privacy Policy — Orgaflow",
+    description: "How Orgaflow collects, uses, and protects your personal data.",
+  },
 };
 
 const LAST_UPDATED = "March 24, 2026";

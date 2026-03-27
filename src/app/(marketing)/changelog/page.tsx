@@ -4,8 +4,20 @@ import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = {
   title: "Changelog",
-  description: "What's new in Orgaflow. Every update, fix, and improvement.",
+  description: "What's new in Orgaflow. Every update, fix, and improvement — documented as we ship.",
   alternates: { canonical: "/changelog" },
+  openGraph: {
+    title: "Changelog — Orgaflow",
+    description:
+      "What's new in Orgaflow. Every update, fix, and improvement — documented as we ship.",
+    url: "/changelog",
+    type: "website",
+  },
+  twitter: {
+    title: "Changelog — Orgaflow",
+    description:
+      "What's new in Orgaflow. Every update, fix, and improvement — documented as we ship.",
+  },
 };
 
 interface ChangelogEntry {

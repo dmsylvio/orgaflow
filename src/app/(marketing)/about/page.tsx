@@ -15,7 +15,26 @@ export const metadata: Metadata = {
   title: "About",
   description:
     "Learn about the team and mission behind Orgaflow — the client workflow platform built for small businesses.",
+  keywords: [
+    "about Orgaflow",
+    "small business software",
+    "invoicing company",
+    "workflow automation startup",
+    "client management platform",
+  ],
   alternates: { canonical: "/about" },
+  openGraph: {
+    title: "About — Orgaflow",
+    description:
+      "Learn about the team and mission behind Orgaflow — the client workflow platform built for small businesses.",
+    url: "/about",
+    type: "website",
+  },
+  twitter: {
+    title: "About — Orgaflow",
+    description:
+      "Learn about the team and mission behind Orgaflow — the client workflow platform built for small businesses.",
+  },
 };
 
 const VALUES = [

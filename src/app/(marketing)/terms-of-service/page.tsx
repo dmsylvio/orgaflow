@@ -5,6 +5,16 @@ export const metadata: Metadata = {
   title: "Terms of Service",
   description: "The terms and conditions governing your use of Orgaflow.",
   alternates: { canonical: "/terms-of-service" },
+  openGraph: {
+    title: "Terms of Service — Orgaflow",
+    description: "The terms and conditions governing your use of Orgaflow.",
+    url: "/terms-of-service",
+    type: "website",
+  },
+  twitter: {
+    title: "Terms of Service — Orgaflow",
+    description: "The terms and conditions governing your use of Orgaflow.",
+  },
 };
 
 const LAST_UPDATED = "March 24, 2026";

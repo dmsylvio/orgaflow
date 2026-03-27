@@ -21,6 +21,18 @@ export const metadata: Metadata = {
   description:
     "See what we're building next. Our public roadmap shows upcoming features and their priorities.",
   alternates: { canonical: "/roadmap" },
+  openGraph: {
+    title: "Roadmap — Orgaflow",
+    description:
+      "See what we're building next. Our public roadmap shows upcoming features and their priorities.",
+    url: "/roadmap",
+    type: "website",
+  },
+  twitter: {
+    title: "Roadmap — Orgaflow",
+    description:
+      "See what we're building next. Our public roadmap shows upcoming features and their priorities.",
+  },
 };
 
 type Status = "shipped" | "in-progress" | "planned" | "considering";

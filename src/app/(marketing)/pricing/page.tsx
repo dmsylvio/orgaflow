@@ -6,8 +6,27 @@ import { Button } from "@/components/ui/button";
 export const metadata: Metadata = {
   title: "Pricing",
   description:
-    "Simple, transparent pricing for every stage of your business.",
+    "Simple, transparent pricing for every stage of your business. Start free, upgrade when you grow.",
+  keywords: [
+    "pricing",
+    "invoice software pricing",
+    "estimate software price",
+    "free invoicing tool",
+    "small business billing plans",
+  ],
   alternates: { canonical: "/pricing" },
+  openGraph: {
+    title: "Pricing — Orgaflow",
+    description:
+      "Simple, transparent pricing for every stage of your business. Start free, upgrade when you grow.",
+    url: "/pricing",
+    type: "website",
+  },
+  twitter: {
+    title: "Pricing — Orgaflow",
+    description:
+      "Simple, transparent pricing for every stage of your business. Start free, upgrade when you grow.",
+  },
 };
 
 const PLANS = [
@@ -17,7 +36,8 @@ const PLANS = [
     annualPrice: 0,
     priceLabel: "Free",
     annualLabel: "Free",
-    description: "Perfect for freelancers and solo business owners getting started.",
+    description:
+      "Perfect for freelancers and solo business owners getting started.",
     cta: "Get started free",
     ctaHref: "/register",
     popular: false,
@@ -71,7 +91,8 @@ const PLANS = [
     annualPrice: 209.99,
     priceLabel: "$24.99",
     annualLabel: "$209.99",
-    description: "For established businesses that want full automation and payments.",
+    description:
+      "For established businesses that want full automation and payments.",
     cta: "Start free trial",
     ctaHref: "/register",
     popular: false,
@@ -161,81 +182,90 @@ export default function PricingPage() {
       {/* Plans */}
       <section className="mx-auto max-w-7xl px-6 pb-24">
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-          {PLANS.map(({ name, priceLabel, description, cta, ctaHref, popular, features, missing }) => (
-            <div
-              key={name}
-              className={`relative flex flex-col overflow-hidden rounded-2xl border ${
-                popular
-                  ? "border-primary bg-primary/[0.03] shadow-xl shadow-primary/10"
-                  : "border-border bg-background shadow-sm"
-              } p-8`}
-            >
-              {popular && (
-                <div className="absolute right-0 top-0">
-                  <div className="rounded-bl-2xl bg-primary px-4 py-1.5 text-xs font-semibold text-white">
-                    Most popular
+          {PLANS.map(
+            ({
+              name,
+              priceLabel,
+              description,
+              cta,
+              ctaHref,
+              popular,
+              features,
+              missing,
+            }) => (
+              <div
+                key={name}
+                className={`relative flex flex-col overflow-hidden rounded-2xl border ${
+                  popular
+                    ? "border-primary bg-primary/[0.03] shadow-xl shadow-primary/10"
+                    : "border-border bg-background shadow-sm"
+                } p-8`}
+              >
+                {popular && (
+                  <div className="absolute right-0 top-0">
+                    <div className="rounded-bl-2xl bg-primary px-4 py-1.5 text-xs font-semibold text-white">
+                      Most popular
+                    </div>
                   </div>
+                )}
+
+                <div className="mb-6">
+                  <h3 className="mb-1 text-lg font-semibold text-foreground">
+                    {name}
+                  </h3>
+                  <p className="text-sm text-muted-foreground">{description}</p>
                 </div>
-              )}
 
-              <div className="mb-6">
-                <h3 className="mb-1 text-lg font-semibold text-foreground">
-                  {name}
-                </h3>
-                <p className="text-sm text-muted-foreground">{description}</p>
-              </div>
-
-              <div className="mb-8">
-                <div className="flex items-end gap-1">
-                  <span className="text-5xl font-bold text-foreground">
-                    {priceLabel}
-                  </span>
-                  {priceLabel !== "Free" && (
-                    <span className="mb-2 text-muted-foreground">/mo</span>
+                <div className="mb-8">
+                  <div className="flex items-end gap-1">
+                    <span className="text-5xl font-bold text-foreground">
+                      {priceLabel}
+                    </span>
+                    {priceLabel !== "Free" && (
+                      <span className="mb-2 text-muted-foreground">/mo</span>
+                    )}
+                  </div>
+                  {priceLabel !== "Free" ? (
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Billed monthly. Annual saves 30%.
+                    </p>
+                  ) : (
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Always free, no limits on time.
+                    </p>
                   )}
                 </div>
-                {priceLabel !== "Free" ? (
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Billed monthly. Annual saves 30%.
-                  </p>
-                ) : (
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Always free, no limits on time.
-                  </p>
-                )}
-              </div>
 
-              <Button
-                asChild
-                className={
-                  popular
-                    ? "mb-8 shadow-md shadow-primary/20"
-                    : "mb-8"
-                }
-                variant={popular ? "default" : "outline"}
-              >
-                <NextLink href={ctaHref}>
-                  {cta}
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </NextLink>
-              </Button>
+                <Button
+                  asChild
+                  className={
+                    popular ? "mb-8 shadow-md shadow-primary/20" : "mb-8"
+                  }
+                  variant={popular ? "default" : "outline"}
+                >
+                  <NextLink href={ctaHref}>
+                    {cta}
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </NextLink>
+                </Button>
 
-              <div className="flex flex-1 flex-col gap-3">
-                {features.map((f) => (
-                  <div key={f} className="flex items-start gap-3">
-                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
-                    <span className="text-sm text-foreground/80">{f}</span>
-                  </div>
-                ))}
-                {missing.map((f) => (
-                  <div key={f} className="flex items-start gap-3 opacity-40">
-                    <X className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">{f}</span>
-                  </div>
-                ))}
+                <div className="flex flex-1 flex-col gap-3">
+                  {features.map((f) => (
+                    <div key={f} className="flex items-start gap-3">
+                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+                      <span className="text-sm text-foreground/80">{f}</span>
+                    </div>
+                  ))}
+                  {missing.map((f) => (
+                    <div key={f} className="flex items-start gap-3 opacity-40">
+                      <X className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                      <span className="text-sm text-muted-foreground">{f}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
+            ),
+          )}
         </div>
 
         {/* Enterprise note */}
@@ -288,7 +318,8 @@ export default function PricingPage() {
             Ready to get started?
           </h2>
           <p className="mb-8 text-muted-foreground">
-            Start with the free Starter plan or go straight to Growth and Scale for the full experience.
+            Start with the free Starter plan or go straight to Growth and Scale
+            for the full experience.
           </p>
           <Button
             size="lg"

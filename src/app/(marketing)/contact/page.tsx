@@ -8,8 +8,26 @@ import { Textarea } from "@/components/ui/textarea";
 export const metadata: Metadata = {
   title: "Contact",
   description:
-    "Get in touch with the Orgaflow team. We'd love to hear from you.",
+    "Get in touch with the Orgaflow team. We'd love to hear from you — whether it's a question, feedback, or a feature request.",
+  keywords: [
+    "contact Orgaflow",
+    "support",
+    "feature request",
+    "business software help",
+  ],
   alternates: { canonical: "/contact" },
+  openGraph: {
+    title: "Contact — Orgaflow",
+    description:
+      "Get in touch with the Orgaflow team. We'd love to hear from you.",
+    url: "/contact",
+    type: "website",
+  },
+  twitter: {
+    title: "Contact — Orgaflow",
+    description:
+      "Get in touch with the Orgaflow team. We'd love to hear from you.",
+  },
 };
 
 const CONTACT_ITEMS = [

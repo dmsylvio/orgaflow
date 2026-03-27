@@ -5,6 +5,16 @@ export const metadata: Metadata = {
   title: "Cookie Policy",
   description: "How Orgaflow uses cookies and similar tracking technologies.",
   alternates: { canonical: "/cookie-policy" },
+  openGraph: {
+    title: "Cookie Policy — Orgaflow",
+    description: "How Orgaflow uses cookies and similar tracking technologies.",
+    url: "/cookie-policy",
+    type: "website",
+  },
+  twitter: {
+    title: "Cookie Policy — Orgaflow",
+    description: "How Orgaflow uses cookies and similar tracking technologies.",
+  },
 };
 
 const LAST_UPDATED = "March 24, 2026";

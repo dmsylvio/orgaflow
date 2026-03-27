@@ -3,60 +3,59 @@ import { getAppBaseUrl } from "@/lib/base-url";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = getAppBaseUrl();
-  const lastModified = new Date();
 
   return [
     {
       url: baseUrl,
-      lastModified,
+      lastModified: new Date("2026-03-26"),
       changeFrequency: "weekly",
       priority: 1,
     },
     {
       url: `${baseUrl}/pricing`,
-      lastModified,
+      lastModified: new Date("2026-03-24"),
       changeFrequency: "monthly",
       priority: 0.8,
     },
     {
       url: `${baseUrl}/about`,
-      lastModified,
+      lastModified: new Date("2026-03-24"),
       changeFrequency: "monthly",
       priority: 0.6,
     },
     {
       url: `${baseUrl}/roadmap`,
-      lastModified,
+      lastModified: new Date("2026-03-26"),
       changeFrequency: "weekly",
       priority: 0.6,
     },
     {
       url: `${baseUrl}/changelog`,
-      lastModified,
+      lastModified: new Date("2026-03-26"),
       changeFrequency: "weekly",
       priority: 0.5,
     },
     {
       url: `${baseUrl}/contact`,
-      lastModified,
+      lastModified: new Date("2026-03-24"),
       changeFrequency: "yearly",
       priority: 0.4,
     },
     {
       url: `${baseUrl}/terms-of-service`,
-      lastModified,
+      lastModified: new Date("2026-03-24"),
       changeFrequency: "yearly",
       priority: 0.2,
     },
     {
       url: `${baseUrl}/privacy-policy`,
-      lastModified,
+      lastModified: new Date("2026-03-24"),
       changeFrequency: "yearly",
       priority: 0.2,
     },
     {
       url: `${baseUrl}/cookie-policy`,
-      lastModified,
+      lastModified: new Date("2026-03-24"),
       changeFrequency: "yearly",
       priority: 0.2,
     },

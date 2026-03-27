@@ -33,7 +33,13 @@
       "Bash(ls -la /Users/sylviolima/Desktop/projects/orgaflow/src/app/\\\\\\(private\\\\\\)/app/\\\\\\(home\\\\\\)/settings/)",
       "Bash(ls /Users/sylviolima/Desktop/projects/orgaflow/src/app/\\\\\\(private\\\\\\)/app/\\\\\\(home\\\\\\)/settings/)",
       "Bash(head -15 grep -n \"amount\\\\|paymentDate\\\\|status\" /Users/sylviolima/Desktop/projects/orgaflow/src/server/db/schemas/payments.ts)",
-      "Bash(head -20 grep -n \"status\\\\|estimateDate\\\\|updatedAt\\\\|createdAt\" /Users/sylviolima/Desktop/projects/orgaflow/src/server/db/schemas/estimates.ts)"
+      "Bash(head -20 grep -n \"status\\\\|estimateDate\\\\|updatedAt\\\\|createdAt\" /Users/sylviolima/Desktop/projects/orgaflow/src/server/db/schemas/estimates.ts)",
+      "Bash(find /Users/sylviolima/Desktop/projects/orgaflow/src/app -type d -name \"\\(marketing\\)\")",
+      "Bash(ls -la /Users/sylviolima/Desktop/projects/orgaflow/src/app/\\\\\\(marketing\\\\\\)/)",
+      "Bash(grep -r next/head /Users/sylviolima/Desktop/projects/orgaflow/src --include=*.tsx --include=*.ts)",
+      "Bash(grep -r \"jsonLd\\\\|json-ld\\\\|ld+json\\\\|structured\" /Users/sylviolima/Desktop/projects/orgaflow/src --include=*.tsx --include=*.ts)",
+      "Bash(grep -r lang= /Users/sylviolima/Desktop/projects/orgaflow/src/app --include=*.tsx)",
+      "Bash(ls /Users/sylviolima/Desktop/projects/orgaflow/eslint*)"
     ]
   }
 }
