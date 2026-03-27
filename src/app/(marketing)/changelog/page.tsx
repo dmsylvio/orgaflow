@@ -21,6 +21,20 @@ interface ChangelogEntry {
 
 const ENTRIES: ChangelogEntry[] = [
   {
+    version: "1.3.0",
+    date: "March 26, 2026",
+    badge: "minor",
+    summary: "Live dashboard with KPIs, revenue chart, pending documents, and activity feed.",
+    changes: [
+      { type: "new", text: "Dashboard now shows real data: total customers, open estimates, open invoices, and revenue for the current month." },
+      { type: "new", text: "Revenue area chart for the last 12 months directly on the dashboard, with a link to the full reports page." },
+      { type: "new", text: "Pending estimates panel: lists all estimates with SENT or VIEWED status awaiting client response." },
+      { type: "new", text: "Invoices needing attention panel: lists SENT, VIEWED, OVERDUE, and partially paid invoices." },
+      { type: "new", text: "Recent activity feed: last 8 events across estimates, invoices, and payments — with relative timestamps and contextual icons." },
+      { type: "improved", text: "KPI cards are now clickable links that navigate directly to the relevant section." },
+    ],
+  },
+  {
     version: "1.2.0",
     date: "March 26, 2026",
     badge: "minor",
@@ -254,10 +268,10 @@ export default function ChangelogPage() {
 
                     {/* Change list */}
                     <div className="flex flex-col gap-2">
-                      {changes.map(({ type, text }, i) => {
+                      {changes.map(({ type, text }) => {
                         const typeCfg = TYPE_CONFIG[type];
                         return (
-                          <div key={`${version}-${i}`} className="flex items-start gap-3">
+                          <div key={text} className="flex items-start gap-3">
                             <span
                               className={`mt-[3px] shrink-0 rounded-full border px-2 py-0.5 text-xs font-semibold ${typeCfg.bg} ${typeCfg.text} ${typeCfg.border}`}
                             >

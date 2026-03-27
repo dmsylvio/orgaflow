@@ -107,6 +107,16 @@ const ITEMS: RoadmapItem[] = [
     category: "Platform",
   },
   {
+    id: 16,
+    Icon: BarChart3,
+    title: "Live Dashboard",
+    description:
+      "Real KPIs, a 12-month revenue area chart, pending estimates and invoices panels, and a recent activity feed — all with live data.",
+    status: "shipped",
+    effort: "Medium",
+    category: "Core",
+  },
+  {
     id: 5,
     Icon: Mail,
     title: "Extended Notifications",
@@ -261,7 +271,7 @@ const COLUMNS: { status: Status; title: string; description: string }[] = [
 ];
 
 export default function RoadmapPage() {
-  const lastUpdated = "March 26, 2026 (v1.2.0)";
+  const lastUpdated = "March 26, 2026 (v1.3.0)";
 
   return (
     <div className="overflow-hidden">
