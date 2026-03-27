@@ -5,6 +5,7 @@ import {
 } from "@/server/trpc/init";
 import { accountRouter } from "@/server/trpc/routers/account";
 import { automationsRouter } from "@/server/trpc/routers/automations";
+import { dashboardRouter } from "@/server/trpc/routers/dashboard";
 import { customersRouter } from "@/server/trpc/routers/customers";
 import { estimatesRouter } from "@/server/trpc/routers/estimates";
 import { expensesRouter } from "@/server/trpc/routers/expenses";
@@ -28,6 +29,7 @@ export const appRouter = createTRPCRouter({
 
   account: accountRouter,
   automations: automationsRouter,
+  dashboard: dashboardRouter,
   customers: customersRouter,
   estimates: estimatesRouter,
   expenses: expensesRouter,
