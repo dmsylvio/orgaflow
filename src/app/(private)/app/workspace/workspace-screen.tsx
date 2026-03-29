@@ -11,6 +11,7 @@ import { LanguagePicker } from "@/components/ui/language-picker";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
 import { appPaths } from "@/lib/app-paths";
+import { PLAN_TRIAL_DAYS } from "@/lib/subscription-plans";
 import { toast } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import {
@@ -62,11 +63,7 @@ function FormSection({ title, children }: FormSectionProps) {
 }
 
 // Step breadcrumb pill indicator
-type FlowStep =
-  | "pick-org"
-  | "create-details"
-  | "create-plan"
-  | "manual-checkout";
+type FlowStep = "pick-org" | "create-details" | "create-plan";
 
 const STEPS: { id: FlowStep; label: string }[] = [
   { id: "create-details", label: "Details" },
@@ -130,7 +127,6 @@ export function WorkspaceScreen() {
   const [selectedPlan, setSelectedPlan] = useState<WorkspacePlan | null>(null);
   const [billingInterval, setBillingInterval] =
     useState<WorkspaceBillingInterval>("monthly");
-  const [pendingPaidOrgId, setPendingPaidOrgId] = useState<string | null>(null);
 
   const referenceEnabled = step === "create-details" || step === "create-plan";
 
@@ -176,17 +172,13 @@ export function WorkspaceScreen() {
     }),
   );
 
-  const activatePlan = useMutation(
-    trpc.workspace.completeDevPaidPlan.mutationOptions({
+  const resumeCheckout = useMutation(
+    trpc.workspace.resumeOrganizationCheckout.mutationOptions({
       onSuccess: () => {
         queryClient.invalidateQueries();
-        setPendingPaidOrgId(null);
-        setStep("pick-org");
-        router.push(appPaths.home);
-        router.refresh();
       },
       onError: (e) => {
-        toast.error("Couldn't activate plan", { description: e.message });
+        toast.error("Couldn't continue checkout", { description: e.message });
       },
     }),
   );
@@ -238,22 +230,19 @@ export function WorkspaceScreen() {
     try {
       const result = await createOrg.mutateAsync(parsed.data);
 
-      if (result.next.type === "home") {
-        queryClient.invalidateQueries();
-        router.push(appPaths.home);
-        router.refresh();
-        return;
-      }
-
       if (result.next.type === "redirect") {
         window.location.href = result.next.url;
         return;
       }
+    } catch {
+      // error handled in mutation onError
+    }
+  }
 
-      if (result.next.type === "manual_checkout") {
-        setPendingPaidOrgId(result.organizationId);
-        setStep("manual-checkout");
-      }
+  async function handleResumeBilling(organizationId: string) {
+    try {
+      const result = await resumeCheckout.mutateAsync({ organizationId });
+      window.location.href = result.url;
     } catch {
       // error handled in mutation onError
     }
@@ -306,60 +295,6 @@ export function WorkspaceScreen() {
   }
 
   const orgList = organizations ?? [];
-
-  // -------------------------------------------------------------------------
-  // Manual checkout
-  // -------------------------------------------------------------------------
-
-  if (step === "manual-checkout" && pendingPaidOrgId) {
-    return (
-      <div className="mx-auto max-w-lg px-4 py-12">
-        <p className="mb-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
-          Billing
-        </p>
-        <h1 className="mb-2 text-2xl font-bold tracking-tight text-foreground">
-          Complete paid plan activation
-        </h1>
-        <p className="mb-6 text-sm text-muted-foreground">
-          We couldn&apos;t finish checkout in the browser. As the organization
-          owner, confirm below to activate your subscription and open the app.
-        </p>
-        <div className="mb-6 rounded-xl border border-border bg-card p-5 shadow-sm">
-          <p className="mb-3 text-sm text-muted-foreground">
-            After confirmation you&apos;ll have access to your paid features for
-            this organization.
-          </p>
-          <p className="text-sm text-muted-foreground">
-            Billing and invoices follow the plan you selected. You can manage
-            subscription details later in settings.
-          </p>
-        </div>
-        <div className="flex flex-wrap justify-end gap-3">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => {
-              setStep("pick-org");
-              setPendingPaidOrgId(null);
-            }}
-          >
-            Back to workspace
-          </Button>
-          <Button
-            type="button"
-            onClick={() =>
-              pendingPaidOrgId &&
-              activatePlan.mutate({ organizationId: pendingPaidOrgId })
-            }
-            loading={activatePlan.isPending}
-            disabled={activatePlan.isPending}
-          >
-            Confirm and activate plan
-          </Button>
-        </div>
-      </div>
-    );
-  }
 
   // -------------------------------------------------------------------------
   // Step 1 — Details
@@ -529,8 +464,9 @@ export function WorkspaceScreen() {
           Choose a plan
         </h1>
         <p className="mb-8 text-sm text-muted-foreground">
-          Starter is free. Growth adds capacity and collaboration. Scale unlocks
-          online payments, automations, and the full toolkit.
+          Every plan starts with a {PLAN_TRIAL_DAYS}-day free trial, and billing
+          is required to create the organization. Starter keeps the core limits,
+          Growth expands capacity, and Scale unlocks payments and automation.
         </p>
         <PlanScroll
           billingInterval={billingInterval}
@@ -558,7 +494,9 @@ export function WorkspaceScreen() {
           selectedId={selectedOrgId}
           onSelect={setSelectedOrgId}
           onAccessOrganization={handleAccessOrganization}
+          onResumeBilling={handleResumeBilling}
           isAccessPending={setActive.isPending}
+          isResumePending={resumeCheckout.isPending}
         />
       ) : (
         <div className="mb-6 rounded-xl border border-dashed border-border bg-muted/20 p-8 text-center">
@@ -569,8 +507,8 @@ export function WorkspaceScreen() {
             No workspaces yet
           </h2>
           <p className="text-sm text-muted-foreground">
-            Create your first workspace below — enter your details then pick a
-            plan.
+            Create your first workspace below, choose a plan, and complete
+            billing to start your {PLAN_TRIAL_DAYS}-day free trial.
           </p>
         </div>
       )}

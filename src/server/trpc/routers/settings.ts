@@ -5,7 +5,10 @@ import { and, asc, eq } from "drizzle-orm";
 import Stripe from "stripe";
 import { z } from "zod";
 import { getAppBaseUrl } from "@/lib/base-url";
-import { getStripePriceIdForPaidPlan } from "@/lib/stripe-subscription-prices";
+import {
+  getStripeBillingIntervalFromPriceId,
+  getStripePriceIdForPlan,
+} from "@/lib/stripe-subscription-prices";
 import {
   currencies,
   DATE_FORMAT_VALUES,
@@ -336,7 +339,9 @@ export const settingsRouter = createTRPCRouter({
         await ctx.db
           .update(organizationPreferences)
           .set(values)
-          .where(eq(organizationPreferences.organizationId, ctx.organizationId));
+          .where(
+            eq(organizationPreferences.organizationId, ctx.organizationId),
+          );
       } else {
         await ctx.db.insert(organizationPreferences).values({
           organizationId: ctx.organizationId,
@@ -423,7 +428,14 @@ export const settingsRouter = createTRPCRouter({
       .where(eq(organizationSubscriptions.organizationId, ctx.organizationId))
       .limit(1);
 
-    return sub ?? null;
+    if (!sub) {
+      return null;
+    }
+
+    return {
+      ...sub,
+      billingInterval: getStripeBillingIntervalFromPriceId(sub.stripePriceId),
+    };
   }),
 
   createBillingPortalSession: ownerProcedure
@@ -480,7 +492,7 @@ export const settingsRouter = createTRPCRouter({
         });
       }
 
-      const priceId = getStripePriceIdForPaidPlan(
+      const priceId = getStripePriceIdForPlan(
         input.targetPlan,
         input.billingInterval,
       );
@@ -534,9 +546,7 @@ export const settingsRouter = createTRPCRouter({
         billingInterval: input.billingInterval,
         successUrl: `${baseUrl}/app/settings/billing?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
         cancelUrl: input.returnUrl,
-        ...(sub?.stripeCustomerId
-          ? { customerId: sub.stripeCustomerId }
-          : {}),
+        ...(sub?.stripeCustomerId ? { customerId: sub.stripeCustomerId } : {}),
       });
 
       if (result.kind === "unconfigured") {
@@ -568,9 +578,7 @@ export const settingsRouter = createTRPCRouter({
       ctx.db
         .select({ taxPerItem: organizationPreferences.taxPerItem })
         .from(organizationPreferences)
-        .where(
-          eq(organizationPreferences.organizationId, ctx.organizationId),
-        )
+        .where(eq(organizationPreferences.organizationId, ctx.organizationId))
         .limit(1),
       ctx.db
         .select()
@@ -591,9 +599,7 @@ export const settingsRouter = createTRPCRouter({
       const [existing] = await ctx.db
         .select({ id: organizationPreferences.id })
         .from(organizationPreferences)
-        .where(
-          eq(organizationPreferences.organizationId, ctx.organizationId),
-        )
+        .where(eq(organizationPreferences.organizationId, ctx.organizationId))
         .limit(1);
 
       if (existing) {
@@ -654,15 +660,22 @@ export const settingsRouter = createTRPCRouter({
         .limit(1);
 
       if (!existing) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Tax type not found." });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Tax type not found.",
+        });
       }
 
       await ctx.db
         .update(taxTypes)
         .set({
           ...(input.name !== undefined && { name: input.name.trim() }),
-          ...(input.percent !== undefined && { percent: String(input.percent) }),
-          ...(input.compoundTax !== undefined && { compoundTax: input.compoundTax }),
+          ...(input.percent !== undefined && {
+            percent: String(input.percent),
+          }),
+          ...(input.compoundTax !== undefined && {
+            compoundTax: input.compoundTax,
+          }),
           updatedAt: new Date(),
         })
         .where(eq(taxTypes.id, input.id));

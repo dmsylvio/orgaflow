@@ -1,10 +1,10 @@
-import { Suspense } from "react";
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { RegisterForm } from "./register-form";
 
 export const metadata: Metadata = {
   title: "Create account",
-  description: "Create your Orgaflow account and start your free plan.",
+  description: "Create your Orgaflow account and start your 15-day free trial.",
   robots: { index: false, follow: false },
 };
 

@@ -25,7 +25,9 @@ export function MarketingNavbar() {
   }, []);
 
   useEffect(() => {
-    setMobileOpen(false);
+    if (pathname) {
+      setMobileOpen(false);
+    }
   }, [pathname]);
 
   return (
@@ -70,7 +72,7 @@ export function MarketingNavbar() {
             <NextLink href="/login">Sign in</NextLink>
           </Button>
           <Button size="sm" asChild className="shadow-sm shadow-primary/20">
-            <NextLink href="/register">Get started free</NextLink>
+            <NextLink href="/register">Start 15-day trial</NextLink>
           </Button>
         </div>
 
@@ -80,7 +82,11 @@ export function MarketingNavbar() {
           onClick={() => setMobileOpen((v) => !v)}
           className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted md:hidden"
         >
-          {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          {mobileOpen ? (
+            <X className="h-5 w-5" />
+          ) : (
+            <Menu className="h-5 w-5" />
+          )}
         </button>
       </div>
 
@@ -103,7 +109,7 @@ export function MarketingNavbar() {
               <NextLink href="/login">Sign in</NextLink>
             </Button>
             <Button asChild>
-              <NextLink href="/register">Get started free</NextLink>
+              <NextLink href="/register">Start 15-day trial</NextLink>
             </Button>
           </div>
         </div>

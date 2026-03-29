@@ -2,11 +2,16 @@ import { ArrowRight, Check, HelpCircle, X } from "lucide-react";
 import type { Metadata } from "next";
 import NextLink from "next/link";
 import { Button } from "@/components/ui/button";
+import {
+  ANNUAL_DISCOUNT_PERCENT,
+  formatWorkspacePlanPrice,
+  PLAN_TRIAL_DAYS,
+} from "@/lib/subscription-plans";
 
 export const metadata: Metadata = {
   title: "Pricing",
   description:
-    "Simple, transparent pricing for every stage of your business. Start free, upgrade when you grow.",
+    "Simple, transparent pricing for every stage of your business. Every plan includes a 15-day free trial.",
   keywords: [
     "pricing",
     "invoice software pricing",
@@ -18,27 +23,25 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Pricing — Orgaflow",
     description:
-      "Simple, transparent pricing for every stage of your business. Start free, upgrade when you grow.",
+      "Simple, transparent pricing for every stage of your business. Every plan includes a 15-day free trial.",
     url: "/pricing",
     type: "website",
   },
   twitter: {
     title: "Pricing — Orgaflow",
     description:
-      "Simple, transparent pricing for every stage of your business. Start free, upgrade when you grow.",
+      "Simple, transparent pricing for every stage of your business. Every plan includes a 15-day free trial.",
   },
 };
 
 const PLANS = [
   {
     name: "Starter",
-    monthlyPrice: 0,
-    annualPrice: 0,
-    priceLabel: "Free",
-    annualLabel: "Free",
+    priceLabel: formatWorkspacePlanPrice("starter", "monthly"),
+    annualLabel: formatWorkspacePlanPrice("starter", "annual"),
     description:
-      "Perfect for freelancers and solo business owners getting started.",
-    cta: "Get started free",
+      "Perfect for freelancers and solo business owners who want the full billing flow with lower usage limits.",
+    cta: "Start 15-day trial",
     ctaHref: "/register",
     popular: false,
     features: [
@@ -60,12 +63,10 @@ const PLANS = [
   },
   {
     name: "Growth",
-    monthlyPrice: 19.99,
-    annualPrice: 167.99,
-    priceLabel: "$19.99",
-    annualLabel: "$167.99",
+    priceLabel: formatWorkspacePlanPrice("growth", "monthly"),
+    annualLabel: formatWorkspacePlanPrice("growth", "annual"),
     description: "For growing teams that need unlimited capacity and branding.",
-    cta: "Start free trial",
+    cta: "Start 15-day trial",
     ctaHref: "/register",
     popular: true,
     features: [
@@ -87,13 +88,11 @@ const PLANS = [
   },
   {
     name: "Scale",
-    monthlyPrice: 24.99,
-    annualPrice: 209.99,
-    priceLabel: "$24.99",
-    annualLabel: "$209.99",
+    priceLabel: formatWorkspacePlanPrice("scale", "monthly"),
+    annualLabel: formatWorkspacePlanPrice("scale", "annual"),
     description:
       "For established businesses that want full automation and payments.",
-    cta: "Start free trial",
+    cta: "Start 15-day trial",
     ctaHref: "/register",
     popular: false,
     features: [
@@ -121,7 +120,7 @@ const FAQS = [
   },
   {
     q: "Is there a free trial?",
-    a: "The Starter plan is always free. For paid plans, contact us and we'll discuss the best way to get you started.",
+    a: "Yes. Every plan includes a 15-day free trial before billing starts.",
   },
   {
     q: "What payment methods do you accept?",
@@ -133,7 +132,7 @@ const FAQS = [
   },
   {
     q: "Do you offer discounts for annual billing?",
-    a: "Yes! Annual billing saves you 30% compared to monthly. You can switch anytime from your billing settings.",
+    a: "Yes. Annual billing saves 30% compared to monthly pricing. You can switch anytime from your billing settings.",
   },
   {
     q: "What happens when I cancel?",
@@ -161,8 +160,9 @@ export default function PricingPage() {
             Simple, transparent pricing
           </h1>
           <p className="text-lg text-muted-foreground">
-            No hidden fees. No surprises. Start free and upgrade when you need
-            more.
+            No hidden fees. No surprises. Every plan includes a{" "}
+            {PLAN_TRIAL_DAYS}-day free trial, and annual billing saves{" "}
+            {ANNUAL_DISCOUNT_PERCENT}%.
           </p>
 
           <div className="mt-8 inline-flex items-center gap-1 rounded-full border border-border bg-muted/60 p-1">
@@ -172,7 +172,7 @@ export default function PricingPage() {
             <div className="flex items-center gap-1.5 rounded-full px-5 py-1.5 text-sm font-medium text-muted-foreground">
               Annual
               <span className="rounded-full bg-emerald-100 px-1.5 py-0.5 text-xs font-semibold text-emerald-700">
-                Save 30%
+                Save {ANNUAL_DISCOUNT_PERCENT}%
               </span>
             </div>
           </div>
@@ -186,6 +186,7 @@ export default function PricingPage() {
             ({
               name,
               priceLabel,
+              annualLabel,
               description,
               cta,
               ctaHref,
@@ -221,19 +222,13 @@ export default function PricingPage() {
                     <span className="text-5xl font-bold text-foreground">
                       {priceLabel}
                     </span>
-                    {priceLabel !== "Free" && (
-                      <span className="mb-2 text-muted-foreground">/mo</span>
-                    )}
+                    <span className="mb-2 text-muted-foreground">/mo</span>
                   </div>
-                  {priceLabel !== "Free" ? (
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      Billed monthly. Annual saves 30%.
-                    </p>
-                  ) : (
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      Always free, no limits on time.
-                    </p>
-                  )}
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {annualLabel}/yr billed annually. Includes a{" "}
+                    {PLAN_TRIAL_DAYS}-day free trial and saves{" "}
+                    {ANNUAL_DISCOUNT_PERCENT}%.
+                  </p>
                 </div>
 
                 <Button
@@ -318,8 +313,8 @@ export default function PricingPage() {
             Ready to get started?
           </h2>
           <p className="mb-8 text-muted-foreground">
-            Start with the free Starter plan or go straight to Growth and Scale
-            for the full experience.
+            Pick the plan that fits now and start with a {PLAN_TRIAL_DAYS}-day
+            free trial.
           </p>
           <Button
             size="lg"
@@ -327,7 +322,7 @@ export default function PricingPage() {
             className="px-10 shadow-lg shadow-primary/25"
           >
             <NextLink href="/register">
-              Get started free
+              Start {PLAN_TRIAL_DAYS}-day trial
               <ArrowRight className="ml-2 h-4 w-4" />
             </NextLink>
           </Button>

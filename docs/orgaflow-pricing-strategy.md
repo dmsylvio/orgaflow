@@ -258,19 +258,15 @@ Marking the Orgaflow Scale plan as **Most Popular** significantly improves conve
 
 ---
 
-# 9. Important Rule for Starter Plan
+# 9. Important Rule for Trials
 
-Do not limit the Starter plan by **time**.
+All plans should include the same free trial window.
 
-Bad example:
+Recommended approach:
 
-Free trial 14 days
+Free trial 15 days on Starter, Growth, and Scale
 
-Better approach:
-
-Starter forever with usage limits
-
-This encourages long-term adoption and organic upgrades.
+After the trial, billing starts automatically unless the subscription is canceled.
 
 ---
 
@@ -300,10 +296,11 @@ The Scale plan should always appear as the best value option.
 
 Recommended annual pricing:
 
-- **Growth Annual**: $167.99/year
-- **Scale Annual**: $209.99/year
+- **Starter Annual**: $83.92/year
+- **Growth Annual**: $209.92/year
+- **Scale Annual**: $377.92/year
 
-This keeps the annual gap between **Growth** and **Scale** at only **$42/year**, making **Scale** feel like the obvious better deal for companies already considering a paid plan.
+This keeps the annual discount consistent across all tiers while preserving a clear value ladder from Starter to Scale.
 
 This combination of usage limits, feature gating, and behavioral pricing psychology will maximize conversion while keeping the product accessible to new users.
 
@@ -315,11 +312,11 @@ This combination of usage limits, feature gating, and behavioral pricing psychol
 
 ### Short description (Stripe)
 
-Orgaflow Starter plan — $0/month. Free forever plan for freelancers and small teams to manage customers, items, estimates, and invoices with generous usage limits, manual payment tracking, PDF export, and basic reporting. No tasks, automations, attachments, or online payments.
+Orgaflow Starter plan — $9.99/month or $83.92/year. Includes a 15-day free trial for freelancers and small teams to manage customers, items, estimates, and invoices with generous usage limits, manual payment tracking, PDF export, and basic reporting. No tasks, automations, attachments, or online payments.
 
 ### Extended description (website)
 
-Orgaflow Starter is the free plan to get started with Orgaflow. Ideal for freelancers and very small teams that need to organize customers, items, estimates, and invoices at no cost. It includes a dashboard, customers and items management, estimates and invoices, manual payment recording, PDF export, and basic reporting. Limits: 50 customers, 50 invoices, 50 estimates, 50 items, and up to 2 users. File attachments are not included. No tasks, automations, fully branded documents, or online payments. Free forever with usage limits.
+Orgaflow Starter is the entry plan for Orgaflow. Ideal for freelancers and very small teams that need to organize customers, items, estimates, and invoices at a lower monthly cost, with a 15-day free trial before billing starts. It includes a dashboard, customers and items management, estimates and invoices, manual payment recording, PDF export, and basic reporting. Limits: 50 customers, 50 invoices, 50 estimates, 50 items, and up to 2 users. File attachments are not included. No tasks, automations, fully branded documents, or online payments.
 
 ---
 
@@ -327,7 +324,7 @@ Orgaflow Starter is the free plan to get started with Orgaflow. Ideal for freela
 
 ### Short description (Stripe)
 
-Orgaflow Growth plan — $19.99/month or $167.99/year. Everything in Orgaflow Starter with unlimited invoices, estimates, and customers, plus attachments, public invoice links, estimate approvals, custom branding, and activity timeline, while keeping payments as manual registration.
+Orgaflow Growth plan — $24.99/month or $209.92/year. Everything in Orgaflow Starter with unlimited invoices, estimates, and customers, plus attachments, public invoice links, estimate approvals, custom branding, and activity timeline, while keeping payments as manual registration. Includes a 15-day free trial.
 
 ### Extended description (website)
 
@@ -339,7 +336,7 @@ Orgaflow Growth is the plan for freelancers and small businesses operating at a 
 
 ### Short description (Stripe)
 
-Orgaflow Scale — $24.99/month or $209.99/year. Everything in Orgaflow Growth plus Stripe online payments, workflow automations (optional, status-based triggers), automatic task creation from those automations, advanced reporting, priority support, up to 10 users, and 10 GB attachment storage, built for teams running their daily operations on Orgaflow.
+Orgaflow Scale — $44.99/month or $377.92/year. Everything in Orgaflow Growth plus Stripe online payments, workflow automations (optional, status-based triggers), automatic task creation from those automations, advanced reporting, priority support, up to 10 users, and 10 GB attachment storage, built for teams running their daily operations on Orgaflow. Includes a 15-day free trial.
 
 ### Extended description (website)
 

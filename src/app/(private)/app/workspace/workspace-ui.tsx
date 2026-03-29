@@ -4,6 +4,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import {
+  ANNUAL_DISCOUNT_PERCENT,
+  formatWorkspacePlanPrice,
+  isWorkspaceAccessible,
+  PLAN_TRIAL_DAYS,
+} from "@/lib/subscription-plans";
 import { cn } from "@/lib/utils";
 import type {
   WorkspaceBillingInterval,
@@ -29,14 +35,14 @@ const WORKSPACE_PLAN_OPTIONS: readonly WorkspacePlanOption[] = [
   {
     id: "starter",
     title: "Starter",
-    badge: "Free",
-    badgeVariant: "secondary",
+    badge: `${PLAN_TRIAL_DAYS}-day trial`,
+    badgeVariant: "soft",
     icon: <Layers className="h-5 w-5" />,
     iconColor: "bg-slate-500/10 text-slate-600",
-    priceMonthly: "$0",
-    priceAnnual: "$0",
+    priceMonthly: formatWorkspacePlanPrice("starter", "monthly"),
+    priceAnnual: formatWorkspacePlanPrice("starter", "annual"),
     summary:
-      "Try Orgaflow and run a small operation: core CRM, estimates, invoices, manual payments, PDFs, and basic reporting.",
+      "For solo operators and lean teams that want the full billing flow with lower limits and the core CRM, estimate, and invoice toolkit.",
     limits: [
       "Up to 50 invoices, estimates, customers, and items",
       "Up to 2 users",
@@ -56,10 +62,10 @@ const WORKSPACE_PLAN_OPTIONS: readonly WorkspacePlanOption[] = [
     title: "Growth",
     icon: <Star className="h-5 w-5" />,
     iconColor: "bg-violet-500/10 text-violet-600",
-    priceMonthly: "$19.99",
-    priceAnnual: "$167.99",
+    priceMonthly: formatWorkspacePlanPrice("growth", "monthly"),
+    priceAnnual: formatWorkspacePlanPrice("growth", "annual"),
     summary:
-      "For freelancers and small businesses that outgrow Starter limits and need attachments, public links, approvals, and branding.",
+      "For growing teams that need unlimited operational volume, branding, attachments, and smoother collaboration.",
     limits: [
       "Unlimited invoices, estimates, customers, and items",
       "Up to 5 users",
@@ -78,8 +84,8 @@ const WORKSPACE_PLAN_OPTIONS: readonly WorkspacePlanOption[] = [
     badgeVariant: "soft",
     icon: <Zap className="h-5 w-5" />,
     iconColor: "bg-amber-500/10 text-amber-600",
-    priceMonthly: "$24.99",
-    priceAnnual: "$209.99",
+    priceMonthly: formatWorkspacePlanPrice("scale", "monthly"),
+    priceAnnual: formatWorkspacePlanPrice("scale", "annual"),
     summary:
       "Daily operations with online card payments, automations, tasks, advanced reporting, and higher user capacity.",
     limits: [
@@ -108,11 +114,7 @@ export function WorkspaceHero() {
   );
 }
 
-export function formatSubscriptionStatusLabel(
-  status: string,
-  plan: WorkspacePlan,
-): string | null {
-  if (plan === "starter") return null;
+export function formatSubscriptionStatusLabel(status: string): string | null {
   if (status === "active") return null;
   const labels: Record<string, string> = {
     incomplete: "Activation pending",
@@ -130,6 +132,7 @@ export interface OrgMemberRow {
   id: string;
   name: string;
   slug: string;
+  isOwner: boolean;
   plan: WorkspacePlan;
   subscriptionStatus: string;
 }
@@ -145,7 +148,9 @@ interface OrgCardScrollProps {
   selectedId: string | null;
   onSelect: (id: string) => void;
   onAccessOrganization: (organizationId: string) => void;
+  onResumeBilling: (organizationId: string) => void;
   isAccessPending: boolean;
+  isResumePending: boolean;
 }
 
 export function OrgCardScroll({
@@ -153,7 +158,9 @@ export function OrgCardScroll({
   selectedId,
   onSelect,
   onAccessOrganization,
+  onResumeBilling,
   isAccessPending,
+  isResumePending,
 }: OrgCardScrollProps) {
   return (
     <fieldset
@@ -166,9 +173,11 @@ export function OrgCardScroll({
       <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {organizations.map((org) => {
           const selected = selectedId === org.id;
+          const canOpenWorkspace = isWorkspaceAccessible(
+            org.subscriptionStatus,
+          );
           const statusLabel = formatSubscriptionStatusLabel(
             org.subscriptionStatus,
-            org.plan,
           );
           const iconColor = PLAN_ICON_COLORS[org.plan];
           return (
@@ -219,16 +228,34 @@ export function OrgCardScroll({
                 {selected ? (
                   <>
                     <Separator className="my-3" />
-                    <Button
-                      type="button"
-                      className="w-full"
-                      size="sm"
-                      onClick={() => onAccessOrganization(org.id)}
-                      loading={isAccessPending}
-                      disabled={isAccessPending}
-                    >
-                      Open workspace
-                    </Button>
+                    {canOpenWorkspace ? (
+                      <Button
+                        type="button"
+                        className="w-full"
+                        size="sm"
+                        onClick={() => onAccessOrganization(org.id)}
+                        loading={isAccessPending}
+                        disabled={isAccessPending}
+                      >
+                        Open workspace
+                      </Button>
+                    ) : org.isOwner ? (
+                      <Button
+                        type="button"
+                        className="w-full"
+                        size="sm"
+                        onClick={() => onResumeBilling(org.id)}
+                        loading={isResumePending}
+                        disabled={isResumePending}
+                      >
+                        Complete billing
+                      </Button>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">
+                        Billing still needs to be completed by the organization
+                        owner before this workspace can be opened.
+                      </p>
+                    )}
                   </>
                 ) : null}
               </CardContent>
@@ -287,7 +314,7 @@ export function PlanScroll({
                 {interval === "monthly" ? "Monthly" : "Annual"}
                 {interval === "annual" && (
                   <span className="ml-1.5 text-xs font-semibold text-primary">
-                    Save 30%
+                    Save {ANNUAL_DISCOUNT_PERCENT}%
                   </span>
                 )}
               </button>
@@ -356,12 +383,7 @@ function PlanOptionCard({
   };
 
   const price = planPriceDisplay(option, billingInterval);
-  const suffix =
-    option.id === "starter"
-      ? "forever"
-      : billingInterval === "monthly"
-        ? "/mo"
-        : "/yr";
+  const suffix = billingInterval === "monthly" ? "/mo" : "/yr";
 
   return (
     <div
@@ -473,7 +495,7 @@ function PlanOptionCard({
               loading={isCreatePending}
               disabled={isCreatePending}
             >
-              Create organization
+              Start {PLAN_TRIAL_DAYS}-day trial
             </Button>
           </div>
         ) : null}

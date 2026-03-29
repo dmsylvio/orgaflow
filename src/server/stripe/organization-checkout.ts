@@ -2,9 +2,10 @@ import "server-only";
 
 import Stripe from "stripe";
 import {
-  getStripePriceIdForPaidPlan,
+  getStripePriceIdForPlan,
   type StripeBillingInterval,
 } from "@/lib/stripe-subscription-prices";
+import { PLAN_TRIAL_DAYS } from "@/lib/subscription-plans";
 import type { WorkspacePlan } from "@/schemas/workspace";
 
 function getStripe(): Stripe | null {
@@ -19,11 +20,10 @@ export type CheckoutSessionResult =
 
 /**
  * Cria sessão Stripe Checkout (subscrição) para uma organização já persistida.
- * Free (`starter`) não deve chamar esta função.
  */
 export async function createOrganizationSubscriptionCheckout(params: {
   organizationId: string;
-  plan: Exclude<WorkspacePlan, "starter">;
+  plan: WorkspacePlan;
   /** Required when `customerId` is not provided. */
   customerEmail?: string;
   /** Existing Stripe customer ID — takes precedence over `customerEmail`. */
@@ -37,10 +37,7 @@ export async function createOrganizationSubscriptionCheckout(params: {
     return { kind: "unconfigured", reason: "missing_stripe" };
   }
 
-  const priceId = getStripePriceIdForPaidPlan(
-    params.plan,
-    params.billingInterval,
-  );
+  const priceId = getStripePriceIdForPlan(params.plan, params.billingInterval);
   if (!priceId) {
     return { kind: "unconfigured", reason: "missing_price" };
   }
@@ -66,6 +63,7 @@ export async function createOrganizationSubscriptionCheckout(params: {
       plan: params.plan,
     },
     subscription_data: {
+      trial_period_days: PLAN_TRIAL_DAYS,
       metadata: {
         organizationId: params.organizationId,
         plan: params.plan,

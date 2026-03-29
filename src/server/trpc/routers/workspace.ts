@@ -5,6 +5,12 @@ import { z } from "zod";
 import { appPaths } from "@/lib/app-paths";
 import { assertUniqueOrganizationSlug } from "@/lib/assert-unique-organization-slug";
 import { getAppBaseUrl } from "@/lib/base-url";
+import {
+  getDefaultStripeBillingInterval,
+  getStripeBillingIntervalFromPriceId,
+  getStripePriceIdForPlan,
+} from "@/lib/stripe-subscription-prices";
+import { isWorkspaceAccessible } from "@/lib/subscription-plans";
 import type { WorkspacePlan } from "@/schemas/workspace";
 import { createOrganizationInputSchema } from "@/schemas/workspace";
 import {
@@ -36,6 +42,7 @@ export const workspaceRouter = createTRPCRouter({
         id: organizations.id,
         name: organizations.name,
         slug: organizations.slug,
+        isOwner: organizationMembers.isOwner,
         plan: organizationSubscriptions.plan,
         subscriptionStatus: organizationSubscriptions.status,
       })
@@ -54,6 +61,7 @@ export const workspaceRouter = createTRPCRouter({
       id: r.id,
       name: r.name,
       slug: r.slug,
+      isOwner: r.isOwner,
       plan: (r.plan ?? "starter") as WorkspacePlan,
       subscriptionStatus: r.subscriptionStatus ?? "active",
     }));
@@ -89,8 +97,18 @@ export const workspaceRouter = createTRPCRouter({
       const userId = getSessionUserId(ctx);
 
       const [member] = await ctx.db
-        .select({ id: organizationMembers.id })
+        .select({
+          id: organizationMembers.id,
+          subscriptionStatus: organizationSubscriptions.status,
+        })
         .from(organizationMembers)
+        .leftJoin(
+          organizationSubscriptions,
+          eq(
+            organizationSubscriptions.organizationId,
+            organizationMembers.organizationId,
+          ),
+        )
         .where(
           and(
             eq(organizationMembers.organizationId, input.organizationId),
@@ -103,6 +121,14 @@ export const workspaceRouter = createTRPCRouter({
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "You are not a member of this organization.",
+        });
+      }
+
+      if (!isWorkspaceAccessible(member.subscriptionStatus ?? "active")) {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message:
+            "Billing must be completed before this organization can be opened.",
         });
       }
 
@@ -127,6 +153,24 @@ export const workspaceRouter = createTRPCRouter({
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: "Your account has no email; cannot continue checkout.",
+        });
+      }
+
+      if (!process.env.STRIPE_SECRET_KEY?.trim()) {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message: "Stripe is not configured for checkout.",
+        });
+      }
+
+      const stripePriceId = getStripePriceIdForPlan(
+        input.plan,
+        input.billingInterval,
+      );
+      if (!stripePriceId) {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message: "Stripe price not configured for this plan.",
         });
       }
 
@@ -206,99 +250,122 @@ export const workspaceRouter = createTRPCRouter({
           estimateViewed: false,
         });
 
-        const isFree = input.plan === "starter";
         await tx.insert(organizationSubscriptions).values({
           organizationId: org.id,
           plan: input.plan,
-          status: isFree ? "active" : "incomplete",
+          status: "incomplete",
+          stripePriceId,
         });
 
         return org.id;
       });
-
-      if (input.plan === "starter") {
-        const cookieStore = await cookies();
-        cookieStore.set(ACTIVE_ORGANIZATION_COOKIE, orgId, {
-          path: "/",
-          httpOnly: true,
-          sameSite: "lax",
-          secure: process.env.NODE_ENV === "production",
-          maxAge: 60 * 60 * 24 * 365,
+      try {
+        const checkout = await createOrganizationSubscriptionCheckout({
+          organizationId: orgId,
+          plan: input.plan,
+          customerEmail: email,
+          successUrl: `${getAppBaseUrl()}/api/workspace/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
+          cancelUrl: `${getAppBaseUrl()}${appPaths.workspace}`,
+          billingInterval: input.billingInterval,
         });
 
-        return {
-          organizationId: orgId,
-          next: { type: "home" as const },
-        };
-      }
+        if (checkout.kind !== "url") {
+          throw new TRPCError({
+            code: "PRECONDITION_FAILED",
+            message: "Stripe is not fully configured for checkout.",
+          });
+        }
 
-      const checkout = await createOrganizationSubscriptionCheckout({
-        organizationId: orgId,
-        plan: input.plan,
-        customerEmail: email,
-        successUrl: `${getAppBaseUrl()}${appPaths.home}?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
-        cancelUrl: `${getAppBaseUrl()}${appPaths.workspace}`,
-        billingInterval: input.billingInterval,
-      });
-
-      if (checkout.kind === "url") {
         return {
           organizationId: orgId,
           next: { type: "redirect" as const, url: checkout.url },
         };
+      } catch (error) {
+        await ctx.db.delete(organizations).where(eq(organizations.id, orgId));
+        throw error;
       }
-
-      /**
-       * Stripe em modo teste ou envs em falta: mesmo comportamento em produção e em dev.
-       * O utilizador confirma manualmente para ativar a subscrição (adequado a deploys com chaves de teste).
-       */
-      return {
-        organizationId: orgId,
-        next: { type: "manual_checkout" as const },
-      };
     }),
 
-  /**
-   * Marca subscrição paga como ativa quando o Checkout Stripe não foi usado (envs em falta,
-   * ou fluxo manual). Disponível em qualquer ambiente — alinhado a Stripe em test mode.
-   */
-  completeDevPaidPlan: protectedProcedure
+  resumeOrganizationCheckout: protectedProcedure
     .input(z.object({ organizationId: z.string().min(1) }))
     .mutation(async ({ ctx, input }) => {
-      const userId = getSessionUserId(ctx);
-
-      const [org] = await ctx.db
-        .select({ ownerUserId: organizations.ownerUserId })
-        .from(organizations)
-        .where(eq(organizations.id, input.organizationId))
-        .limit(1);
-
-      if (!org || org.ownerUserId !== userId) {
+      const email = ctx.session.user.email;
+      if (!email) {
         throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Only the organization owner can complete this step.",
+          code: "BAD_REQUEST",
+          message: "Your account has no email; cannot continue checkout.",
         });
       }
 
-      await ctx.db
-        .update(organizationSubscriptions)
-        .set({
-          status: "active",
-          updatedAt: new Date(),
+      const userId = getSessionUserId(ctx);
+      const [org] = await ctx.db
+        .select({
+          isOwner: organizationMembers.isOwner,
+          plan: organizationSubscriptions.plan,
+          status: organizationSubscriptions.status,
+          stripeCustomerId: organizationSubscriptions.stripeCustomerId,
+          stripePriceId: organizationSubscriptions.stripePriceId,
         })
+        .from(organizationMembers)
+        .leftJoin(
+          organizationSubscriptions,
+          eq(
+            organizationSubscriptions.organizationId,
+            organizationMembers.organizationId,
+          ),
+        )
         .where(
-          eq(organizationSubscriptions.organizationId, input.organizationId),
-        );
+          and(
+            eq(organizationMembers.organizationId, input.organizationId),
+            eq(organizationMembers.userId, userId),
+          ),
+        )
+        .limit(1);
 
-      const cookieStore = await cookies();
-      cookieStore.set(ACTIVE_ORGANIZATION_COOKIE, input.organizationId, {
-        path: "/",
-        httpOnly: true,
-        sameSite: "lax",
-        secure: process.env.NODE_ENV === "production",
-        maxAge: 60 * 60 * 24 * 365,
+      if (!org) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You are not a member of this organization.",
+        });
+      }
+
+      if (!org.isOwner) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message:
+            "Only the organization owner can complete billing for this workspace.",
+        });
+      }
+
+      if (isWorkspaceAccessible(org.status ?? "active")) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "This organization already has an active subscription.",
+        });
+      }
+
+      const plan = (org.plan ?? "starter") as WorkspacePlan;
+      const billingInterval =
+        getStripeBillingIntervalFromPriceId(org.stripePriceId) ??
+        getDefaultStripeBillingInterval();
+
+      const checkout = await createOrganizationSubscriptionCheckout({
+        organizationId: input.organizationId,
+        plan,
+        customerEmail: email,
+        ...(org.stripeCustomerId ? { customerId: org.stripeCustomerId } : {}),
+        successUrl: `${getAppBaseUrl()}/api/workspace/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
+        cancelUrl: `${getAppBaseUrl()}${appPaths.workspace}`,
+        billingInterval,
       });
 
-      return { ok: true as const };
+      if (checkout.kind !== "url") {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message: "Stripe is not fully configured for checkout.",
+        });
+      }
+
+      return { url: checkout.url };
     }),
 });

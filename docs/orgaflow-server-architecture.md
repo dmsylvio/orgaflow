@@ -971,7 +971,7 @@ Examples:
 
 ---
 
-## 16.2 Free plan example
+## 16.2 Starter plan example
 
 Conceptual example:
 - 100 MB storage

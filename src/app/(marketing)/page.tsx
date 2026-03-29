@@ -393,7 +393,7 @@ export default function LandingPage() {
               className="h-12 gap-2 px-8 shadow-xl shadow-primary/20 text-base"
             >
               <NextLink href="/register">
-                Start for free
+                Start 15-day trial
                 <ArrowRight className="h-4 w-4" />
               </NextLink>
             </Button>
@@ -851,7 +851,7 @@ export default function LandingPage() {
                   className="h-12 bg-white px-10 text-base text-primary shadow-2xl hover:bg-white/95"
                 >
                   <NextLink href="/register">
-                    Start for free
+                    Start 15-day trial
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </NextLink>
                 </Button>

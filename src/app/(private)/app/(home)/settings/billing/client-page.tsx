@@ -19,6 +19,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
+import {
+  ANNUAL_DISCOUNT_PERCENT,
+  formatWorkspacePlanPrice,
+  PLAN_TRIAL_DAYS,
+} from "@/lib/subscription-plans";
 import { toast } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { useTRPC } from "@/trpc/client";
@@ -37,12 +42,6 @@ const PLAN_LABELS: Record<Plan, string> = {
 };
 
 const PLAN_ORDER: Plan[] = ["starter", "growth", "scale"];
-
-const PLAN_PRICES: Record<Plan, { monthly: string; annual: string }> = {
-  starter: { monthly: "$0", annual: "$0" },
-  growth: { monthly: "$19.99/mo", annual: "$167.99/yr" },
-  scale: { monthly: "$24.99/mo", annual: "$209.99/yr" },
-};
 
 const PLAN_STORAGE_BYTES: Record<Plan, number | null> = {
   starter: null,
@@ -339,7 +338,9 @@ function UpgradeSection({
             )}
           >
             Annual
-            <span className="font-semibold text-primary">−30%</span>
+            <span className="font-semibold text-primary">
+              -{ANNUAL_DISCOUNT_PERCENT}%
+            </span>
           </button>
         </div>
       </div>
@@ -347,7 +348,9 @@ function UpgradeSection({
       <div className="divide-y divide-border">
         {upgradablePlans.map((plan) => {
           const config = UPGRADE_PLAN_CONFIG[plan];
-          const price = PLAN_PRICES[plan][interval];
+          const price = `${formatWorkspacePlanPrice(plan, interval)}${
+            interval === "monthly" ? "/mo" : "/yr"
+          }`;
 
           return (
             <div key={plan} className="flex items-start gap-4 px-5 py-5">
@@ -489,10 +492,13 @@ export default function BillingSettingsPage() {
 
   const plan = (sub?.plan ?? "starter") as Plan;
   const status = sub?.status ?? "active";
+  const billingInterval = sub?.billingInterval ?? "monthly";
   const statusCfg = STATUS_CONFIG[status] ?? STATUS_CONFIG.active;
   const StatusIcon = statusCfg.icon;
-  const isPaid = plan !== "starter";
   const hasStripe = !!sub?.stripeCustomerId;
+  const priceLabel = `${formatWorkspacePlanPrice(plan, billingInterval)}${
+    billingInterval === "monthly" ? "/mo" : "/yr"
+  }`;
 
   return (
     <SettingsPage
@@ -521,7 +527,14 @@ export default function BillingSettingsPage() {
 
         <div className="divide-y divide-border px-5">
           <InfoRow label="Plan" value={PLAN_LABELS[plan] ?? plan} />
-          {isPaid ? (
+          <InfoRow label="Price" value={priceLabel} />
+          {sub?.status === "trialing" ? (
+            <InfoRow
+              label="Trial"
+              value={`${PLAN_TRIAL_DAYS}-day free trial`}
+            />
+          ) : null}
+          {sub?.currentPeriodStart || sub?.currentPeriodEnd ? (
             <>
               <InfoRow
                 label="Billing period start"
@@ -542,9 +555,7 @@ export default function BillingSettingsPage() {
                 />
               ) : null}
             </>
-          ) : (
-            <InfoRow label="Price" value="Free — no credit card required" />
-          )}
+          ) : null}
         </div>
       </section>
 

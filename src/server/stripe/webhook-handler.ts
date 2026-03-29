@@ -196,14 +196,17 @@ async function onSubscriptionUpserted(sub: Stripe.Subscription): Promise<void> {
  * fields. The customer ID is kept so the org can re-subscribe later.
  */
 async function onSubscriptionDeleted(sub: Stripe.Subscription): Promise<void> {
+  const priceId = sub.items.data[0]?.price.id ?? null;
+  const plan = priceId ? planFromPriceId(priceId) : null;
+
   await db
     .update(organizationSubscriptions)
     .set({
-      plan: "starter",
+      ...(plan ? { plan: plan as "starter" | "growth" | "scale" } : {}),
       status: "canceled",
       cancelAtPeriodEnd: false,
       stripeSubscriptionId: null,
-      stripePriceId: null,
+      ...(priceId ? { stripePriceId: priceId } : {}),
       currentPeriodStart: null,
       currentPeriodEnd: null,
       updatedAt: new Date(),

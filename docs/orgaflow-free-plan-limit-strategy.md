@@ -110,16 +110,14 @@ Upgrade to Orgaflow Scale to unlock tasks, automations, and Stripe payments.
 The Starter plan should be positioned as:
 
 ```
-Free forever for small teams
+Low-cost starter plan with a 15-day free trial
 ```
-
-It should not be presented as a time-limited trial.
 
 The commercial narrative is:
 
-- Start free
+- Start with a 15-day trial
 - Learn the workflow
-- Upgrade when scale, branding, payments, or operations become important
+- Keep the Starter tier or upgrade when scale, branding, payments, or operations become important
 
 ---
 

@@ -3,8 +3,12 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 import { appPaths } from "@/lib/app-paths";
+import { isWorkspaceAccessible } from "@/lib/subscription-plans";
 import { db } from "@/server/db";
-import { organizationMembers } from "@/server/db/schemas";
+import {
+  organizationMembers,
+  organizationSubscriptions,
+} from "@/server/db/schemas";
 import { ACTIVE_ORGANIZATION_COOKIE } from "@/server/trpc/constants";
 import { auth } from "../../../../../auth";
 import { AppShell } from "./app-shell";
@@ -35,8 +39,18 @@ export default async function AppHomeLayout({
   }
 
   const [member] = await db
-    .select({ id: organizationMembers.id })
+    .select({
+      id: organizationMembers.id,
+      subscriptionStatus: organizationSubscriptions.status,
+    })
     .from(organizationMembers)
+    .leftJoin(
+      organizationSubscriptions,
+      eq(
+        organizationSubscriptions.organizationId,
+        organizationMembers.organizationId,
+      ),
+    )
     .where(
       and(
         eq(organizationMembers.organizationId, orgId),
@@ -46,6 +60,10 @@ export default async function AppHomeLayout({
     .limit(1);
 
   if (!member) {
+    redirect(appPaths.workspace);
+  }
+
+  if (!isWorkspaceAccessible(member.subscriptionStatus ?? "active")) {
     redirect(appPaths.workspace);
   }
 

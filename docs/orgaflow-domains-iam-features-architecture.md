@@ -107,7 +107,7 @@ Usage answers:
 > How much can the organization consume?
 
 Examples:
-- 100 MB on the free plan
+- 100 MB on the Starter plan
 - maximum number of users
 - maximum number of customers
 - upload volume
@@ -800,7 +800,7 @@ Examples:
 
 ---
 
-## 11.2 Free plan example
+## 11.2 Starter plan example
 
 Conceptual example:
 
