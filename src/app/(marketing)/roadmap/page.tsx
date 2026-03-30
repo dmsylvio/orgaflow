@@ -10,6 +10,7 @@ import {
   Paperclip,
   RefreshCw,
   Settings,
+  ShieldCheck,
   Zap,
 } from "lucide-react";
 import type { Metadata } from "next";
@@ -129,6 +130,16 @@ const ITEMS: RoadmapItem[] = [
     category: "Core",
   },
   {
+    id: 17,
+    Icon: ShieldCheck,
+    title: "Payment Reliability & Retry Flow",
+    description:
+      "Plan gates now enforce subscription status — incomplete or canceled subscriptions can no longer access paid features. Global banner alerts for failed payments, dedicated billing section with one-click portal access, and webhook sync for expired checkout sessions.",
+    status: "shipped",
+    effort: "Medium",
+    category: "Billing",
+  },
+  {
     id: 5,
     Icon: Mail,
     title: "Extended Notifications",
@@ -154,7 +165,7 @@ const ITEMS: RoadmapItem[] = [
     title: "Online Payments via Stripe",
     description:
       "Let clients pay invoices directly online via Stripe Connect. Generate a payment link and track status automatically. Available on the Scale plan.",
-    status: "planned",
+    status: "in-progress",
     effort: "High",
     category: "Payments",
   },
@@ -283,7 +294,7 @@ const COLUMNS: { status: Status; title: string; description: string }[] = [
 ];
 
 export default function RoadmapPage() {
-  const lastUpdated = "March 26, 2026 (v1.3.0)";
+  const lastUpdated = "March 29, 2026 (v1.4.0)";
 
   return (
     <div className="overflow-hidden">

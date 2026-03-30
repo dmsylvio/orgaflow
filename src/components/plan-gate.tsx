@@ -11,6 +11,24 @@ type Plan = "starter" | "growth" | "scale";
 
 const PLAN_RANK: Record<Plan, number> = { starter: 0, growth: 1, scale: 2 };
 
+/**
+ * Statuses where the subscription exists but the payment was never completed or
+ * the workspace has been deactivated. In these states we treat the org as if it
+ * were on the Starter plan regardless of the `plan` field in the DB, because the
+ * customer has not actually paid for a higher tier.
+ */
+const PAYMENT_BLOCKED_STATUSES = new Set([
+  "incomplete",
+  "incomplete_expired",
+  "canceled",
+  "paused",
+]);
+
+function getEffectivePlan(plan: Plan, status: string | undefined): Plan {
+  if (status && PAYMENT_BLOCKED_STATUSES.has(status)) return "starter";
+  return plan;
+}
+
 const PLAN_LABEL: Record<Plan, string> = {
   starter: "Starter",
   growth: "Growth",
@@ -118,7 +136,8 @@ export function usePlanCheck(requiredPlan: Plan): { allowed: boolean } {
   if (isPending) return { allowed: false };
   // No billing record means org was created before billing was set up — treat as unrestricted.
   if (!billing) return { allowed: true };
-  return { allowed: planAtLeast(billing.plan as Plan, requiredPlan) };
+  const effectivePlan = getEffectivePlan(billing.plan as Plan, billing.status);
+  return { allowed: planAtLeast(effectivePlan, requiredPlan) };
 }
 
 // ---------------------------------------------------------------------------
@@ -153,7 +172,7 @@ export function PlanGate({
   // No billing record — org has no subscription yet, treat as unrestricted.
   if (!billing) return <>{children}</>;
 
-  const currentPlan = billing.plan as Plan;
+  const currentPlan = getEffectivePlan(billing.plan as Plan, billing.status);
 
   if (!planAtLeast(currentPlan, requiredPlan)) {
     return (

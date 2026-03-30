@@ -39,7 +39,10 @@
       "Bash(grep -r next/head /Users/sylviolima/Desktop/projects/orgaflow/src --include=*.tsx --include=*.ts)",
       "Bash(grep -r \"jsonLd\\\\|json-ld\\\\|ld+json\\\\|structured\" /Users/sylviolima/Desktop/projects/orgaflow/src --include=*.tsx --include=*.ts)",
       "Bash(grep -r lang= /Users/sylviolima/Desktop/projects/orgaflow/src/app --include=*.tsx)",
-      "Bash(ls /Users/sylviolima/Desktop/projects/orgaflow/eslint*)"
+      "Bash(ls /Users/sylviolima/Desktop/projects/orgaflow/eslint*)",
+      "Bash(grep -r \"getBilling\\\\|createUpgradeSession\\\\|createBillingPortalSession\" /Users/sylviolima/Desktop/projects/orgaflow/src/server/trpc --include=*.ts)",
+      "Bash(grep -r \"isWorkspaceAccessible\\\\|ACCESSIBLE_WORKSPACE_STATUS\" /Users/sylviolima/Desktop/projects/orgaflow/src --include=*.ts)",
+      "Bash(npx tsc:*)"
     ]
   }
 }

@@ -33,6 +33,18 @@ interface ChangelogEntry {
 
 const ENTRIES: ChangelogEntry[] = [
   {
+    version: "1.4.0",
+    date: "March 29, 2026",
+    badge: "minor",
+    summary: "Subscription payment reliability — retry flow, payment banners, and status-aware plan gates.",
+    changes: [
+      { type: "fixed", text: "PlanGate and usePlanCheck now correctly block paid-plan features when the subscription status is incomplete, incomplete_expired, canceled, or paused — previously the plan field alone was checked, allowing access before payment was confirmed." },
+      { type: "new", text: "Global payment alert banner in the app shell: a persistent amber banner appears on every page when the subscription is past_due or unpaid, with a direct link to fix the payment." },
+      { type: "new", text: "Billing settings page now shows a dedicated payment failure section when the subscription is past_due or unpaid, with a one-click button to open the Stripe billing portal and update the payment method." },
+      { type: "new", text: "Webhook handler for checkout.session.expired: when a user abandons a checkout session and the 24-hour Stripe window closes, the subscription status is automatically updated to incomplete_expired so the UI can show a clear retry prompt." },
+    ],
+  },
+  {
     version: "1.3.0",
     date: "March 26, 2026",
     badge: "minor",

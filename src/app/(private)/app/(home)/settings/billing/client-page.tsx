@@ -401,6 +401,59 @@ function UpgradeSection({
 }
 
 // ---------------------------------------------------------------------------
+// Payment failure section
+// ---------------------------------------------------------------------------
+
+function PaymentFailureSection({
+  status,
+  onOpenPortal,
+  isPortalPending,
+}: {
+  status: string;
+  onOpenPortal: () => void;
+  isPortalPending: boolean;
+}) {
+  if (status !== "past_due" && status !== "unpaid") return null;
+
+  const isPastDue = status === "past_due";
+
+  return (
+    <section className="rounded-xl border border-amber-500/30 bg-amber-50 shadow-sm dark:bg-amber-950/20">
+      <div className="flex items-center gap-2.5 border-b border-amber-500/20 px-5 py-4">
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10">
+          <AlertCircle className="h-4 w-4 text-amber-600" />
+        </div>
+        <span className="text-sm font-semibold text-amber-800 dark:text-amber-200">
+          {isPastDue ? "Payment failed" : "Subscription unpaid"}
+        </span>
+      </div>
+
+      <div className="px-5 py-5">
+        <p className="text-sm text-amber-800 dark:text-amber-300">
+          {isPastDue
+            ? "Your last payment could not be processed. Update your payment method to avoid losing access to your plan."
+            : "Multiple payment attempts have failed. Update your payment method immediately to restore full access."}
+        </p>
+        <p className="mt-2 text-xs text-amber-700/70 dark:text-amber-400/70">
+          You can update your card, view failed invoices, and retry payment
+          through the Stripe billing portal.
+        </p>
+        <Button
+          type="button"
+          className="mt-4 bg-amber-600 hover:bg-amber-700 text-white"
+          loading={isPortalPending}
+          disabled={isPortalPending}
+          onClick={onOpenPortal}
+        >
+          <ExternalLink className="h-4 w-4" />
+          Fix payment now
+        </Button>
+      </div>
+    </section>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Downgrade section
 // ---------------------------------------------------------------------------
 
@@ -598,6 +651,15 @@ export default function BillingSettingsPage() {
 
       {/* ── File attachment storage usage ────────────────────────────── */}
       <StorageUsageSection plan={plan} />
+
+      {/* ── Payment failure ──────────────────────────────────────────── */}
+      <PaymentFailureSection
+        status={status}
+        onOpenPortal={() =>
+          openPortal.mutate({ returnUrl: window.location.href })
+        }
+        isPortalPending={openPortal.isPending}
+      />
 
       {/* ── Upgrade ──────────────────────────────────────────────────── */}
       <UpgradeSection

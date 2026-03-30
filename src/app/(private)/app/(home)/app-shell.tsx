@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import {
+  AlertTriangle,
   BarChart3,
   BookOpen,
   Building2,
@@ -53,6 +54,33 @@ function UserInitial({ name }: { name?: string | null }) {
     <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/20 text-[10px] font-semibold text-primary">
       {initial}
     </span>
+  );
+}
+
+const PAYMENT_ALERT_STATUSES = new Set(["past_due", "unpaid"]);
+
+function PaymentAlertBanner() {
+  const trpc = useTRPC();
+  const { data: billing } = useQuery(trpc.settings.getBilling.queryOptions());
+  if (!billing || !PAYMENT_ALERT_STATUSES.has(billing.status)) return null;
+
+  const isPastDue = billing.status === "past_due";
+
+  return (
+    <div className="flex items-center gap-3 border-b border-amber-500/20 bg-amber-50 px-4 py-2.5 dark:bg-amber-950/30">
+      <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600" />
+      <p className="flex-1 text-sm text-amber-800 dark:text-amber-200">
+        {isPastDue
+          ? "Your last payment failed. Update your payment method to keep access."
+          : "Your subscription is unpaid. Please update your payment method."}
+      </p>
+      <NextLink
+        href="/app/settings/billing"
+        className="shrink-0 rounded-md bg-amber-600 px-3 py-1 text-xs font-semibold text-white transition-colors hover:bg-amber-700"
+      >
+        Fix payment
+      </NextLink>
+    </div>
   );
 }
 
@@ -221,6 +249,7 @@ export function AppShell({ children }: AppShellProps) {
 
       {/* Main content */}
       <main className="flex min-w-0 flex-1 flex-col overflow-y-auto">
+        <PaymentAlertBanner />
         {children}
       </main>
     </div>

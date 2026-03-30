@@ -1,6 +1,6 @@
 import "server-only";
 
-import { eq, or } from "drizzle-orm";
+import { and, eq, or } from "drizzle-orm";
 import Stripe from "stripe";
 import type { WorkspacePlan } from "@/schemas/workspace";
 import { db } from "@/server/db";
@@ -245,6 +245,31 @@ async function onInvoicePaymentSucceeded(
 }
 
 /**
+ * `checkout.session.expired`
+ *
+ * Fired when the user abandons a checkout session and the 24-hour window
+ * closes without completing. Updates the subscription status to
+ * `incomplete_expired` so the UI can show a clear "retry" prompt instead
+ * of leaving the row stuck as `incomplete`.
+ */
+async function onCheckoutSessionExpired(
+  session: Stripe.Checkout.Session,
+): Promise<void> {
+  const organizationId = session.metadata?.organizationId;
+  if (!organizationId) return;
+
+  await db
+    .update(organizationSubscriptions)
+    .set({ status: "incomplete_expired", updatedAt: new Date() })
+    .where(
+      and(
+        eq(organizationSubscriptions.organizationId, organizationId),
+        eq(organizationSubscriptions.status, "incomplete"),
+      ),
+    );
+}
+
+/**
  * `invoice.payment_failed`
  *
  * Marks the subscription as `past_due`. Stripe will retry automatically; if
@@ -295,6 +320,12 @@ export async function handleStripeWebhook(
   switch (event.type) {
     case "checkout.session.completed":
       await onCheckoutSessionCompleted(
+        event.data.object as Stripe.Checkout.Session,
+      );
+      break;
+
+    case "checkout.session.expired":
+      await onCheckoutSessionExpired(
         event.data.object as Stripe.Checkout.Session,
       );
       break;
