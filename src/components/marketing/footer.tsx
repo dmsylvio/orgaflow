@@ -84,13 +84,24 @@ export function MarketingFooter() {
           ))}
         </div>
 
-        <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-border pt-8 sm:flex-row">
-          <p className="text-xs text-muted-foreground">
-            © {new Date().getFullYear()} Orgaflow. All rights reserved.
+        <div className="mt-12 flex flex-col gap-3 border-t border-border pt-8 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-center text-xs text-muted-foreground sm:text-left">
+            Copyright 2026 Orgaflow LLC. All rights reserved.
           </p>
-          <p className="text-xs text-muted-foreground/60">
-            Built for small businesses that mean business.
-          </p>
+          <div className="flex flex-col items-center gap-1 text-center sm:items-end sm:text-right">
+            <p className="text-xs text-muted-foreground/60">
+              Built for small businesses that mean business.
+            </p>
+            <p className="text-xs text-muted-foreground/60">
+              Created by Sylvio Lima ·{" "}
+              <Link
+                href="https://github.com/dmsylvio"
+                className="font-medium text-muted-foreground transition-colors hover:text-foreground"
+              >
+                @dmsylvio
+              </Link>
+            </p>
+          </div>
         </div>
       </div>
     </footer>

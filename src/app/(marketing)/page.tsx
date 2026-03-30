@@ -13,6 +13,7 @@ import {
   Zap,
 } from "lucide-react";
 import type { Metadata } from "next";
+import Image from "next/image";
 import NextLink from "next/link";
 import { Button } from "@/components/ui/button";
 
@@ -432,10 +433,15 @@ export default function LandingPage() {
             </div>
 
             {/* Screenshot */}
-            <img
-              src="/desktop1-light.svg"
+            <Image
+              src="/screencapture-orgaflow.png"
               alt="Orgaflow dashboard"
               className="w-full"
+              width={1920}
+              height={1080}
+              quality={100}
+              priority
+              unoptimized
             />
           </div>
 
