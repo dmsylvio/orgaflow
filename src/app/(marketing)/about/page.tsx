@@ -1,12 +1,4 @@
-import {
-  ArrowRight,
-  Globe,
-  Heart,
-  Shield,
-  Target,
-  Users,
-  Zap,
-} from "lucide-react";
+import { ArrowRight, Globe, Heart, Shield, Target, Zap } from "lucide-react";
 import type { Metadata } from "next";
 import NextLink from "next/link";
 import { Button } from "@/components/ui/button";
@@ -14,7 +6,7 @@ import { Button } from "@/components/ui/button";
 export const metadata: Metadata = {
   title: "About",
   description:
-    "Learn about the team and mission behind Orgaflow — the client workflow platform built for small businesses.",
+    "The story behind Orgaflow LLC - a founder-led client workflow platform built for small businesses.",
   keywords: [
     "about Orgaflow",
     "small business software",
@@ -24,16 +16,16 @@ export const metadata: Metadata = {
   ],
   alternates: { canonical: "/about" },
   openGraph: {
-    title: "About — Orgaflow",
+    title: "About - Orgaflow",
     description:
-      "Learn about the team and mission behind Orgaflow — the client workflow platform built for small businesses.",
+      "The story behind Orgaflow LLC - a founder-led client workflow platform built for small businesses.",
     url: "/about",
     type: "website",
   },
   twitter: {
-    title: "About — Orgaflow",
+    title: "About - Orgaflow",
     description:
-      "Learn about the team and mission behind Orgaflow — the client workflow platform built for small businesses.",
+      "The story behind Orgaflow LLC - a founder-led client workflow platform built for small businesses.",
   },
 };
 
@@ -51,7 +43,7 @@ const VALUES = [
     Icon: Heart,
     title: "Customer obsessed",
     description:
-      "Our customers are small business owners with real problems. We talk to them every week and build what actually matters.",
+      "We build for small business owners with real day-to-day problems. We listen, iterate, and focus on what actually matters.",
     iconColor: "text-rose-600",
     iconBg: "bg-rose-50",
     border: "border-rose-100",
@@ -67,9 +59,9 @@ const VALUES = [
   },
   {
     Icon: Zap,
-    title: "Move fast, ship quality",
+    title: "Craft & quality",
     description:
-      "We ship every week. But speed never comes at the cost of reliability — our uptime speaks for itself.",
+      "We care about the fundamentals: performance, reliability, and details that make the product feel effortless.",
     iconColor: "text-amber-600",
     iconBg: "bg-amber-50",
     border: "border-amber-100",
@@ -78,81 +70,46 @@ const VALUES = [
 
 const TEAM = [
   {
-    name: "Alex Rivera",
-    role: "Co-founder & CEO",
-    bio: "Former product manager at Stripe. Obsessed with making complex workflows simple.",
-    avatar: "AR",
-    avatarBg: "bg-blue-100 text-blue-700",
-  },
-  {
-    name: "Priya Nair",
-    role: "Co-founder & CTO",
-    bio: "Ex-Shopify engineer. Built payment infrastructure at scale. Loves distributed systems.",
-    avatar: "PN",
-    avatarBg: "bg-emerald-100 text-emerald-700",
-  },
-  {
-    name: "Lucas Mendes",
-    role: "Head of Design",
-    bio: "8 years designing SaaS products. Believes that great UX is the product's most important feature.",
-    avatar: "LM",
-    avatarBg: "bg-rose-100 text-rose-700",
-  },
-  {
-    name: "Emma Fitzgerald",
-    role: "Head of Customer Success",
-    bio: "Helped 500+ small businesses move from spreadsheets to modern software. She's seen it all.",
-    avatar: "EF",
-    avatarBg: "bg-violet-100 text-violet-700",
-  },
-  {
-    name: "David Park",
-    role: "Lead Engineer",
-    bio: "Full-stack developer with 10 years of experience. TypeScript evangelist and coffee addict.",
-    avatar: "DP",
-    avatarBg: "bg-amber-100 text-amber-700",
-  },
-  {
-    name: "Sofia Torres",
-    role: "Marketing & Growth",
-    bio: "Scaled three B2B SaaS companies from 0 to 10,000 customers. Data-driven storyteller.",
-    avatar: "ST",
-    avatarBg: "bg-cyan-100 text-cyan-700",
+    name: "Sylvio Lima",
+    role: "Founder & Owner",
+    bio: "I'm a full-stack developer with 10+ years of experience building web products - from enterprise government systems to SaaS platforms and client-facing websites. I specialize in TypeScript, React/Next.js, Node.js, and PostgreSQL, and I take pride in shipping things that actually work in production.",
+    avatar: "SL",
+    avatarBg: "bg-primary/10 text-primary",
   },
 ];
 
 const MILESTONES = [
   {
-    year: "2022",
-    title: "The idea",
-    description:
-      "Alex and Priya spent a year interviewing small business owners. The pain was clear: too many disconnected tools.",
-  },
-  {
-    year: "2023",
-    title: "First version launched",
-    description:
-      "After 8 months of building, Orgaflow launched in private beta with 50 pilot customers.",
-  },
-  {
-    year: "2024",
-    title: "Public launch & growth",
-    description:
-      "Opened to the public. Hit 1,000 businesses in 90 days. Closed seed funding of $3.2M.",
-  },
-  {
     year: "2025",
-    title: "Scaling up",
+    title: "Nights and weekends",
     description:
-      "Surpassed 2,000 businesses, launched workflow automations, and expanded the team to 18 people.",
+      "Orgaflow starts as a side project, built after work with a focus on helping small businesses stay organized.",
+  },
+  {
+    year: "Nov25",
+    title: "Orgaflow LLC",
+    description:
+      "In November 2025, Orgaflow LLC is formed and the project becomes a long-term product with a clear mission.",
+  },
+  {
+    year: "2026",
+    title: "Live",
+    description:
+      "Orgaflow goes live and keeps improving the core quote-to-payment experience.",
+  },
+  {
+    year: "Now",
+    title: "Keep improving",
+    description:
+      "Polishing onboarding, reliability, and the details that make Orgaflow feel effortless day to day.",
   },
 ];
 
 const STATS = [
-  { value: "2,000+", label: "Businesses served" },
-  { value: "18", label: "Team members" },
-  { value: "3", label: "Countries" },
-  { value: "$12M+", label: "Invoices processed" },
+  { value: "Live", label: "Stage" },
+  { value: "Nov 2025", label: "Orgaflow LLC" },
+  { value: "1", label: "Team member" },
+  { value: "10+ yrs", label: "Founder experience" },
 ];
 
 export default function AboutPage() {
@@ -170,18 +127,18 @@ export default function AboutPage() {
 
         <div className="relative mx-auto max-w-4xl px-6">
           <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-primary">
-            About us
+            About Orgaflow
           </p>
           <h1 className="mb-6 text-5xl font-bold leading-tight tracking-tight text-foreground sm:text-6xl lg:text-7xl">
-            We're building for the{" "}
+            Orgaflow means{" "}
             <span className="bg-gradient-to-r from-primary to-violet-500 bg-clip-text text-transparent">
-              backbone of the economy
+              Organization + Flow
             </span>
           </h1>
           <p className="mx-auto max-w-2xl text-lg leading-relaxed text-muted-foreground">
-            Small and medium businesses create the majority of jobs and drive
-            local economies. We believe they deserve software as good as what
-            enterprises use — without the enterprise price tag or complexity.
+            Orgaflow is a founder-led client workflow platform built for small
+            businesses. The goal is simple: keep work moving from quote to
+            payment, without enterprise complexity or pricing.
           </p>
         </div>
       </section>
@@ -207,27 +164,27 @@ export default function AboutPage() {
                 Our story
               </p>
               <h2 className="mb-6 text-4xl font-bold text-foreground sm:text-5xl">
-                Born from frustration, built with purpose
+                Built for independence, built for small businesses
               </h2>
               <div className="flex flex-col gap-4 text-base leading-relaxed text-muted-foreground">
                 <p>
-                  In 2022, our founders Alex and Priya spent a full year
-                  visiting small businesses — plumbers, designers, consultants,
-                  contractors. The pattern was always the same: quotes in Google
-                  Docs, invoices in Excel, payments tracked via email, tasks
-                  written on sticky notes.
+                  Orgaflow started with a personal goal: build a product I could
+                  own, grow, and improve long-term - without selling my time to
+                  other people. As I looked at the market, I saw a huge gap for
+                  small businesses that are just getting started: most tools
+                  were either too expensive, too complex, or not connected end
+                  to end.
                 </p>
                 <p>
-                  These businesses weren't failing for lack of talent or
-                  ambition. They were failing because their tools weren't built
-                  for them. Enterprise software was too complex and too
-                  expensive. Generic apps didn't connect the dots.
+                  I began building Orgaflow in my free time - nights after work
+                  and weekends - always looking for ways to make the day-to-day
+                  simpler: staying organized, sending professional estimates and
+                  invoices, and keeping work moving from quote to payment.
                 </p>
                 <p>
-                  So we built Orgaflow — a platform where every piece of the
-                  client workflow connects naturally, from the first estimate to
-                  the final payment. No bolt-ons. No integrations that break.
-                  Just one place where your business actually runs.
+                  The name is short for Organization + Flow. Today, Orgaflow LLC
+                  is live, and I'm focused on making the core experience fast,
+                  clear, and genuinely useful for small businesses.
                 </p>
               </div>
             </div>
@@ -272,24 +229,28 @@ export default function AboutPage() {
           </div>
 
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-            {VALUES.map(({ Icon, title, description, iconColor, iconBg, border }) => (
-              <div
-                key={title}
-                className={`flex gap-5 rounded-2xl border ${border} bg-background p-7 shadow-sm`}
-              >
+            {VALUES.map(
+              ({ Icon, title, description, iconColor, iconBg, border }) => (
                 <div
-                  className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${iconBg}`}
+                  key={title}
+                  className={`flex gap-5 rounded-2xl border ${border} bg-background p-7 shadow-sm`}
                 >
-                  <Icon className={`h-6 w-6 ${iconColor}`} />
+                  <div
+                    className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${iconBg}`}
+                  >
+                    <Icon className={`h-6 w-6 ${iconColor}`} />
+                  </div>
+                  <div>
+                    <h3 className="mb-2 font-semibold text-foreground">
+                      {title}
+                    </h3>
+                    <p className="text-sm leading-relaxed text-muted-foreground">
+                      {description}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="mb-2 font-semibold text-foreground">{title}</h3>
-                  <p className="text-sm leading-relaxed text-muted-foreground">
-                    {description}
-                  </p>
-                </div>
-              </div>
-            ))}
+              ),
+            )}
           </div>
         </div>
       </section>
@@ -299,14 +260,14 @@ export default function AboutPage() {
         <div className="mx-auto max-w-7xl px-6">
           <div className="mb-16 text-center">
             <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-primary">
-              The people
+              The founder
             </p>
             <h2 className="mb-4 text-4xl font-bold text-foreground sm:text-5xl">
-              Meet the team
+              Meet the founder
             </h2>
             <p className="mx-auto max-w-xl text-base text-muted-foreground">
-              A small, focused team spread across three time zones — united by
-              the mission to help small businesses thrive.
+              Orgaflow is currently built and supported by one person. That
+              keeps the feedback loop short and the product focused.
             </p>
           </div>
 
@@ -332,22 +293,27 @@ export default function AboutPage() {
             ))}
           </div>
 
-          {/* Hiring */}
+          {/* Live */}
           <div className="mt-10 rounded-2xl border border-primary/20 bg-primary/5 p-8 text-center">
-            <Users className="mx-auto mb-4 h-8 w-8 text-primary" />
+            <Zap className="mx-auto mb-4 h-8 w-8 text-primary" />
             <h3 className="mb-2 text-xl font-bold text-foreground">
-              We're hiring!
+              We're live
             </h3>
             <p className="mb-6 text-sm text-muted-foreground">
-              Join us in building the future of small business software. We're a
-              remote-first team that values autonomy, impact, and fun.
+              Orgaflow is live. If you'd like help getting started or want to
+              share feedback, we'd love to hear from you.
             </p>
-            <Button variant="outline" asChild>
-              <NextLink href="/contact">
-                View open roles
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </NextLink>
-            </Button>
+            <div className="flex flex-wrap items-center justify-center gap-3">
+              <Button variant="outline" asChild>
+                <NextLink href="/register">
+                  Create an account
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </NextLink>
+              </Button>
+              <Button variant="ghost" asChild>
+                <NextLink href="/contact">Get in touch</NextLink>
+              </Button>
+            </div>
           </div>
         </div>
       </section>
@@ -369,9 +335,9 @@ export default function AboutPage() {
                 Our mission
               </h2>
               <p className="mx-auto max-w-2xl text-base leading-relaxed text-white/75">
-                To give every small business on the planet access to a
-                world-class client workflow platform — so they can focus on what
-                they do best, not on juggling software.
+                To make high-quality, easy-to-use workflow software accessible
+                to every small business - especially the ones just getting
+                started.
               </p>
               <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
                 <Button
@@ -381,7 +347,7 @@ export default function AboutPage() {
                   className="bg-white px-8 text-primary hover:bg-white/90"
                 >
                   <NextLink href="/register">
-                    Join us today
+                    Get started
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </NextLink>
                 </Button>

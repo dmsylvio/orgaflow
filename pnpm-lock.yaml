@@ -53,6 +53,9 @@ importers:
       '@tanstack/react-query':
         specifier: ^5.91.0
         version: 5.91.0(react@19.2.4)
+      '@tawk.to/tawk-messenger-react':
+        specifier: ^2.0.2
+        version: 2.0.2(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@tiptap/pm':
         specifier: ^3.20.4
         version: 3.20.4
@@ -1497,6 +1500,12 @@ packages:
     resolution: {integrity: sha512-S8FODsDTNv0Ym+o/JVBvA6EWiWVhg6K2Q4qFehZyFKk6uW4H9OPbXl4kyiN9hAly0uHJ/1GEbR6kAI4MZWfjEA==}
     peerDependencies:
       react: ^18 || ^19
+
+  '@tawk.to/tawk-messenger-react@2.0.2':
+    resolution: {integrity: sha512-Nl3JMMIrQiyveSSuP8qYWEu1u+coqz4WCA7TfSjOMDcpyWEiORvOdnMWTsSlhz8rae57HWsCAGLzE507fKtzXA==}
+    peerDependencies:
+      react: ^18.1.0
+      react-dom: ^18.1.0
 
   '@tiptap/core@3.20.4':
     resolution: {integrity: sha512-3i/DG89TFY/b34T5P+j35UcjYuB5d3+9K8u6qID+iUqNPiza015HPIZLuPfE5elNwVdV3EXIoPo0LLeBLgXXAg==}
@@ -3876,6 +3885,11 @@ snapshots:
     dependencies:
       '@tanstack/query-core': 5.91.0
       react: 19.2.4
+
+  '@tawk.to/tawk-messenger-react@2.0.2(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
+    dependencies:
+      react: 19.2.4
+      react-dom: 19.2.4(react@19.2.4)
 
   '@tiptap/core@3.20.4(@tiptap/pm@3.20.4)':
     dependencies:

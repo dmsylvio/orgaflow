@@ -1,4 +1,4 @@
-import { Mail, MapPin, MessageSquare, Phone } from "lucide-react";
+import { Mail, MapPin } from "lucide-react";
 import type { Metadata } from "next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 export const metadata: Metadata = {
   title: "Contact",
   description:
-    "Get in touch with the Orgaflow team. We'd love to hear from you — whether it's a question, feedback, or a feature request.",
+    "Contact Orgaflow LLC. Email us at app@orgaflow.dev and we'll get back to you as soon as we can.",
   keywords: [
     "contact Orgaflow",
     "support",
@@ -17,16 +17,16 @@ export const metadata: Metadata = {
   ],
   alternates: { canonical: "/contact" },
   openGraph: {
-    title: "Contact — Orgaflow",
+    title: "Contact - Orgaflow",
     description:
-      "Get in touch with the Orgaflow team. We'd love to hear from you.",
+      "Contact Orgaflow LLC. Email us at app@orgaflow.dev and we'll get back to you as soon as we can.",
     url: "/contact",
     type: "website",
   },
   twitter: {
-    title: "Contact — Orgaflow",
+    title: "Contact - Orgaflow",
     description:
-      "Get in touch with the Orgaflow team. We'd love to hear from you.",
+      "Contact Orgaflow LLC. Email us at app@orgaflow.dev and we'll get back to you as soon as we can.",
   },
 };
 
@@ -34,38 +34,20 @@ const CONTACT_ITEMS = [
   {
     Icon: Mail,
     label: "Email",
-    value: "hello@orgaflow.io",
-    href: "mailto:hello@orgaflow.io",
+    value: "app@orgaflow.dev",
+    href: "mailto:app@orgaflow.dev",
     iconColor: "text-blue-600",
     iconBg: "bg-blue-50",
     border: "border-blue-100",
   },
   {
-    Icon: Phone,
-    label: "Phone",
-    value: "+1 (888) 555-0100",
-    href: "tel:+18885550100",
-    iconColor: "text-emerald-600",
-    iconBg: "bg-emerald-50",
-    border: "border-emerald-100",
-  },
-  {
     Icon: MapPin,
     label: "Address",
-    value: "San Francisco, CA · Remote-first",
-    href: "#",
+    value: "1600 E 8th Ave A200, Tampa, FL 33605",
+    href: "https://www.google.com/maps/search/?api=1&query=1600%20E%208th%20Ave%20A200%2C%20Tampa%2C%20FL%2033605",
     iconColor: "text-violet-600",
     iconBg: "bg-violet-50",
     border: "border-violet-100",
-  },
-  {
-    Icon: MessageSquare,
-    label: "Live chat",
-    value: "Available Mon–Fri, 9–6 PT",
-    href: "#",
-    iconColor: "text-amber-600",
-    iconBg: "bg-amber-50",
-    border: "border-amber-100",
   },
 ];
 
@@ -98,36 +80,38 @@ export default function ContactPage() {
             Let's talk
           </h1>
           <p className="text-lg text-muted-foreground">
-            Whether you have a question, need support, or want to explore a
-            custom plan — our team is here to help.
+            Whether you have a question, need support, or want to share feedback
+            - email us at app@orgaflow.dev.
           </p>
         </div>
       </section>
 
       {/* Contact info cards */}
       <section className="mx-auto max-w-6xl px-6 pb-12">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {CONTACT_ITEMS.map(({ Icon, label, value, href, iconColor, iconBg, border }) => (
-            <a
-              key={label}
-              href={href}
-              className={`group flex flex-col gap-3 rounded-2xl border ${border} bg-background p-5 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-md`}
-            >
-              <div
-                className={`flex h-10 w-10 items-center justify-center rounded-xl ${iconBg}`}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-2">
+          {CONTACT_ITEMS.map(
+            ({ Icon, label, value, href, iconColor, iconBg, border }) => (
+              <a
+                key={label}
+                href={href}
+                className={`group flex flex-col gap-3 rounded-2xl border ${border} bg-background p-5 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-md`}
               >
-                <Icon className={`h-5 w-5 ${iconColor}`} />
-              </div>
-              <div>
-                <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                  {label}
-                </p>
-                <p className="mt-0.5 text-sm font-medium text-foreground">
-                  {value}
-                </p>
-              </div>
-            </a>
-          ))}
+                <div
+                  className={`flex h-10 w-10 items-center justify-center rounded-xl ${iconBg}`}
+                >
+                  <Icon className={`h-5 w-5 ${iconColor}`} />
+                </div>
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                    {label}
+                  </p>
+                  <p className="mt-0.5 text-sm font-medium text-foreground">
+                    {value}
+                  </p>
+                </div>
+              </a>
+            ),
+          )}
         </div>
       </section>
 
@@ -141,7 +125,7 @@ export default function ContactPage() {
                 Send us a message
               </h2>
               <p className="mb-8 text-sm text-muted-foreground">
-                We typically reply within a few hours on business days.
+                We read every message and reply as soon as we can.
               </p>
 
               <form className="flex flex-col gap-5">
@@ -182,7 +166,11 @@ export default function ContactPage() {
                   />
                 </div>
 
-                <Button type="submit" size="lg" className="w-full shadow-md shadow-primary/20">
+                <Button
+                  type="submit"
+                  size="lg"
+                  className="w-full shadow-md shadow-primary/20"
+                >
                   Send message
                 </Button>
 
@@ -203,16 +191,16 @@ export default function ContactPage() {
               <ul className="flex flex-col gap-4">
                 {[
                   {
-                    title: "Fast response",
-                    desc: "We reply to all messages within 4 business hours.",
+                    title: "Founder-led support",
+                    desc: "You'll hear back from the person building Orgaflow.",
                   },
                   {
-                    title: "No gatekeeping",
-                    desc: "You'll talk to a real person, not a bot.",
+                    title: "Email-first",
+                    desc: "We don't offer phone support right now - email is the best way to reach us.",
                   },
                   {
-                    title: "Expert help",
-                    desc: "Our team knows the product inside out.",
+                    title: "Feedback welcome",
+                    desc: "Bug reports and feature requests help us improve faster.",
                   },
                 ].map(({ title, desc }) => (
                   <li key={title} className="flex gap-3">
@@ -226,42 +214,6 @@ export default function ContactPage() {
                   </li>
                 ))}
               </ul>
-            </div>
-
-            {/* Office hours */}
-            <div className="rounded-2xl border border-border bg-background p-6 shadow-sm">
-              <h3 className="mb-4 font-semibold text-foreground">
-                Office hours
-              </h3>
-              <div className="flex flex-col gap-2.5">
-                {[
-                  { day: "Monday – Friday", time: "9:00 AM – 6:00 PM PT" },
-                  { day: "Saturday", time: "10:00 AM – 2:00 PM PT" },
-                  { day: "Sunday", time: "Closed" },
-                ].map(({ day, time }) => (
-                  <div key={day} className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">{day}</span>
-                    <span className="font-medium text-foreground">{time}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Enterprise */}
-            <div className="rounded-2xl border border-primary/20 bg-primary/5 p-6">
-              <h3 className="mb-2 font-semibold text-foreground">
-                Enterprise sales
-              </h3>
-              <p className="mb-4 text-sm text-muted-foreground">
-                Looking for a custom plan or volume pricing? Our enterprise team
-                can build a solution tailored to your needs.
-              </p>
-              <a
-                href="mailto:enterprise@orgaflow.io"
-                className="text-sm font-medium text-primary hover:underline"
-              >
-                enterprise@orgaflow.io →
-              </a>
             </div>
           </div>
         </div>

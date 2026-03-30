@@ -86,11 +86,13 @@ const TESTIMONIALS = [
   },
 ];
 
+const STAR_KEYS = ["1", "2", "3", "4", "5"] as const;
+
 /* ─────────────────────────────────────────────
    Mini UI mockups (pure CSS / Tailwind)
 ───────────────────────────────────────────── */
 
-function InvoiceMockup() {
+function _InvoiceMockup() {
   return (
     <div className="w-full overflow-hidden rounded-xl border border-border bg-background shadow-sm">
       {/* toolbar */}
@@ -115,8 +117,8 @@ function InvoiceMockup() {
           </span>
         </div>
         <div className="mb-3 space-y-1.5">
-          {[80, 60, 70].map((w, i) => (
-            <div key={i} className="flex items-center justify-between">
+          {[80, 60, 70].map((w) => (
+            <div key={w} className="flex items-center justify-between">
               <div
                 className={`h-2 rounded-full bg-muted`}
                 style={{ width: `${w}%` }}
@@ -288,7 +290,24 @@ function CRMMockup() {
 }
 
 function ReportMockup() {
-  const bars = [45, 72, 60, 88, 55, 95, 78];
+  const bars = [
+    { id: "b1", height: 45 },
+    { id: "b2", height: 72 },
+    { id: "b3", height: 60 },
+    { id: "b4", height: 88 },
+    { id: "b5", height: 55 },
+    { id: "b6", height: 95 },
+    { id: "b7", height: 78 },
+  ];
+  const days = [
+    { id: "mon", label: "M" },
+    { id: "tue", label: "T" },
+    { id: "wed", label: "W" },
+    { id: "thu", label: "T" },
+    { id: "fri", label: "F" },
+    { id: "sat", label: "S" },
+    { id: "sun", label: "S" },
+  ];
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-end justify-between">
@@ -302,18 +321,18 @@ function ReportMockup() {
         </span>
       </div>
       <div className="flex items-end justify-between gap-1 h-14">
-        {bars.map((h, i) => (
+        {bars.map(({ id, height }, i) => (
           <div
-            key={i}
+            key={id}
             className={`flex-1 rounded-t-md ${i === bars.length - 1 ? "bg-primary" : "bg-primary/20"}`}
-            style={{ height: `${h}%` }}
+            style={{ height: `${height}%` }}
           />
         ))}
       </div>
       <div className="flex justify-between text-[10px] text-muted-foreground">
-        {["M", "T", "W", "T", "F", "S", "S"].map((d, i) => (
-          <span key={i} className="flex-1 text-center">
-            {d}
+        {days.map(({ id, label }) => (
+          <span key={id} className="flex-1 text-center">
+            {label}
           </span>
         ))}
       </div>
@@ -344,7 +363,7 @@ export default function LandingPage() {
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-60" />
               <span className="relative h-2 w-2 rounded-full bg-primary" />
             </span>
-            Now in public beta — join 200+ businesses
+            Now live — built for small businesses
           </div>
 
           <h1 className="mx-auto mb-6 max-w-4xl text-[clamp(2.5rem,6vw,4.5rem)] font-bold leading-[1.1] tracking-tight text-foreground">
@@ -359,6 +378,7 @@ export default function LandingPage() {
                 className="absolute -bottom-2 left-0 w-full"
                 fill="none"
               >
+                <title>Decorative underline</title>
                 <path
                   d="M2 8 C60 3, 140 10, 298 4"
                   stroke="url(#underline-grad)"
@@ -799,9 +819,9 @@ export default function LandingPage() {
                   className="flex flex-col gap-5 rounded-2xl border border-border bg-background p-7 shadow-sm transition-shadow hover:shadow-md"
                 >
                   <div className="flex gap-0.5">
-                    {Array.from({ length: stars }).map((_, i) => (
+                    {STAR_KEYS.slice(0, stars).map((k) => (
                       <Star
-                        key={i}
+                        key={`${name}-star-${k}`}
                         className="h-4 w-4 fill-amber-400 text-amber-400"
                       />
                     ))}

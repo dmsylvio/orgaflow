@@ -6,19 +6,19 @@ export const metadata: Metadata = {
   description: "The terms and conditions governing your use of Orgaflow.",
   alternates: { canonical: "/terms-of-service" },
   openGraph: {
-    title: "Terms of Service — Orgaflow",
+    title: "Terms of Service - Orgaflow",
     description: "The terms and conditions governing your use of Orgaflow.",
     url: "/terms-of-service",
     type: "website",
   },
   twitter: {
-    title: "Terms of Service — Orgaflow",
+    title: "Terms of Service - Orgaflow",
     description: "The terms and conditions governing your use of Orgaflow.",
   },
 };
 
-const LAST_UPDATED = "March 24, 2026";
-const EFFECTIVE_DATE = "March 24, 2026";
+const LAST_UPDATED = "March 30, 2026";
+const EFFECTIVE_DATE = "March 30, 2026";
 
 export default function TermsOfServicePage() {
   return (
@@ -26,12 +26,14 @@ export default function TermsOfServicePage() {
       {/* Hero */}
       <section className="border-b border-border bg-muted/40 py-16 text-center">
         <div className="mx-auto max-w-3xl px-6">
-          <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-primary">Legal</p>
+          <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-primary">
+            Legal
+          </p>
           <h1 className="mb-3 text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
             Terms of Service
           </h1>
           <p className="text-muted-foreground">
-            Effective: {EFFECTIVE_DATE} · Last updated: {LAST_UPDATED}
+            Effective: {EFFECTIVE_DATE} | Last updated: {LAST_UPDATED}
           </p>
         </div>
       </section>
@@ -40,10 +42,11 @@ export default function TermsOfServicePage() {
       <section className="mx-auto max-w-3xl px-6 py-16">
         <div className="text-foreground">
           <p className="text-base leading-relaxed text-muted-foreground">
-            These Terms of Service ("Terms") govern your access to and use of the
-            Orgaflow platform ("Service") operated by Orgaflow Inc. ("Orgaflow",
-            "we", "us"). By creating an account or using the Service, you agree to
-            these Terms. If you do not agree, do not use the Service.
+            These Terms of Service ("Terms") govern your access to and use of
+            the Orgaflow platform ("Service") operated by Orgaflow LLC
+            ("Orgaflow", "we", "us"). By creating an account or using the
+            Service, you agree to these Terms. If you do not agree, do not use
+            the Service.
           </p>
 
           {[
@@ -53,7 +56,7 @@ export default function TermsOfServicePage() {
                 "You must be at least 18 years old and capable of entering a binding contract.",
                 "You are responsible for maintaining the confidentiality of your login credentials.",
                 "You are responsible for all activity that occurs under your account.",
-                "You must notify us immediately of any unauthorized access at security@orgaflow.io.",
+                "You must notify us immediately of any unauthorized access at app@orgaflow.dev.",
                 "You may not share your account with others or create accounts on behalf of others without authorization.",
               ],
             },
@@ -90,7 +93,7 @@ export default function TermsOfServicePage() {
             {
               title: "5. Intellectual Property",
               items: [
-                "The Orgaflow platform, brand, and all associated software are owned by Orgaflow Inc.",
+                "The Orgaflow platform, brand, and all associated software are owned by Orgaflow LLC.",
                 "You are granted a limited, non-exclusive, non-transferable license to use the Service.",
                 "You may not copy, modify, distribute, or create derivative works from the Service.",
                 "Feedback you provide may be used by us to improve the Service without obligation to you.",
@@ -107,7 +110,7 @@ export default function TermsOfServicePage() {
             {
               title: "7. Limitation of Liability",
               items: [
-                "The Service is provided \"as is\" without warranties of any kind.",
+                'The Service is provided "as is" without warranties of any kind.',
                 "Orgaflow's total liability to you shall not exceed the fees paid by you in the 12 months preceding the claim.",
                 "We are not liable for indirect, incidental, consequential, or punitive damages.",
                 "Some jurisdictions do not allow liability limitations — in those cases, the minimum liability permitted by law applies.",
@@ -131,19 +134,22 @@ export default function TermsOfServicePage() {
             {
               title: "10. Governing Law",
               items: [
-                "These Terms are governed by the laws of the State of California, USA, without regard to conflict of law principles.",
-                "Any disputes shall be resolved through binding arbitration in San Francisco, CA, except where prohibited by law.",
+                "These Terms are governed by the laws of the State of Florida, USA, without regard to conflict of law principles.",
+                "Any disputes shall be resolved through binding arbitration in Tampa, FL, except where prohibited by law.",
               ],
             },
             {
               title: "11. Contact",
               items: [
-                "For questions about these Terms, contact us at legal@orgaflow.io or via our contact page.",
+                "For questions about these Terms, contact us at app@orgaflow.dev or via our contact page.",
+                "Mailing address: Orgaflow LLC, 1600 E 8th Ave A200, Tampa, FL 33605.",
               ],
             },
           ].map(({ title, items }) => (
             <div key={title} className="mt-10">
-              <h2 className="mb-3 text-lg font-bold text-foreground">{title}</h2>
+              <h2 className="mb-3 text-lg font-bold text-foreground">
+                {title}
+              </h2>
               <ul className="ml-5 list-disc space-y-2 text-sm leading-relaxed text-muted-foreground">
                 {items.map((item) => (
                   <li key={item}>{item}</li>
@@ -155,13 +161,22 @@ export default function TermsOfServicePage() {
 
         {/* Legal nav */}
         <div className="mt-16 flex flex-wrap gap-4 border-t border-border pt-8">
-          <NextLink href="/privacy-policy" className="text-sm text-primary hover:underline">
+          <NextLink
+            href="/privacy-policy"
+            className="text-sm text-primary hover:underline"
+          >
             Privacy Policy
           </NextLink>
-          <NextLink href="/cookie-policy" className="text-sm text-primary hover:underline">
+          <NextLink
+            href="/cookie-policy"
+            className="text-sm text-primary hover:underline"
+          >
             Cookie Policy
           </NextLink>
-          <NextLink href="/contact" className="text-sm text-primary hover:underline">
+          <NextLink
+            href="/contact"
+            className="text-sm text-primary hover:underline"
+          >
             Contact us
           </NextLink>
         </div>

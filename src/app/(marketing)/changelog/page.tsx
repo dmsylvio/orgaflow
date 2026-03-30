@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = {
   title: "Changelog",
-  description: "What's new in Orgaflow. Every update, fix, and improvement — documented as we ship.",
+  description:
+    "What's new in Orgaflow. Every update, fix, and improvement — documented as we ship.",
   alternates: { canonical: "/changelog" },
   openGraph: {
     title: "Changelog — Orgaflow",
@@ -36,71 +37,169 @@ const ENTRIES: ChangelogEntry[] = [
     version: "1.4.0",
     date: "March 29, 2026",
     badge: "minor",
-    summary: "Subscription payment reliability — retry flow, payment banners, and status-aware plan gates.",
+    summary:
+      "Subscription payment reliability — retry flow, payment banners, and status-aware plan gates.",
     changes: [
-      { type: "fixed", text: "PlanGate and usePlanCheck now correctly block paid-plan features when the subscription status is incomplete, incomplete_expired, canceled, or paused — previously the plan field alone was checked, allowing access before payment was confirmed." },
-      { type: "new", text: "Global payment alert banner in the app shell: a persistent amber banner appears on every page when the subscription is past_due or unpaid, with a direct link to fix the payment." },
-      { type: "new", text: "Billing settings page now shows a dedicated payment failure section when the subscription is past_due or unpaid, with a one-click button to open the Stripe billing portal and update the payment method." },
-      { type: "new", text: "Webhook handler for checkout.session.expired: when a user abandons a checkout session and the 24-hour Stripe window closes, the subscription status is automatically updated to incomplete_expired so the UI can show a clear retry prompt." },
+      {
+        type: "fixed",
+        text: "PlanGate and usePlanCheck now correctly block paid-plan features when the subscription status is incomplete, incomplete_expired, canceled, or paused — previously the plan field alone was checked, allowing access before payment was confirmed.",
+      },
+      {
+        type: "new",
+        text: "Global payment alert banner in the app shell: a persistent amber banner appears on every page when the subscription is past_due or unpaid, with a direct link to fix the payment.",
+      },
+      {
+        type: "new",
+        text: "Billing settings page now shows a dedicated payment failure section when the subscription is past_due or unpaid, with a one-click button to open the Stripe billing portal and update the payment method.",
+      },
+      {
+        type: "new",
+        text: "Webhook handler for checkout.session.expired: when a user abandons a checkout session and the 24-hour Stripe window closes, the subscription status is automatically updated to incomplete_expired so the UI can show a clear retry prompt.",
+      },
     ],
   },
   {
     version: "1.3.0",
     date: "March 26, 2026",
     badge: "minor",
-    summary: "Live dashboard with KPIs, revenue chart, pending documents, and activity feed.",
+    summary:
+      "Live dashboard with KPIs, revenue chart, pending documents, and activity feed.",
     changes: [
-      { type: "new", text: "Dashboard now shows real data: total customers, open estimates, open invoices, and revenue for the current month." },
-      { type: "new", text: "Revenue area chart for the last 12 months directly on the dashboard, with a link to the full reports page." },
-      { type: "new", text: "Pending estimates panel: lists all estimates with SENT or VIEWED status awaiting client response." },
-      { type: "new", text: "Invoices needing attention panel: lists SENT, VIEWED, OVERDUE, and partially paid invoices." },
-      { type: "new", text: "Recent activity feed: last 8 events across estimates, invoices, and payments — with relative timestamps and contextual icons." },
-      { type: "improved", text: "KPI cards are now clickable links that navigate directly to the relevant section." },
+      {
+        type: "new",
+        text: "Dashboard now shows real data: total customers, open estimates, open invoices, and revenue for the current month.",
+      },
+      {
+        type: "new",
+        text: "Revenue area chart for the last 12 months directly on the dashboard, with a link to the full reports page.",
+      },
+      {
+        type: "new",
+        text: "Pending estimates panel: lists all estimates with SENT or VIEWED status awaiting client response.",
+      },
+      {
+        type: "new",
+        text: "Invoices needing attention panel: lists SENT, VIEWED, OVERDUE, and partially paid invoices.",
+      },
+      {
+        type: "new",
+        text: "Recent activity feed: last 8 events across estimates, invoices, and payments — with relative timestamps and contextual icons.",
+      },
+      {
+        type: "improved",
+        text: "KPI cards are now clickable links that navigate directly to the relevant section.",
+      },
     ],
   },
   {
     version: "1.2.0",
     date: "March 26, 2026",
     badge: "minor",
-    summary: "PDF export, reports & analytics, notification emails, and settings routing.",
+    summary:
+      "PDF export, reports & analytics, notification emails, and settings routing.",
     changes: [
-      { type: "new", text: "PDF export for estimates and invoices — download from the admin detail pages or directly from the public client-facing page." },
-      { type: "new", text: "Reports page (/app/reports) with revenue vs expenses bar chart, estimate and invoice status pie charts, and top 5 customers by revenue." },
-      { type: "new", text: "Period selector on reports (3, 6, or 12 months) for revenue, expenses, and top customers." },
-      { type: "new", text: "Notification emails: owners receive an email when a client views an estimate or invoice for the first time. Configurable per toggle in Settings → Notifications." },
-      { type: "improved", text: "Settings home page now redirects directly to Company Settings instead of showing a stub screen." },
-      { type: "fixed", text: "Removed dead 'Customization' link from settings sidebar (section was not yet implemented)." },
+      {
+        type: "new",
+        text: "PDF export for estimates and invoices — download from the admin detail pages or directly from the public client-facing page.",
+      },
+      {
+        type: "new",
+        text: "Reports page (/app/reports) with revenue vs expenses bar chart, estimate and invoice status pie charts, and top 5 customers by revenue.",
+      },
+      {
+        type: "new",
+        text: "Period selector on reports (3, 6, or 12 months) for revenue, expenses, and top customers.",
+      },
+      {
+        type: "new",
+        text: "Notification emails: owners receive an email when a client views an estimate or invoice for the first time. Configurable per toggle in Settings → Notifications.",
+      },
+      {
+        type: "improved",
+        text: "Settings home page now redirects directly to Company Settings instead of showing a stub screen.",
+      },
+      {
+        type: "fixed",
+        text: "Removed dead 'Customization' link from settings sidebar (section was not yet implemented).",
+      },
     ],
   },
   {
     version: "1.1.0",
     date: "March 26, 2026",
     badge: "minor",
-    summary: "Redesigned public estimate page — professional document layout, all attachments visible, sticky approve/reject bar.",
+    summary:
+      "Redesigned public estimate page — professional document layout, all attachments visible, sticky approve/reject bar.",
     changes: [
-      { type: "improved", text: "Public estimate page fully redesigned: clean document-style layout with clear typography hierarchy, summary cards, and a branded footer." },
-      { type: "improved", text: "All attached files are now always visible to the client on the public estimate page — no more per-file visibility toggle." },
-      { type: "improved", text: "Attachments displayed as a responsive card grid with image thumbnails, file icons, names, sizes, and direct download links." },
-      { type: "improved", text: "Approve / Reject actions moved to a sticky bar at the bottom of the screen — always accessible without scrolling." },
-      { type: "improved", text: "Notes on the public page now render rich text (HTML) instead of plain text, matching what was written in the editor." },
-      { type: "improved", text: "Rejection reason on the public page is rendered as rich text inside a highlighted banner." },
-      { type: "improved", text: "Line items redesigned as a clean table with divider rows instead of individual card backgrounds." },
-      { type: "improved", text: "Total amount visually highlighted in the summary cards with primary color to draw immediate attention." },
+      {
+        type: "improved",
+        text: "Public estimate page fully redesigned: clean document-style layout with clear typography hierarchy, summary cards, and a branded footer.",
+      },
+      {
+        type: "improved",
+        text: "All attached files are now always visible to the client on the public estimate page — no more per-file visibility toggle.",
+      },
+      {
+        type: "improved",
+        text: "Attachments displayed as a responsive card grid with image thumbnails, file icons, names, sizes, and direct download links.",
+      },
+      {
+        type: "improved",
+        text: "Approve / Reject actions moved to a sticky bar at the bottom of the screen — always accessible without scrolling.",
+      },
+      {
+        type: "improved",
+        text: "Notes on the public page now render rich text (HTML) instead of plain text, matching what was written in the editor.",
+      },
+      {
+        type: "improved",
+        text: "Rejection reason on the public page is rendered as rich text inside a highlighted banner.",
+      },
+      {
+        type: "improved",
+        text: "Line items redesigned as a clean table with divider rows instead of individual card backgrounds.",
+      },
+      {
+        type: "improved",
+        text: "Total amount visually highlighted in the summary cards with primary color to draw immediate attention.",
+      },
     ],
   },
   {
     version: "1.0.0",
     date: "March 25, 2026",
     badge: "minor",
-    summary: "File attachments across all documents, client approve/reject flow, and Notes/Files tabs.",
+    summary:
+      "File attachments across all documents, client approve/reject flow, and Notes/Files tabs.",
     changes: [
-      { type: "new", text: "File attachments on expenses, estimates, and invoices — upload PDFs, images, and documents stored securely via Vercel Blob." },
-      { type: "new", text: "Clients can now approve or reject estimates directly from the public estimate link." },
-      { type: "new", text: "Rejection modal with optional rich-text reason. Rejection reason is displayed on the public page after submission." },
-      { type: "new", text: "Attachment grid on the public estimate page — clients see image thumbnails, file icons, and downloadable files." },
-      { type: "new", text: "Notes / Files tab switcher in create and edit forms for estimates and invoices. Files in create forms are uploaded right after saving." },
-      { type: "improved", text: "Expense detail page (/app/expenses/[id]) now shows receipts with download and delete." },
-      { type: "improved", text: "Estimate and invoice detail pages now have a full attachments section with upload and delete." },
+      {
+        type: "new",
+        text: "File attachments on expenses, estimates, and invoices — upload PDFs, images, and documents stored securely via Vercel Blob.",
+      },
+      {
+        type: "new",
+        text: "Clients can now approve or reject estimates directly from the public estimate link.",
+      },
+      {
+        type: "new",
+        text: "Rejection modal with optional rich-text reason. Rejection reason is displayed on the public page after submission.",
+      },
+      {
+        type: "new",
+        text: "Attachment grid on the public estimate page — clients see image thumbnails, file icons, and downloadable files.",
+      },
+      {
+        type: "new",
+        text: "Notes / Files tab switcher in create and edit forms for estimates and invoices. Files in create forms are uploaded right after saving.",
+      },
+      {
+        type: "improved",
+        text: "Expense detail page (/app/expenses/[id]) now shows receipts with download and delete.",
+      },
+      {
+        type: "improved",
+        text: "Estimate and invoice detail pages now have a full attachments section with upload and delete.",
+      },
     ],
   },
   {
@@ -109,11 +208,26 @@ const ENTRIES: ChangelogEntry[] = [
     badge: "minor",
     summary: "Public marketing pages, roadmap, and billing improvements.",
     changes: [
-      { type: "new", text: "Public marketing site with landing, pricing, about, contact, roadmap, and changelog pages." },
-      { type: "new", text: "Roadmap page listing all upcoming features with status and effort indicators." },
-      { type: "improved", text: "Billing settings now show storage usage progress bar per plan." },
-      { type: "improved", text: "Upgrade flow now supports both monthly and annual intervals with a 30% annual discount." },
-      { type: "fixed", text: "Billing portal button no longer appears when no Stripe customer exists." },
+      {
+        type: "new",
+        text: "Public marketing site with landing, pricing, about, contact, roadmap, and changelog pages.",
+      },
+      {
+        type: "new",
+        text: "Roadmap page listing all upcoming features with status and effort indicators.",
+      },
+      {
+        type: "improved",
+        text: "Billing settings now show storage usage progress bar per plan.",
+      },
+      {
+        type: "improved",
+        text: "Upgrade flow now supports both monthly and annual intervals with a 30% annual discount.",
+      },
+      {
+        type: "fixed",
+        text: "Billing portal button no longer appears when no Stripe customer exists.",
+      },
     ],
   },
   {
@@ -122,12 +236,30 @@ const ENTRIES: ChangelogEntry[] = [
     badge: "minor",
     summary: "Workflow automations and expense categories.",
     changes: [
-      { type: "new", text: "Workflow automations: trigger task creation automatically when an invoice is paid or estimate is approved." },
-      { type: "new", text: "Expense categories: organize expenses into custom categories per organization." },
-      { type: "new", text: "Automation rule editor with trigger, condition, and action steps." },
-      { type: "improved", text: "Task board now supports custom stages configurable from settings." },
-      { type: "improved", text: "Estimates and invoices now support rich-text notes per line item." },
-      { type: "fixed", text: "Currency picker now correctly filters by active organization currencies." },
+      {
+        type: "new",
+        text: "Workflow automations: trigger task creation automatically when an invoice is paid or estimate is approved.",
+      },
+      {
+        type: "new",
+        text: "Expense categories: organize expenses into custom categories per organization.",
+      },
+      {
+        type: "new",
+        text: "Automation rule editor with trigger, condition, and action steps.",
+      },
+      {
+        type: "improved",
+        text: "Task board now supports custom stages configurable from settings.",
+      },
+      {
+        type: "improved",
+        text: "Estimates and invoices now support rich-text notes per line item.",
+      },
+      {
+        type: "fixed",
+        text: "Currency picker now correctly filters by active organization currencies.",
+      },
     ],
   },
   {
@@ -136,12 +268,30 @@ const ENTRIES: ChangelogEntry[] = [
     badge: "minor",
     summary: "Team roles, RBAC permissions, and invite system.",
     changes: [
-      { type: "new", text: "Role-based access control (RBAC): create custom roles with granular permissions per resource." },
-      { type: "new", text: "Team invite system: invite members via email link with role assignment." },
-      { type: "new", text: "Owners bypass all permission checks and have full access to org settings." },
-      { type: "improved", text: "Settings sidebar now groups sections by category with permission-aware visibility." },
-      { type: "improved", text: "Workspace switcher redesigned with organization avatar and quick access." },
-      { type: "fixed", text: "Fixed session not refreshing after organization switch in some browsers." },
+      {
+        type: "new",
+        text: "Role-based access control (RBAC): create custom roles with granular permissions per resource.",
+      },
+      {
+        type: "new",
+        text: "Team invite system: invite members via email link with role assignment.",
+      },
+      {
+        type: "new",
+        text: "Owners bypass all permission checks and have full access to org settings.",
+      },
+      {
+        type: "improved",
+        text: "Settings sidebar now groups sections by category with permission-aware visibility.",
+      },
+      {
+        type: "improved",
+        text: "Workspace switcher redesigned with organization avatar and quick access.",
+      },
+      {
+        type: "fixed",
+        text: "Fixed session not refreshing after organization switch in some browsers.",
+      },
     ],
   },
   {
@@ -150,11 +300,26 @@ const ENTRIES: ChangelogEntry[] = [
     badge: "minor",
     summary: "Payments, expenses, and multi-workspace support.",
     changes: [
-      { type: "new", text: "Payments module: record and track payments linked to invoices." },
-      { type: "new", text: "Expenses module: log business expenses with category, amount, and date." },
-      { type: "new", text: "Multi-workspace: users can belong to multiple organizations and switch between them." },
-      { type: "improved", text: "Invoice status now automatically updates to PAID when full payment is recorded." },
-      { type: "improved", text: "Dashboard stat cards now reflect real data from the active workspace." },
+      {
+        type: "new",
+        text: "Payments module: record and track payments linked to invoices.",
+      },
+      {
+        type: "new",
+        text: "Expenses module: log business expenses with category, amount, and date.",
+      },
+      {
+        type: "new",
+        text: "Multi-workspace: users can belong to multiple organizations and switch between them.",
+      },
+      {
+        type: "improved",
+        text: "Invoice status now automatically updates to PAID when full payment is recorded.",
+      },
+      {
+        type: "improved",
+        text: "Dashboard stat cards now reflect real data from the active workspace.",
+      },
     ],
   },
   {
@@ -163,11 +328,26 @@ const ENTRIES: ChangelogEntry[] = [
     badge: "minor",
     summary: "Task board (Kanban) and public invoice pages.",
     changes: [
-      { type: "new", text: "Kanban task board: create, assign, and move tasks across custom stages." },
-      { type: "new", text: "Public invoice page: clients can view their invoice via a secure token link." },
-      { type: "new", text: "Public estimate page: clients can approve or reject estimates via a shareable link." },
-      { type: "improved", text: "Estimates can now be converted to invoices in a single click." },
-      { type: "fixed", text: "Fixed line item totals not recalculating when tax type is changed." },
+      {
+        type: "new",
+        text: "Kanban task board: create, assign, and move tasks across custom stages.",
+      },
+      {
+        type: "new",
+        text: "Public invoice page: clients can view their invoice via a secure token link.",
+      },
+      {
+        type: "new",
+        text: "Public estimate page: clients can approve or reject estimates via a shareable link.",
+      },
+      {
+        type: "improved",
+        text: "Estimates can now be converted to invoices in a single click.",
+      },
+      {
+        type: "fixed",
+        text: "Fixed line item totals not recalculating when tax type is changed.",
+      },
     ],
   },
   {
@@ -176,10 +356,22 @@ const ENTRIES: ChangelogEntry[] = [
     badge: "minor",
     summary: "Invoices module and item catalog.",
     changes: [
-      { type: "new", text: "Invoices: create, send, and manage invoices with line items, taxes, and discounts." },
-      { type: "new", text: "Item catalog: define reusable products and services with default price and unit." },
-      { type: "new", text: "Tax types: configure organization-level tax rates applied to line items." },
-      { type: "improved", text: "Estimate editor now shares the same line item component as invoices." },
+      {
+        type: "new",
+        text: "Invoices: create, send, and manage invoices with line items, taxes, and discounts.",
+      },
+      {
+        type: "new",
+        text: "Item catalog: define reusable products and services with default price and unit.",
+      },
+      {
+        type: "new",
+        text: "Tax types: configure organization-level tax rates applied to line items.",
+      },
+      {
+        type: "improved",
+        text: "Estimate editor now shares the same line item component as invoices.",
+      },
     ],
   },
   {
@@ -188,10 +380,22 @@ const ENTRIES: ChangelogEntry[] = [
     badge: "minor",
     summary: "Estimates and customer management.",
     changes: [
-      { type: "new", text: "Estimates module: create and send professional estimates to customers." },
-      { type: "new", text: "Customer management: full CRM with contact details, history, and notes." },
-      { type: "new", text: "Currency and language pickers for internationalization support." },
-      { type: "improved", text: "Organization settings expanded with company info, address, and preferences." },
+      {
+        type: "new",
+        text: "Estimates module: create and send professional estimates to customers.",
+      },
+      {
+        type: "new",
+        text: "Customer management: full CRM with contact details, history, and notes.",
+      },
+      {
+        type: "new",
+        text: "Currency and language pickers for internationalization support.",
+      },
+      {
+        type: "improved",
+        text: "Organization settings expanded with company info, address, and preferences.",
+      },
     ],
   },
   {
@@ -210,27 +414,78 @@ const ENTRIES: ChangelogEntry[] = [
     version: "0.1.0",
     date: "November 10, 2025",
     badge: "major",
-    summary: "Initial private beta release.",
+    summary: "Initial release.",
     changes: [
-      { type: "new", text: "Project scaffolded with Next.js App Router, tRPC, Drizzle ORM, and PostgreSQL." },
-      { type: "new", text: "Multi-tenant architecture with organization-scoped data isolation." },
-      { type: "new", text: "Stripe subscription integration with Starter, Growth, and Scale plans." },
-      { type: "new", text: "Role-based access control foundation and IAM permission catalog." },
+      {
+        type: "new",
+        text: "Project scaffolded with Next.js App Router, tRPC, Drizzle ORM, and PostgreSQL.",
+      },
+      {
+        type: "new",
+        text: "Multi-tenant architecture with organization-scoped data isolation.",
+      },
+      {
+        type: "new",
+        text: "Stripe subscription integration with Starter, Growth, and Scale plans.",
+      },
+      {
+        type: "new",
+        text: "Role-based access control foundation and IAM permission catalog.",
+      },
     ],
   },
 ];
 
 const BADGE_CONFIG = {
-  major: { label: "Major", bg: "bg-primary/10", text: "text-primary", border: "border-primary/20" },
-  minor: { label: "Minor", bg: "bg-violet-50", text: "text-violet-700", border: "border-violet-200" },
-  patch: { label: "Patch", bg: "bg-muted", text: "text-muted-foreground", border: "border-border" },
+  major: {
+    label: "Major",
+    bg: "bg-primary/10",
+    text: "text-primary",
+    border: "border-primary/20",
+  },
+  minor: {
+    label: "Minor",
+    bg: "bg-violet-50",
+    text: "text-violet-700",
+    border: "border-violet-200",
+  },
+  patch: {
+    label: "Patch",
+    bg: "bg-muted",
+    text: "text-muted-foreground",
+    border: "border-border",
+  },
 };
 
 const TYPE_CONFIG = {
-  new:      { label: "New",      dot: "bg-emerald-500", text: "text-emerald-700", bg: "bg-emerald-50", border: "border-emerald-200" },
-  improved: { label: "Improved", dot: "bg-blue-500",    text: "text-blue-700",    bg: "bg-blue-50",    border: "border-blue-200" },
-  fixed:    { label: "Fixed",    dot: "bg-amber-500",   text: "text-amber-700",   bg: "bg-amber-50",   border: "border-amber-200" },
-  removed:  { label: "Removed",  dot: "bg-rose-500",    text: "text-rose-700",    bg: "bg-rose-50",    border: "border-rose-200" },
+  new: {
+    label: "New",
+    dot: "bg-emerald-500",
+    text: "text-emerald-700",
+    bg: "bg-emerald-50",
+    border: "border-emerald-200",
+  },
+  improved: {
+    label: "Improved",
+    dot: "bg-blue-500",
+    text: "text-blue-700",
+    bg: "bg-blue-50",
+    border: "border-blue-200",
+  },
+  fixed: {
+    label: "Fixed",
+    dot: "bg-amber-500",
+    text: "text-amber-700",
+    bg: "bg-amber-50",
+    border: "border-amber-200",
+  },
+  removed: {
+    label: "Removed",
+    dot: "bg-rose-500",
+    text: "text-rose-700",
+    bg: "bg-rose-50",
+    border: "border-rose-200",
+  },
 };
 
 export default function ChangelogPage() {
@@ -238,17 +493,22 @@ export default function ChangelogPage() {
     <div className="overflow-hidden">
       {/* Hero */}
       <section className="relative pb-16 pt-20 text-center">
-        <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 overflow-hidden"
+        >
           <div className="absolute left-1/2 top-0 h-80 w-[700px] -translate-x-1/2 rounded-full bg-primary/5 blur-[80px]" />
         </div>
         <div className="relative mx-auto max-w-3xl px-6">
-          <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-primary">Changelog</p>
+          <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-primary">
+            Changelog
+          </p>
           <h1 className="mb-4 text-5xl font-bold tracking-tight text-foreground sm:text-6xl">
             What's new
           </h1>
           <p className="text-lg text-muted-foreground">
-            Every update, improvement, and fix — documented as we ship. We release
-            new versions every 1–2 weeks.
+            Every update, improvement, and fix — documented as we ship. We
+            release new versions every 1–2 weeks.
           </p>
         </div>
       </section>
@@ -288,7 +548,9 @@ export default function ChangelogPage() {
                       </span>
                     </div>
 
-                    <p className="mb-5 text-sm text-muted-foreground">{summary}</p>
+                    <p className="mb-5 text-sm text-muted-foreground">
+                      {summary}
+                    </p>
 
                     {/* Change list */}
                     <div className="flex flex-col gap-2">
@@ -301,7 +563,9 @@ export default function ChangelogPage() {
                             >
                               {typeCfg.label}
                             </span>
-                            <p className="text-sm leading-relaxed text-foreground/80">{text}</p>
+                            <p className="text-sm leading-relaxed text-foreground/80">
+                              {text}
+                            </p>
                           </div>
                         );
                       })}
@@ -317,9 +581,12 @@ export default function ChangelogPage() {
       {/* CTA */}
       <section className="border-t border-border bg-muted/40 py-20 text-center">
         <div className="mx-auto max-w-xl px-6">
-          <h2 className="mb-3 text-2xl font-bold text-foreground">Want to know what's coming?</h2>
+          <h2 className="mb-3 text-2xl font-bold text-foreground">
+            Want to know what's coming?
+          </h2>
           <p className="mb-8 text-muted-foreground">
-            Check our public roadmap to see what's in progress and planned for upcoming releases.
+            Check our public roadmap to see what's in progress and planned for
+            upcoming releases.
           </p>
           <Button asChild variant="outline">
             <NextLink href="/roadmap">View roadmap</NextLink>
