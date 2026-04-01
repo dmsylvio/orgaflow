@@ -34,6 +34,31 @@ interface ChangelogEntry {
 
 const ENTRIES: ChangelogEntry[] = [
   {
+    version: "1.5.0",
+    date: "April 1, 2026",
+    badge: "minor",
+    summary:
+      "Per-module price visibility permissions — hide monetary amounts from team members on a per-module basis.",
+    changes: [
+      {
+        type: "new",
+        text: "Six new per-module permissions — invoice:view-prices, estimate:view-prices, expense:view-prices, item:view-prices, payment:view-prices, and dashboard:view-prices — assignable independently per role.",
+      },
+      {
+        type: "new",
+        text: "Monetary fields are stripped server-side when a member lacks the corresponding permission — the API never returns price data to unauthorized users.",
+      },
+      {
+        type: "new",
+        text: "Price columns, financial stat cards, revenue charts, and top-customer sections are hidden from the UI for members without view-prices permissions — no empty columns or zero placeholders.",
+      },
+      {
+        type: "improved",
+        text: "Create and edit permissions automatically include the corresponding view-prices dependency — members with write access always see the prices they are editing.",
+      },
+    ],
+  },
+  {
     version: "1.4.0",
     date: "March 29, 2026",
     badge: "minor",

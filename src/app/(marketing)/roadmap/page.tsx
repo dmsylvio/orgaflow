@@ -2,6 +2,7 @@ import {
   BarChart3,
   CheckCircle2,
   CreditCard,
+  Eye,
   FileSearch,
   FileText,
   History,
@@ -128,6 +129,16 @@ const ITEMS: RoadmapItem[] = [
     status: "shipped",
     effort: "Medium",
     category: "Core",
+  },
+  {
+    id: 18,
+    Icon: Eye,
+    title: "Per-Module Price Visibility Permissions",
+    description:
+      "Six granular permissions (one per module) let owners restrict which team members can see monetary amounts — prices, totals, and financial charts are hidden server-side and in the UI.",
+    status: "shipped",
+    effort: "Medium",
+    category: "RBAC",
   },
   {
     id: 17,
@@ -294,7 +305,7 @@ const COLUMNS: { status: Status; title: string; description: string }[] = [
 ];
 
 export default function RoadmapPage() {
-  const lastUpdated = "March 29, 2026 (v1.4.0)";
+  const lastUpdated = "April 1, 2026 (v1.5.0)";
 
   return (
     <div className="overflow-hidden">
