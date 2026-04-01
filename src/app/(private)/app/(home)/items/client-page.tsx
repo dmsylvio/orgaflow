@@ -269,7 +269,7 @@ function ItemRow({
         <td className="w-[18%] px-2 py-3 align-top">
           <div className="space-y-1">
             <p className="text-sm font-medium text-foreground">
-              {formatCurrencyDisplay(item.price, currency)}
+              {formatCurrencyDisplay(item.price ?? "", currency)}
             </p>
             {currency ? (
               <p className="text-xs text-muted-foreground">{currency.code}</p>

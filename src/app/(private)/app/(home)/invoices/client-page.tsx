@@ -99,7 +99,7 @@ function InvoiceRow({
       </td>
       {canViewPrices ? (
         <td className="px-2 py-3 align-top text-sm font-medium text-foreground">
-          {formatCurrencyDisplay(invoice.total, invoice.currency)}
+          {formatCurrencyDisplay(invoice.total ?? "", invoice.currency)}
         </td>
       ) : null}
       <td className="py-3 pl-2 pr-4 align-top">

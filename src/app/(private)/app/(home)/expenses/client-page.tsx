@@ -368,7 +368,7 @@ function ExpenseRow({
             href={`/app/expenses/${expense.id}`}
             className="hover:underline underline-offset-2"
           >
-            {formatCurrencyDisplay(expense.amount, currency)}
+            {formatCurrencyDisplay(expense.amount ?? "", currency)}
           </NextLink>
         </td>
       ) : null}

@@ -231,7 +231,7 @@ export default function EstimateDetailPage() {
                 Subtotal
               </p>
               <p className="mt-1 text-sm font-semibold text-foreground">
-                {formatCurrencyDisplay(estimate.subTotal, estimate.currency)}
+                {formatCurrencyDisplay(estimate.subTotal ?? "", estimate.currency)}
               </p>
             </div>
           ) : null}
@@ -241,7 +241,7 @@ export default function EstimateDetailPage() {
                 Total
               </p>
               <p className="mt-1 text-sm font-semibold text-foreground">
-                {formatCurrencyDisplay(estimate.total, estimate.currency)}
+                {formatCurrencyDisplay(estimate.total ?? "", estimate.currency)}
               </p>
             </div>
           ) : null}
@@ -274,7 +274,7 @@ export default function EstimateDetailPage() {
                   </div>
                   {canViewPrices ? (
                     <p className="text-sm font-semibold text-foreground">
-                      {formatCurrencyDisplay(item.total, estimate.currency)}
+                      {formatCurrencyDisplay(item.total ?? "", estimate.currency)}
                     </p>
                   ) : null}
                 </div>
@@ -288,7 +288,7 @@ export default function EstimateDetailPage() {
                     <div>
                       Unit price:{" "}
                       <span className="text-foreground">
-                        {formatCurrencyDisplay(item.price, estimate.currency)}
+                        {formatCurrencyDisplay(item.price ?? "", estimate.currency)}
                       </span>
                     </div>
                   ) : null}
@@ -316,20 +316,20 @@ export default function EstimateDetailPage() {
               <div className="flex items-center justify-between text-muted-foreground">
                 <span>Subtotal</span>
                 <span className="font-medium text-foreground">
-                  {formatCurrencyDisplay(estimate.subTotal, estimate.currency)}
+                  {formatCurrencyDisplay(estimate.subTotal ?? "", estimate.currency)}
                 </span>
               </div>
               <div className="flex items-center justify-between text-muted-foreground">
                 <span>Tax</span>
                 <span className="font-medium text-foreground">
-                  {formatCurrencyDisplay(estimate.tax, estimate.currency)}
+                  {formatCurrencyDisplay(estimate.tax ?? "", estimate.currency)}
                 </span>
               </div>
               <Separator />
               <div className="flex items-center justify-between">
                 <span className="font-semibold text-foreground">Total</span>
                 <span className="text-lg font-semibold text-foreground">
-                  {formatCurrencyDisplay(estimate.total, estimate.currency)}
+                  {formatCurrencyDisplay(estimate.total ?? "", estimate.currency)}
                 </span>
               </div>
             </div>

@@ -559,7 +559,7 @@ function PaymentRow({
       </td>
       {canViewPrices ? (
         <td className="py-3 px-2 text-sm font-medium text-foreground whitespace-nowrap">
-          {formatCurrencyDisplay(payment.amount, currency)}
+          {formatCurrencyDisplay(payment.amount ?? "", currency)}
         </td>
       ) : null}
       <td className="py-3 px-2 text-sm text-muted-foreground">

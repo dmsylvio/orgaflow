@@ -142,7 +142,7 @@ export default function ExpenseDetailPage() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           {canViewPrices ? (
             <p className="text-3xl font-bold tracking-tight text-foreground">
-              {formatCurrencyDisplay(expense.amount, currency)}
+              {formatCurrencyDisplay(expense.amount ?? "", currency)}
             </p>
           ) : null}
 

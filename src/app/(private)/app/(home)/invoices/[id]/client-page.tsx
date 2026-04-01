@@ -229,7 +229,7 @@ export default function InvoiceDetailPage() {
                 Subtotal
               </p>
               <p className="mt-1 text-sm font-semibold text-foreground">
-                {formatCurrencyDisplay(invoice.subTotal, invoice.currency)}
+                {formatCurrencyDisplay(invoice.subTotal ?? "", invoice.currency)}
               </p>
             </div>
           ) : null}
@@ -239,7 +239,7 @@ export default function InvoiceDetailPage() {
                 Total
               </p>
               <p className="mt-1 text-sm font-semibold text-foreground">
-                {formatCurrencyDisplay(invoice.total, invoice.currency)}
+                {formatCurrencyDisplay(invoice.total ?? "", invoice.currency)}
               </p>
             </div>
           ) : null}
@@ -271,7 +271,7 @@ export default function InvoiceDetailPage() {
                   </div>
                   {canViewPrices ? (
                     <p className="text-sm font-semibold text-foreground">
-                      {formatCurrencyDisplay(item.total, invoice.currency)}
+                      {formatCurrencyDisplay(item.total ?? "", invoice.currency)}
                     </p>
                   ) : null}
                 </div>
@@ -285,7 +285,7 @@ export default function InvoiceDetailPage() {
                     <div>
                       Unit price:{" "}
                       <span className="text-foreground">
-                        {formatCurrencyDisplay(item.price, invoice.currency)}
+                        {formatCurrencyDisplay(item.price ?? "", invoice.currency)}
                       </span>
                     </div>
                   ) : null}
@@ -313,20 +313,20 @@ export default function InvoiceDetailPage() {
               <div className="flex items-center justify-between text-muted-foreground">
                 <span>Subtotal</span>
                 <span className="font-medium text-foreground">
-                  {formatCurrencyDisplay(invoice.subTotal, invoice.currency)}
+                  {formatCurrencyDisplay(invoice.subTotal ?? "", invoice.currency)}
                 </span>
               </div>
               <div className="flex items-center justify-between text-muted-foreground">
                 <span>Tax</span>
                 <span className="font-medium text-foreground">
-                  {formatCurrencyDisplay(invoice.tax, invoice.currency)}
+                  {formatCurrencyDisplay(invoice.tax ?? "", invoice.currency)}
                 </span>
               </div>
               <Separator />
               <div className="flex items-center justify-between">
                 <span className="font-semibold text-foreground">Total</span>
                 <span className="text-lg font-semibold text-foreground">
-                  {formatCurrencyDisplay(invoice.total, invoice.currency)}
+                  {formatCurrencyDisplay(invoice.total ?? "", invoice.currency)}
                 </span>
               </div>
             </div>
