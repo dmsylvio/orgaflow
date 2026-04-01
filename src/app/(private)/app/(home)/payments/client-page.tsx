@@ -692,7 +692,7 @@ export default function PaymentsPage() {
                 Total Received
               </p>
               <p className="mt-1 text-2xl font-semibold text-foreground">
-                {formatCurrencyDisplay(totalAmount, orgCurrency)}
+                {formatCurrencyDisplay(totalAmount ?? 0, orgCurrency)}
               </p>
             </div>
           ) : null}

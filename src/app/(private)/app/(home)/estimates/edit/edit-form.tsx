@@ -130,7 +130,7 @@ export function EditEstimateForm() {
             id: item.id,
             itemId: item.itemId ?? "",
             quantity: item.quantity,
-            unitPrice: item.price,
+            unitPrice: item.price ?? "",
           }))
         : [makeDraftItem()],
     );

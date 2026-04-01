@@ -131,7 +131,7 @@ export function EditInvoiceForm() {
             id: item.id,
             itemId: item.itemId ?? "",
             quantity: item.quantity,
-            unitPrice: item.price,
+            unitPrice: item.price ?? "",
           }))
         : [makeDraftItem()],
     );
