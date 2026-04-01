@@ -24,6 +24,7 @@ import {
 import { toast } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { useTRPC } from "@/trpc/client";
+import { useCanViewPrices } from "@/hooks/use-can-view-prices";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -32,7 +33,7 @@ import { useTRPC } from "@/trpc/client";
 type Payment = {
   id: string;
   paymentNumber: string;
-  amount: string;
+  amount: string | null;
   paymentDate: string;
   notes: string | null;
   invoiceId: string | null;
@@ -428,7 +429,7 @@ function EditPaymentDialog({
   paymentModes: { id: string; name: string }[];
 }) {
   const trpc = useTRPC();
-  const [amount, setAmount] = useState(payment.amount);
+  const [amount, setAmount] = useState(payment.amount ?? "");
   const [paymentDate, setPaymentDate] = useState(payment.paymentDate);
   const [customerId, setCustomerId] = useState(payment.customerId ?? "");
   const [invoiceId, setInvoiceId] = useState(payment.invoiceId ?? "");
@@ -488,7 +489,7 @@ function EditPaymentDialog({
             invoicesDisabled={invoicesDisabled}
             paymentModes={paymentModes}
             editingPaymentInvoiceId={payment.invoiceId}
-            editingPaymentAmount={payment.amount}
+            editingPaymentAmount={payment.amount ?? undefined}
           />
         </DialogBody>
         <DialogFooter>
@@ -528,6 +529,7 @@ function PaymentRow({
   customerName,
   paymentModeName,
   currency,
+  canViewPrices,
   onEdit,
   onDelete,
   isDeletePending,
@@ -536,6 +538,7 @@ function PaymentRow({
   customerName?: string;
   paymentModeName?: string;
   currency: OrgCurrency;
+  canViewPrices: boolean;
   onEdit: (p: Payment) => void;
   onDelete: (id: string) => void;
   isDeletePending: boolean;
@@ -554,9 +557,11 @@ function PaymentRow({
       <td className="py-3 px-2 text-sm text-muted-foreground">
         {payment.invoiceRef ?? <span className="italic opacity-40">—</span>}
       </td>
-      <td className="py-3 px-2 text-sm font-medium text-foreground whitespace-nowrap">
-        {formatCurrencyDisplay(payment.amount, currency)}
-      </td>
+      {canViewPrices ? (
+        <td className="py-3 px-2 text-sm font-medium text-foreground whitespace-nowrap">
+          {formatCurrencyDisplay(payment.amount, currency)}
+        </td>
+      ) : null}
       <td className="py-3 px-2 text-sm text-muted-foreground">
         {paymentModeName ?? <span className="italic opacity-40">—</span>}
       </td>
@@ -595,6 +600,7 @@ function PaymentRow({
 export default function PaymentsPage() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
+  const { payment: canViewPrices } = useCanViewPrices();
 
   const { data: paymentList = [], isLoading } = useQuery(
     trpc.payments.list.queryOptions(),
@@ -657,10 +663,9 @@ export default function PaymentsPage() {
     );
   }
 
-  const totalAmount = paymentList.reduce(
-    (sum, p) => sum + parseFloat(p.amount),
-    0,
-  );
+  const totalAmount = canViewPrices
+    ? paymentList.reduce((sum, p) => sum + parseFloat(p.amount ?? "0"), 0)
+    : null;
 
   return (
     <div className="w-full p-6 md:p-8">
@@ -681,14 +686,16 @@ export default function PaymentsPage() {
 
       {paymentList.length > 0 && (
         <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-3">
-          <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
-              Total Received
-            </p>
-            <p className="mt-1 text-2xl font-semibold text-foreground">
-              {formatCurrencyDisplay(totalAmount, orgCurrency)}
-            </p>
-          </div>
+          {canViewPrices ? (
+            <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
+              <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
+                Total Received
+              </p>
+              <p className="mt-1 text-2xl font-semibold text-foreground">
+                {formatCurrencyDisplay(totalAmount, orgCurrency)}
+              </p>
+            </div>
+          ) : null}
           <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
             <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
               Records
@@ -739,9 +746,11 @@ export default function PaymentsPage() {
                   <th className="py-2 px-2 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/50">
                     Invoice
                   </th>
-                  <th className="py-2 px-2 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/50">
-                    Amount
-                  </th>
+                  {canViewPrices ? (
+                    <th className="py-2 px-2 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/50">
+                      Amount
+                    </th>
+                  ) : null}
                   <th className="py-2 px-2 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/50">
                     Mode
                   </th>
@@ -753,6 +762,7 @@ export default function PaymentsPage() {
                   <PaymentRow
                     key={payment.id}
                     payment={payment}
+                    canViewPrices={canViewPrices}
                     customerName={
                       payment.customerId
                         ? customerMap.get(payment.customerId)

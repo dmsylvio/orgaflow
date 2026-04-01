@@ -12,6 +12,7 @@ import {
 import { getOrganizationPlan } from "@/server/services/billing/get-organization-plan";
 import { getUsageLimit } from "@/server/services/billing/plan-limits";
 import { ensureDefaultUnits } from "@/server/services/workspace/ensure-default-units";
+import { can } from "@/server/iam/ability";
 import {
   createTRPCRouter,
   organizationProcedure,
@@ -40,7 +41,9 @@ export const itemsRouter = createTRPCRouter({
   list: organizationProcedure
     .use(requirePermission("item:view"))
     .query(async ({ ctx }) => {
-      return ctx.db
+      const canViewPrices = can(ctx.ability, "item:view-prices");
+
+      const rows = await ctx.db
         .select({
           id: items.id,
           name: items.name,
@@ -55,6 +58,11 @@ export const itemsRouter = createTRPCRouter({
         .leftJoin(units, eq(items.unitId, units.id))
         .where(eq(items.organizationId, ctx.organizationId))
         .orderBy(asc(items.name), asc(items.createdAt));
+
+      return rows.map((row) => ({
+        ...row,
+        price: canViewPrices ? row.price : null,
+      }));
     }),
 
   listUnits: organizationProcedure

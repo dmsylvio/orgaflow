@@ -26,12 +26,13 @@ import {
 import { toast } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { useTRPC } from "@/trpc/client";
+import { useCanViewPrices } from "@/hooks/use-can-view-prices";
 
 type ItemRecord = {
   id: string;
   name: string;
   description: string | null;
-  price: string;
+  price: string | null;
   unitId: string | null;
   unitName: string | null;
   createdAt: Date;
@@ -237,12 +238,14 @@ function ItemDialog({
 function ItemRow({
   item,
   currency,
+  canViewPrices,
   isDeletePending,
   onEdit,
   onDelete,
 }: {
   item: ItemRecord;
   currency: CurrencyFormat;
+  canViewPrices: boolean;
   isDeletePending: boolean;
   onEdit: (item: ItemRecord) => void;
   onDelete: (id: string) => void;
@@ -262,16 +265,18 @@ function ItemRow({
           {item.unitName ?? <span className="italic opacity-40">No unit</span>}
         </span>
       </td>
-      <td className="w-[18%] px-2 py-3 align-top">
-        <div className="space-y-1">
-          <p className="text-sm font-medium text-foreground">
-            {formatCurrencyDisplay(item.price, currency)}
-          </p>
-          {currency ? (
-            <p className="text-xs text-muted-foreground">{currency.code}</p>
-          ) : null}
-        </div>
-      </td>
+      {canViewPrices ? (
+        <td className="w-[18%] px-2 py-3 align-top">
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-foreground">
+              {formatCurrencyDisplay(item.price, currency)}
+            </p>
+            {currency ? (
+              <p className="text-xs text-muted-foreground">{currency.code}</p>
+            ) : null}
+          </div>
+        </td>
+      ) : null}
       <td className="px-2 py-3 align-top">
         <span className="text-sm text-muted-foreground">
           {item.description ? (
@@ -314,6 +319,7 @@ export default function ItemsPage() {
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<ItemRecord | null>(null);
+  const { item: canViewPrices } = useCanViewPrices();
 
   const { data: items = [], isPending } = useQuery(
     trpc.items.list.queryOptions(),
@@ -433,9 +439,11 @@ export default function ItemsPage() {
                       <th className="px-2 py-3 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
                         Unit
                       </th>
-                      <th className="px-2 py-3 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
-                        Price
-                      </th>
+                      {canViewPrices ? (
+                        <th className="px-2 py-3 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
+                          Price
+                        </th>
+                      ) : null}
                       <th className="px-2 py-3 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
                         Description
                       </th>
@@ -450,6 +458,7 @@ export default function ItemsPage() {
                         key={item.id}
                         item={item}
                         currency={currency}
+                        canViewPrices={canViewPrices}
                         isDeletePending={deleteItem.isPending}
                         onEdit={(nextItem) => {
                           setEditingItem(nextItem);

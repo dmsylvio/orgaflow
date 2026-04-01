@@ -25,6 +25,7 @@ import {
 import { toast } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { useTRPC } from "@/trpc/client";
+import { useCanViewPrices } from "@/hooks/use-can-view-prices";
 import {
   EditExpenseDialog,
   type ExpenseRecord,
@@ -332,6 +333,7 @@ function CreateExpenseDialog({
 
 function ExpenseRow({
   expense,
+  canViewPrices,
   categoryName,
   customerName,
   paymentModeName,
@@ -341,6 +343,7 @@ function ExpenseRow({
   isDeletePending,
 }: {
   expense: ExpenseRecord;
+  canViewPrices: boolean;
   categoryName?: string;
   customerName?: string;
   paymentModeName?: string;
@@ -359,14 +362,16 @@ function ExpenseRow({
           {formatDate(expense.expenseDate)}
         </NextLink>
       </td>
-      <td className="py-3 px-2 text-sm font-medium text-foreground whitespace-nowrap">
-        <NextLink
-          href={`/app/expenses/${expense.id}`}
-          className="hover:underline underline-offset-2"
-        >
-          {formatCurrencyDisplay(expense.amount, currency)}
-        </NextLink>
-      </td>
+      {canViewPrices ? (
+        <td className="py-3 px-2 text-sm font-medium text-foreground whitespace-nowrap">
+          <NextLink
+            href={`/app/expenses/${expense.id}`}
+            className="hover:underline underline-offset-2"
+          >
+            {formatCurrencyDisplay(expense.amount, currency)}
+          </NextLink>
+        </td>
+      ) : null}
       <td className="py-3 px-2 text-sm text-muted-foreground">
         {categoryName ?? <span className="italic opacity-40">—</span>}
       </td>
@@ -411,6 +416,7 @@ function ExpenseRow({
 export default function ExpensesPage() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
+  const { expense: canViewPrices } = useCanViewPrices();
 
   const { data: expenseList = [], isLoading } = useQuery(
     trpc.expenses.list.queryOptions(),
@@ -458,10 +464,9 @@ export default function ExpensesPage() {
     );
   }
 
-  const totalAmount = expenseList.reduce(
-    (sum, e) => sum + parseFloat(e.amount),
-    0,
-  );
+  const totalAmount = canViewPrices
+    ? expenseList.reduce((sum, e) => sum + parseFloat(e.amount ?? "0"), 0)
+    : null;
 
   return (
     <div className="w-full p-6 md:p-8">
@@ -482,14 +487,16 @@ export default function ExpensesPage() {
 
       {expenseList.length > 0 && (
         <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-3">
-          <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
-              Total Expenses
-            </p>
-            <p className="mt-1 text-2xl font-semibold text-foreground">
-              {formatCurrencyDisplay(totalAmount, orgCurrency)}
-            </p>
-          </div>
+          {canViewPrices ? (
+            <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
+              <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
+                Total Expenses
+              </p>
+              <p className="mt-1 text-2xl font-semibold text-foreground">
+                {formatCurrencyDisplay(totalAmount, orgCurrency)}
+              </p>
+            </div>
+          ) : null}
           <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
             <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
               Records
@@ -531,9 +538,11 @@ export default function ExpensesPage() {
                   <th className="py-2 pl-4 pr-2 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/50">
                     Date
                   </th>
-                  <th className="py-2 px-2 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/50">
-                    Amount
-                  </th>
+                  {canViewPrices ? (
+                    <th className="py-2 px-2 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/50">
+                      Amount
+                    </th>
+                  ) : null}
                   <th className="py-2 px-2 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/50">
                     Category
                   </th>
@@ -551,6 +560,7 @@ export default function ExpensesPage() {
                   <ExpenseRow
                     key={expense.id}
                     expense={expense}
+                    canViewPrices={canViewPrices}
                     categoryName={
                       expense.categoryId
                         ? categoryMap.get(expense.categoryId)

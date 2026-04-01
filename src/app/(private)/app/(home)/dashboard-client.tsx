@@ -23,6 +23,7 @@ import {
 } from "recharts";
 import { Spinner } from "@/components/ui/spinner";
 import { useTRPC } from "@/trpc/client";
+import { useCanViewPrices } from "@/hooks/use-can-view-prices";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -142,6 +143,7 @@ function ChartTooltip({ active, payload, label }: any) {
 
 export function DashboardClient({ orgName }: { orgName: string | null }) {
   const trpc = useTRPC();
+  const { dashboard: canViewPrices } = useCanViewPrices();
 
   const stats        = useQuery(trpc.dashboard.getStats.queryOptions());
   const revenue      = useQuery(trpc.dashboard.getMonthlyRevenue.queryOptions());
@@ -186,13 +188,13 @@ export function DashboardClient({ orgName }: { orgName: string | null }) {
             color: "bg-amber-500/10 text-amber-600",
             href: "/app/invoices",
           },
-          {
+          ...(canViewPrices ? [{
             label: "Revenue this month",
-            value: stats.data !== undefined ? formatCurrency(stats.data.revenueThisMonth) : undefined,
+            value: stats.data !== undefined ? formatCurrency(stats.data.revenueThisMonth ?? 0) : undefined,
             icon: TrendingUp,
             color: "bg-emerald-500/10 text-emerald-600",
             href: "/app/reports",
-          },
+          }] : []),
         ].map(({ label, value, icon: Icon, color, href }) => (
           <NextLink
             key={label}
@@ -215,7 +217,7 @@ export function DashboardClient({ orgName }: { orgName: string | null }) {
       </div>
 
       {/* ── Revenue chart ──────────────────────────────────────────── */}
-      <div className="rounded-2xl border border-border bg-card p-5">
+      {canViewPrices ? <div className="rounded-2xl border border-border bg-card p-5">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-sm font-semibold text-foreground">Revenue — last 12 months</h2>
           <NextLink href="/app/reports" className="text-xs text-muted-foreground hover:text-primary">
@@ -262,7 +264,7 @@ export function DashboardClient({ orgName }: { orgName: string | null }) {
             </AreaChart>
           </ResponsiveContainer>
         )}
-      </div>
+      </div> : null}
 
       {/* ── Pending documents ──────────────────────────────────────── */}
       <div className="grid gap-4 md:grid-cols-2">

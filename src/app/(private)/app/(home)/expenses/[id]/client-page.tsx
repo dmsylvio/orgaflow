@@ -22,6 +22,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { formatCurrencyDisplay } from "@/lib/currency-format";
 import { toast } from "@/lib/toast";
 import { useTRPC } from "@/trpc/client";
+import { useCanViewPrices } from "@/hooks/use-can-view-prices";
 import { EditExpenseDialog, formatBytes } from "../edit-dialog";
 
 // ---------------------------------------------------------------------------
@@ -69,6 +70,7 @@ export default function ExpenseDetailPage() {
   const queryClient = useQueryClient();
   const params = useParams<{ id: string }>();
   const expenseId = params.id;
+  const { expense: canViewPrices } = useCanViewPrices();
 
   const [editOpen, setEditOpen] = useState(false);
 
@@ -138,9 +140,11 @@ export default function ExpenseDetailPage() {
       <div className="space-y-6">
         {/* Amount + actions */}
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <p className="text-3xl font-bold tracking-tight text-foreground">
-            {formatCurrencyDisplay(expense.amount, currency)}
-          </p>
+          {canViewPrices ? (
+            <p className="text-3xl font-bold tracking-tight text-foreground">
+              {formatCurrencyDisplay(expense.amount, currency)}
+            </p>
+          ) : null}
 
           <div className="flex gap-2">
             <Button type="button" variant="outline" asChild>

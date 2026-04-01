@@ -25,6 +25,7 @@ import { getOrganizationPlan } from "@/server/services/billing/get-organization-
 import { getUsageLimit } from "@/server/services/billing/plan-limits";
 import { sendTransactionalEmail } from "@/server/services/email/resend";
 import { sendViewedNotification } from "@/server/services/notifications/send-viewed-notification";
+import { can } from "@/server/iam/ability";
 import {
   createTRPCRouter,
   organizationProcedure,
@@ -275,6 +276,8 @@ export const invoicesRouter = createTRPCRouter({
   list: organizationProcedure
     .use(requirePermission("invoice:view"))
     .query(async ({ ctx }) => {
+      const canViewPrices = can(ctx.ability, "invoice:view-prices");
+
       const rows = await ctx.db
         .select({
           id: invoices.id,
@@ -324,9 +327,9 @@ export const invoicesRouter = createTRPCRouter({
         invoiceDate: row.invoiceDate,
         dueDate: row.dueDate,
         notes: row.notes,
-        subTotal: row.subTotal,
-        total: row.total,
-        tax: row.tax,
+        subTotal: canViewPrices ? row.subTotal : null,
+        total: canViewPrices ? row.total : null,
+        tax: canViewPrices ? row.tax : null,
         createdAt: row.createdAt,
         customer: {
           id: row.customerId,
@@ -350,6 +353,7 @@ export const invoicesRouter = createTRPCRouter({
     .use(requirePermission("invoice:view"))
     .input(z.object({ id: z.string().trim().min(1) }))
     .query(async ({ ctx, input }) => {
+      const canViewPrices = can(ctx.ability, "invoice:view-prices");
       const [invoice] = await ctx.db
         .select({
           id: invoices.id,
@@ -421,11 +425,11 @@ export const invoicesRouter = createTRPCRouter({
         invoiceDate: invoice.invoiceDate,
         dueDate: invoice.dueDate,
         notes: invoice.notes,
-        subTotal: invoice.subTotal,
-        total: invoice.total,
-        tax: invoice.tax,
-        discount: invoice.discount,
-        discountFixed: invoice.discountFixed,
+        subTotal: canViewPrices ? invoice.subTotal : null,
+        total: canViewPrices ? invoice.total : null,
+        tax: canViewPrices ? invoice.tax : null,
+        discount: canViewPrices ? invoice.discount : null,
+        discountFixed: canViewPrices ? invoice.discountFixed : null,
         createdAt: invoice.createdAt,
         updatedAt: invoice.updatedAt,
         customer: {
@@ -442,7 +446,9 @@ export const invoicesRouter = createTRPCRouter({
           decimalSeparator: invoice.currencyDecimalSeparator,
           swapCurrencySymbol: invoice.currencySwapSymbol,
         },
-        items: lineItems,
+        items: canViewPrices
+          ? lineItems
+          : lineItems.map((item) => ({ ...item, price: null, total: null })),
       };
     }),
 

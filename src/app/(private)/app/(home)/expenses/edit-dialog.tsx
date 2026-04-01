@@ -27,7 +27,7 @@ import { useTRPC } from "@/trpc/client";
 
 export type ExpenseRecord = {
   id: string;
-  amount: string;
+  amount: string | null;
   expenseDate: string;
   notes: string | null;
   categoryId: string | null;
@@ -445,7 +445,7 @@ export function EditExpenseDialog({
   paymentModes: { id: string; name: string }[];
 }) {
   const trpc = useTRPC();
-  const [amount, setAmount] = useState(expense.amount);
+  const [amount, setAmount] = useState(expense.amount ?? "");
   const [expenseDate, setExpenseDate] = useState(expense.expenseDate);
   const [notes, setNotes] = useState(expense.notes ?? "");
   const [categoryId, setCategoryId] = useState(expense.categoryId ?? "");

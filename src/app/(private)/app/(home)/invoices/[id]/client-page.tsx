@@ -11,6 +11,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { formatCurrencyDisplay } from "@/lib/currency-format";
 import { toast } from "@/lib/toast";
 import { useTRPC } from "@/trpc/client";
+import { useCanViewPrices } from "@/hooks/use-can-view-prices";
 import { formatBytes, uploadFile } from "../../expenses/edit-dialog";
 import {
   formatInvoiceDate,
@@ -154,6 +155,7 @@ export default function InvoiceDetailPage() {
   const trpc = useTRPC();
   const params = useParams<{ id: string }>();
   const invoiceId = params.id;
+  const { invoice: canViewPrices } = useCanViewPrices();
 
   const { data: invoice, isPending } = useQuery({
     ...trpc.invoices.getById.queryOptions({ id: invoiceId }),
@@ -221,22 +223,26 @@ export default function InvoiceDetailPage() {
               {formatInvoiceDate(invoice.dueDate) ?? "No due date"}
             </p>
           </div>
-          <div className="rounded-2xl border border-border bg-card p-4">
-            <p className="text-xs uppercase tracking-wide text-muted-foreground/70">
-              Subtotal
-            </p>
-            <p className="mt-1 text-sm font-semibold text-foreground">
-              {formatCurrencyDisplay(invoice.subTotal, invoice.currency)}
-            </p>
-          </div>
-          <div className="rounded-2xl border border-border bg-card p-4">
-            <p className="text-xs uppercase tracking-wide text-muted-foreground/70">
-              Total
-            </p>
-            <p className="mt-1 text-sm font-semibold text-foreground">
-              {formatCurrencyDisplay(invoice.total, invoice.currency)}
-            </p>
-          </div>
+          {canViewPrices ? (
+            <div className="rounded-2xl border border-border bg-card p-4">
+              <p className="text-xs uppercase tracking-wide text-muted-foreground/70">
+                Subtotal
+              </p>
+              <p className="mt-1 text-sm font-semibold text-foreground">
+                {formatCurrencyDisplay(invoice.subTotal, invoice.currency)}
+              </p>
+            </div>
+          ) : null}
+          {canViewPrices ? (
+            <div className="rounded-2xl border border-border bg-card p-4">
+              <p className="text-xs uppercase tracking-wide text-muted-foreground/70">
+                Total
+              </p>
+              <p className="mt-1 text-sm font-semibold text-foreground">
+                {formatCurrencyDisplay(invoice.total, invoice.currency)}
+              </p>
+            </div>
+          ) : null}
         </div>
 
         <div className="rounded-2xl border border-border bg-card p-5">
@@ -263,9 +269,11 @@ export default function InvoiceDetailPage() {
                       </p>
                     ) : null}
                   </div>
-                  <p className="text-sm font-semibold text-foreground">
-                    {formatCurrencyDisplay(item.total, invoice.currency)}
-                  </p>
+                  {canViewPrices ? (
+                    <p className="text-sm font-semibold text-foreground">
+                      {formatCurrencyDisplay(item.total, invoice.currency)}
+                    </p>
+                  ) : null}
                 </div>
 
                 <div className="mt-3 grid gap-3 text-sm text-muted-foreground sm:grid-cols-3">
@@ -273,12 +281,14 @@ export default function InvoiceDetailPage() {
                     Qty:{" "}
                     <span className="text-foreground">{item.quantity}</span>
                   </div>
-                  <div>
-                    Unit price:{" "}
-                    <span className="text-foreground">
-                      {formatCurrencyDisplay(item.price, invoice.currency)}
-                    </span>
-                  </div>
+                  {canViewPrices ? (
+                    <div>
+                      Unit price:{" "}
+                      <span className="text-foreground">
+                        {formatCurrencyDisplay(item.price, invoice.currency)}
+                      </span>
+                    </div>
+                  ) : null}
                   <div>
                     Unit:{" "}
                     <span className="text-foreground">
@@ -298,27 +308,29 @@ export default function InvoiceDetailPage() {
 
           <Separator className="my-5" />
 
-          <div className="ml-auto max-w-sm space-y-3 text-sm">
-            <div className="flex items-center justify-between text-muted-foreground">
-              <span>Subtotal</span>
-              <span className="font-medium text-foreground">
-                {formatCurrencyDisplay(invoice.subTotal, invoice.currency)}
-              </span>
+          {canViewPrices ? (
+            <div className="ml-auto max-w-sm space-y-3 text-sm">
+              <div className="flex items-center justify-between text-muted-foreground">
+                <span>Subtotal</span>
+                <span className="font-medium text-foreground">
+                  {formatCurrencyDisplay(invoice.subTotal, invoice.currency)}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-muted-foreground">
+                <span>Tax</span>
+                <span className="font-medium text-foreground">
+                  {formatCurrencyDisplay(invoice.tax, invoice.currency)}
+                </span>
+              </div>
+              <Separator />
+              <div className="flex items-center justify-between">
+                <span className="font-semibold text-foreground">Total</span>
+                <span className="text-lg font-semibold text-foreground">
+                  {formatCurrencyDisplay(invoice.total, invoice.currency)}
+                </span>
+              </div>
             </div>
-            <div className="flex items-center justify-between text-muted-foreground">
-              <span>Tax</span>
-              <span className="font-medium text-foreground">
-                {formatCurrencyDisplay(invoice.tax, invoice.currency)}
-              </span>
-            </div>
-            <Separator />
-            <div className="flex items-center justify-between">
-              <span className="font-semibold text-foreground">Total</span>
-              <span className="text-lg font-semibold text-foreground">
-                {formatCurrencyDisplay(invoice.total, invoice.currency)}
-              </span>
-            </div>
-          </div>
+          ) : null}
         </div>
 
         {invoice.notes ? (

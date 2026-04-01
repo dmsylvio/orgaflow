@@ -14,6 +14,7 @@ import {
   paymentModes,
 } from "@/server/db/schemas";
 import { ensureDefaultPaymentModes } from "@/server/services/workspace/ensure-default-payment-modes";
+import { can } from "@/server/iam/ability";
 import {
   createTRPCRouter,
   organizationProcedure,
@@ -26,6 +27,7 @@ export const expensesRouter = createTRPCRouter({
     .use(requirePermission("expense:view"))
     .input(z.object({ id: z.string().min(1) }))
     .query(async ({ ctx, input }) => {
+      const canViewPrices = can(ctx.ability, "expense:view-prices");
       const [row] = await ctx.db
         .select({
           id: expenses.id,
@@ -84,13 +86,15 @@ export const expensesRouter = createTRPCRouter({
         )
         .orderBy(asc(documentFiles.createdAt));
 
-      return { ...row, files };
+      return { ...row, amount: canViewPrices ? row.amount : null, files };
     }),
 
   list: organizationProcedure
     .use(requirePermission("expense:view"))
     .query(async ({ ctx }) => {
-      return ctx.db
+      const canViewPrices = can(ctx.ability, "expense:view-prices");
+
+      const rows = await ctx.db
         .select({
           id: expenses.id,
           amount: expenses.amount,
@@ -105,6 +109,11 @@ export const expensesRouter = createTRPCRouter({
         .from(expenses)
         .where(eq(expenses.organizationId, ctx.organizationId))
         .orderBy(desc(expenses.expenseDate), desc(expenses.createdAt));
+
+      return rows.map((row) => ({
+        ...row,
+        amount: canViewPrices ? row.amount : null,
+      }));
     }),
 
   create: organizationProcedure

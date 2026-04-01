@@ -16,6 +16,7 @@ import {
 } from "recharts";
 import { Spinner } from "@/components/ui/spinner";
 import { useTRPC } from "@/trpc/client";
+import { useCanViewPrices } from "@/hooks/use-can-view-prices";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -121,6 +122,7 @@ function PieTooltip({ active, payload }: any) {
 export function ReportsClientPage() {
   const trpc = useTRPC();
   const [period, setPeriod] = useState<Period>("12m");
+  const { dashboard: canViewPrices } = useCanViewPrices();
 
   const overview = useQuery(
     trpc.reports.getMonthlyOverview.queryOptions({ period }),
@@ -194,16 +196,20 @@ export function ReportsClientPage() {
         <>
           {/* KPI cards */}
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <StatCard
-              label="Total revenue"
-              value={formatCurrency(totalRevenue)}
-              sub={`Last ${period === "3m" ? "3" : period === "6m" ? "6" : "12"} months`}
-            />
-            <StatCard
-              label="Total expenses"
-              value={formatCurrency(totalExpenses)}
-              sub={`Last ${period === "3m" ? "3" : period === "6m" ? "6" : "12"} months`}
-            />
+            {canViewPrices ? (
+              <StatCard
+                label="Total revenue"
+                value={formatCurrency(totalRevenue)}
+                sub={`Last ${period === "3m" ? "3" : period === "6m" ? "6" : "12"} months`}
+              />
+            ) : null}
+            {canViewPrices ? (
+              <StatCard
+                label="Total expenses"
+                value={formatCurrency(totalExpenses)}
+                sub={`Last ${period === "3m" ? "3" : period === "6m" ? "6" : "12"} months`}
+              />
+            ) : null}
             <StatCard
               label="Estimate approval rate"
               value={`${approvalRate}%`}
@@ -217,7 +223,7 @@ export function ReportsClientPage() {
           </div>
 
           {/* Revenue vs Expenses bar chart */}
-          <div className="rounded-2xl border border-border bg-card p-5">
+          {canViewPrices ? <div className="rounded-2xl border border-border bg-card p-5">
             <h2 className="mb-4 text-sm font-semibold text-foreground">
               Revenue vs Expenses
             </h2>
@@ -276,7 +282,7 @@ export function ReportsClientPage() {
                 Expenses
               </div>
             </div>
-          </div>
+          </div> : null}
 
           {/* Pie charts row */}
           <div className="grid gap-4 md:grid-cols-2">
@@ -414,7 +420,7 @@ export function ReportsClientPage() {
           </div>
 
           {/* Top customers */}
-          <div className="rounded-2xl border border-border bg-card p-5">
+          {canViewPrices ? <div className="rounded-2xl border border-border bg-card p-5">
             <h2 className="mb-4 text-sm font-semibold text-foreground">
               Top customers by revenue
             </h2>
@@ -453,7 +459,7 @@ export function ReportsClientPage() {
                 })}
               </div>
             )}
-          </div>
+          </div> : null}
         </>
       )}
     </div>

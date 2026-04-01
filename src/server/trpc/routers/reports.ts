@@ -9,6 +9,7 @@ import {
   invoices,
   payments,
 } from "@/server/db/schemas";
+import { can } from "@/server/iam/ability";
 import {
   createTRPCRouter,
   organizationProcedure,
@@ -35,6 +36,7 @@ export const reportsRouter = createTRPCRouter({
     .use(requirePermission("dashboard:view"))
     .input(z.object({ period: periodSchema }))
     .query(async ({ ctx, input }) => {
+      const canViewPrices = can(ctx.ability, "dashboard:view-prices");
       const months = periodToMonths(input.period);
       const since = monthsBack(months);
 
@@ -77,13 +79,15 @@ export const reportsRouter = createTRPCRouter({
         grid.push({ month: key, revenue: 0, expenses: 0 });
       }
 
-      for (const row of revenueRows) {
-        const entry = grid.find((g) => g.month === row.month);
-        if (entry) entry.revenue = Number(row.total ?? 0);
-      }
-      for (const row of expenseRows) {
-        const entry = grid.find((g) => g.month === row.month);
-        if (entry) entry.expenses = Number(row.total ?? 0);
+      if (canViewPrices) {
+        for (const row of revenueRows) {
+          const entry = grid.find((g) => g.month === row.month);
+          if (entry) entry.revenue = Number(row.total ?? 0);
+        }
+        for (const row of expenseRows) {
+          const entry = grid.find((g) => g.month === row.month);
+          if (entry) entry.expenses = Number(row.total ?? 0);
+        }
       }
 
       return grid;

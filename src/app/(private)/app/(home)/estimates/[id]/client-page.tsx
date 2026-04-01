@@ -11,6 +11,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { formatCurrencyDisplay } from "@/lib/currency-format";
 import { toast } from "@/lib/toast";
 import { useTRPC } from "@/trpc/client";
+import { useCanViewPrices } from "@/hooks/use-can-view-prices";
 import { formatBytes, uploadFile } from "../../expenses/edit-dialog";
 import {
   EstimateStatusBadge,
@@ -156,6 +157,7 @@ export default function EstimateDetailPage() {
   const trpc = useTRPC();
   const params = useParams<{ id: string }>();
   const estimateId = params.id;
+  const { estimate: canViewPrices } = useCanViewPrices();
 
   const { data: estimate, isPending } = useQuery({
     ...trpc.estimates.getById.queryOptions({ id: estimateId }),
@@ -223,22 +225,26 @@ export default function EstimateDetailPage() {
               {formatEstimateDate(estimate.expiryDate) ?? "No expiry"}
             </p>
           </div>
-          <div className="rounded-2xl border border-border bg-card p-4">
-            <p className="text-xs uppercase tracking-wide text-muted-foreground/70">
-              Subtotal
-            </p>
-            <p className="mt-1 text-sm font-semibold text-foreground">
-              {formatCurrencyDisplay(estimate.subTotal, estimate.currency)}
-            </p>
-          </div>
-          <div className="rounded-2xl border border-border bg-card p-4">
-            <p className="text-xs uppercase tracking-wide text-muted-foreground/70">
-              Total
-            </p>
-            <p className="mt-1 text-sm font-semibold text-foreground">
-              {formatCurrencyDisplay(estimate.total, estimate.currency)}
-            </p>
-          </div>
+          {canViewPrices ? (
+            <div className="rounded-2xl border border-border bg-card p-4">
+              <p className="text-xs uppercase tracking-wide text-muted-foreground/70">
+                Subtotal
+              </p>
+              <p className="mt-1 text-sm font-semibold text-foreground">
+                {formatCurrencyDisplay(estimate.subTotal, estimate.currency)}
+              </p>
+            </div>
+          ) : null}
+          {canViewPrices ? (
+            <div className="rounded-2xl border border-border bg-card p-4">
+              <p className="text-xs uppercase tracking-wide text-muted-foreground/70">
+                Total
+              </p>
+              <p className="mt-1 text-sm font-semibold text-foreground">
+                {formatCurrencyDisplay(estimate.total, estimate.currency)}
+              </p>
+            </div>
+          ) : null}
         </div>
 
         <div className="rounded-2xl border border-border bg-card p-5">
@@ -266,9 +272,11 @@ export default function EstimateDetailPage() {
                       </p>
                     ) : null}
                   </div>
-                  <p className="text-sm font-semibold text-foreground">
-                    {formatCurrencyDisplay(item.total, estimate.currency)}
-                  </p>
+                  {canViewPrices ? (
+                    <p className="text-sm font-semibold text-foreground">
+                      {formatCurrencyDisplay(item.total, estimate.currency)}
+                    </p>
+                  ) : null}
                 </div>
 
                 <div className="mt-3 grid gap-3 text-sm text-muted-foreground sm:grid-cols-3">
@@ -276,12 +284,14 @@ export default function EstimateDetailPage() {
                     Qty:{" "}
                     <span className="text-foreground">{item.quantity}</span>
                   </div>
-                  <div>
-                    Unit price:{" "}
-                    <span className="text-foreground">
-                      {formatCurrencyDisplay(item.price, estimate.currency)}
-                    </span>
-                  </div>
+                  {canViewPrices ? (
+                    <div>
+                      Unit price:{" "}
+                      <span className="text-foreground">
+                        {formatCurrencyDisplay(item.price, estimate.currency)}
+                      </span>
+                    </div>
+                  ) : null}
                   <div>
                     Unit:{" "}
                     <span className="text-foreground">
@@ -301,27 +311,29 @@ export default function EstimateDetailPage() {
 
           <Separator className="my-5" />
 
-          <div className="ml-auto max-w-sm space-y-3 text-sm">
-            <div className="flex items-center justify-between text-muted-foreground">
-              <span>Subtotal</span>
-              <span className="font-medium text-foreground">
-                {formatCurrencyDisplay(estimate.subTotal, estimate.currency)}
-              </span>
+          {canViewPrices ? (
+            <div className="ml-auto max-w-sm space-y-3 text-sm">
+              <div className="flex items-center justify-between text-muted-foreground">
+                <span>Subtotal</span>
+                <span className="font-medium text-foreground">
+                  {formatCurrencyDisplay(estimate.subTotal, estimate.currency)}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-muted-foreground">
+                <span>Tax</span>
+                <span className="font-medium text-foreground">
+                  {formatCurrencyDisplay(estimate.tax, estimate.currency)}
+                </span>
+              </div>
+              <Separator />
+              <div className="flex items-center justify-between">
+                <span className="font-semibold text-foreground">Total</span>
+                <span className="text-lg font-semibold text-foreground">
+                  {formatCurrencyDisplay(estimate.total, estimate.currency)}
+                </span>
+              </div>
             </div>
-            <div className="flex items-center justify-between text-muted-foreground">
-              <span>Tax</span>
-              <span className="font-medium text-foreground">
-                {formatCurrencyDisplay(estimate.tax, estimate.currency)}
-              </span>
-            </div>
-            <Separator />
-            <div className="flex items-center justify-between">
-              <span className="font-semibold text-foreground">Total</span>
-              <span className="text-lg font-semibold text-foreground">
-                {formatCurrencyDisplay(estimate.total, estimate.currency)}
-              </span>
-            </div>
-          </div>
+          ) : null}
         </div>
 
         {estimate.notes ? (

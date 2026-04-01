@@ -14,6 +14,7 @@ import {
 } from "@/server/db/schemas";
 import { runWorkflowAutomations } from "@/server/services/automations/run-workflow-automations";
 import { ensureDefaultPaymentModes } from "@/server/services/workspace/ensure-default-payment-modes";
+import { can } from "@/server/iam/ability";
 import {
   createTRPCRouter,
   organizationProcedure,
@@ -119,6 +120,8 @@ export const paymentsRouter = createTRPCRouter({
   list: organizationProcedure
     .use(requirePermission("payment:view"))
     .query(async ({ ctx }) => {
+      const canViewPrices = can(ctx.ability, "payment:view-prices");
+
       const rows = await ctx.db
         .select({
           id: payments.id,
@@ -139,6 +142,7 @@ export const paymentsRouter = createTRPCRouter({
 
       return rows.map((r) => ({
         ...r,
+        amount: canViewPrices ? r.amount : null,
         paymentNumber: formatPaymentNumber(r.sequenceNumber),
       }));
     }),

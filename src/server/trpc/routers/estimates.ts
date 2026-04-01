@@ -23,6 +23,7 @@ import { getOrganizationPlan } from "@/server/services/billing/get-organization-
 import { getUsageLimit } from "@/server/services/billing/plan-limits";
 import { sendTransactionalEmail } from "@/server/services/email/resend";
 import { sendViewedNotification } from "@/server/services/notifications/send-viewed-notification";
+import { can } from "@/server/iam/ability";
 import {
   createTRPCRouter,
   organizationProcedure,
@@ -283,6 +284,8 @@ export const estimatesRouter = createTRPCRouter({
   list: organizationProcedure
     .use(requirePermission("estimate:view"))
     .query(async ({ ctx }) => {
+      const canViewPrices = can(ctx.ability, "estimate:view-prices");
+
       const rows = await ctx.db
         .select({
           id: estimates.id,
@@ -332,9 +335,9 @@ export const estimatesRouter = createTRPCRouter({
         estimateDate: row.estimateDate,
         expiryDate: row.expiryDate,
         notes: row.notes,
-        subTotal: row.subTotal,
-        total: row.total,
-        tax: row.tax,
+        subTotal: canViewPrices ? row.subTotal : null,
+        total: canViewPrices ? row.total : null,
+        tax: canViewPrices ? row.tax : null,
         createdAt: row.createdAt,
         customer: {
           id: row.customerId,
@@ -358,6 +361,7 @@ export const estimatesRouter = createTRPCRouter({
     .use(requirePermission("estimate:view"))
     .input(z.object({ id: z.string().trim().min(1) }))
     .query(async ({ ctx, input }) => {
+      const canViewPrices = can(ctx.ability, "estimate:view-prices");
       const [estimate] = await ctx.db
         .select({
           id: estimates.id,
@@ -429,11 +433,11 @@ export const estimatesRouter = createTRPCRouter({
         estimateDate: estimate.estimateDate,
         expiryDate: estimate.expiryDate,
         notes: estimate.notes,
-        subTotal: estimate.subTotal,
-        total: estimate.total,
-        tax: estimate.tax,
-        discount: estimate.discount,
-        discountFixed: estimate.discountFixed,
+        subTotal: canViewPrices ? estimate.subTotal : null,
+        total: canViewPrices ? estimate.total : null,
+        tax: canViewPrices ? estimate.tax : null,
+        discount: canViewPrices ? estimate.discount : null,
+        discountFixed: canViewPrices ? estimate.discountFixed : null,
         createdAt: estimate.createdAt,
         updatedAt: estimate.updatedAt,
         customer: {
@@ -450,7 +454,9 @@ export const estimatesRouter = createTRPCRouter({
           decimalSeparator: estimate.currencyDecimalSeparator,
           swapCurrencySymbol: estimate.currencySwapSymbol,
         },
-        items: lineItems,
+        items: canViewPrices
+          ? lineItems
+          : lineItems.map((item) => ({ ...item, price: null, total: null })),
       };
     }),
 

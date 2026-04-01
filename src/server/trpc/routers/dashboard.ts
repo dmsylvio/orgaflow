@@ -7,6 +7,7 @@ import {
   invoices,
   payments,
 } from "@/server/db/schemas";
+import { can } from "@/server/iam/ability";
 import {
   createTRPCRouter,
   organizationProcedure,
@@ -33,6 +34,7 @@ export const dashboardRouter = createTRPCRouter({
   getStats: organizationProcedure
     .use(requirePermission("dashboard:view"))
     .query(async ({ ctx }) => {
+      const canViewPrices = can(ctx.ability, "dashboard:view-prices");
       const orgId = ctx.organizationId;
 
       const [customerCount] = await ctx.db
@@ -74,7 +76,7 @@ export const dashboardRouter = createTRPCRouter({
         customers: customerCount?.total ?? 0,
         openEstimates: openEstimatesCount?.total ?? 0,
         openInvoices: openInvoicesCount?.total ?? 0,
-        revenueThisMonth: Number(revenueThisMonth?.total ?? 0),
+        revenueThisMonth: canViewPrices ? Number(revenueThisMonth?.total ?? 0) : null,
       };
     }),
 
@@ -82,6 +84,7 @@ export const dashboardRouter = createTRPCRouter({
   getMonthlyRevenue: organizationProcedure
     .use(requirePermission("dashboard:view"))
     .query(async ({ ctx }) => {
+      const canViewPrices = can(ctx.ability, "dashboard:view-prices");
       const since = monthsBack(12);
       const orgId = ctx.organizationId;
 
@@ -108,9 +111,11 @@ export const dashboardRouter = createTRPCRouter({
         const label = d.toLocaleDateString("en-US", { month: "short", year: "2-digit" });
         grid.push({ month: key, label, revenue: 0 });
       }
-      for (const row of rows) {
-        const entry = grid.find((g) => g.month === row.month);
-        if (entry) entry.revenue = Number(row.total ?? 0);
+      if (canViewPrices) {
+        for (const row of rows) {
+          const entry = grid.find((g) => g.month === row.month);
+          if (entry) entry.revenue = Number(row.total ?? 0);
+        }
       }
       return grid;
     }),
@@ -119,6 +124,8 @@ export const dashboardRouter = createTRPCRouter({
   getPendingEstimates: organizationProcedure
     .use(requirePermission("estimate:view"))
     .query(async ({ ctx }) => {
+      const canViewPrices = can(ctx.ability, "estimate:view-prices");
+
       const rows = await ctx.db
         .select({
           id: estimates.id,
@@ -139,13 +146,18 @@ export const dashboardRouter = createTRPCRouter({
         .orderBy(desc(estimates.updatedAt))
         .limit(6);
 
-      return rows;
+      return rows.map((row) => ({
+        ...row,
+        total: canViewPrices ? row.total : null,
+      }));
     }),
 
   // ── Pending invoices (SENT / VIEWED / OVERDUE / PARTIALLY_PAID) ───────────
   getPendingInvoices: organizationProcedure
     .use(requirePermission("invoice:view"))
     .query(async ({ ctx }) => {
+      const canViewPrices = can(ctx.ability, "invoice:view-prices");
+
       const rows = await ctx.db
         .select({
           id: invoices.id,
@@ -166,7 +178,10 @@ export const dashboardRouter = createTRPCRouter({
         .orderBy(desc(invoices.updatedAt))
         .limit(6);
 
-      return rows;
+      return rows.map((row) => ({
+        ...row,
+        total: canViewPrices ? row.total : null,
+      }));
     }),
 
   // ── Recent activity ───────────────────────────────────────────────────────

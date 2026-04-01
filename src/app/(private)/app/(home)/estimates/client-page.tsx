@@ -14,6 +14,7 @@ import {
 import { toast } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { useTRPC } from "@/trpc/client";
+import { useCanViewPrices } from "@/hooks/use-can-view-prices";
 import { EstimateActionsDropdown } from "./estimate-actions-dropdown";
 import {
   type EstimateStatus,
@@ -29,9 +30,9 @@ type EstimateRecord = {
   estimateDate: string;
   expiryDate: string | null;
   notes: string | null;
-  subTotal: string;
-  total: string;
-  tax: string;
+  subTotal: string | null;
+  total: string | null;
+  tax: string | null;
   createdAt: Date;
   customer: {
     id: string;
@@ -46,6 +47,7 @@ type EstimateFilter = "ALL" | "DRAFT" | "SENT";
 
 function EstimateRow({
   estimate,
+  canViewPrices,
   isDeleting,
   isConverting,
   isUpdatingStatus,
@@ -54,6 +56,7 @@ function EstimateRow({
   onDelete,
 }: {
   estimate: EstimateRecord;
+  canViewPrices: boolean;
   isDeleting: boolean;
   isConverting: boolean;
   isUpdatingStatus: boolean;
@@ -94,9 +97,11 @@ function EstimateRow({
       <td className="px-2 py-3 align-top text-sm text-foreground">
         {formatEstimateDate(estimate.expiryDate) ?? "No expiry"}
       </td>
-      <td className="px-2 py-3 align-top text-sm font-medium text-foreground">
-        {formatCurrencyDisplay(estimate.total, estimate.currency)}
-      </td>
+      {canViewPrices ? (
+        <td className="px-2 py-3 align-top text-sm font-medium text-foreground">
+          {formatCurrencyDisplay(estimate.total, estimate.currency)}
+        </td>
+      ) : null}
       <td className="py-3 pl-2 pr-4 align-top">
         <div className="flex justify-end">
           <EstimateActionsDropdown
@@ -121,6 +126,7 @@ export default function EstimatesPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [activeFilter, setActiveFilter] = useState<EstimateFilter>("ALL");
+  const { estimate: canViewPrices } = useCanViewPrices();
 
   const { data: estimates = [], isPending: estimatesPending } = useQuery(
     trpc.estimates.list.queryOptions(),
@@ -195,10 +201,9 @@ export default function EstimatesPage() {
     );
   }
 
-  const totalEstimateValue = estimates.reduce(
-    (sum, estimate) => sum + Number(estimate.total),
-    0,
-  );
+  const totalEstimateValue = canViewPrices
+    ? estimates.reduce((sum, estimate) => sum + Number(estimate.total ?? 0), 0)
+    : null;
   const draftCount = estimates.filter(
     (estimate) => estimate.status === "DRAFT",
   ).length;
@@ -252,17 +257,19 @@ export default function EstimatesPage() {
                 {draftCount}
               </p>
             </div>
-            <div className="rounded-2xl border border-border bg-card px-4 py-3">
-              <p className="text-xs uppercase tracking-wide text-muted-foreground/70">
-                Pipeline value
-              </p>
-              <p className="mt-1 text-2xl font-semibold text-foreground">
-                {formatCurrencyDisplay(
-                  totalEstimateValue.toFixed(3),
-                  meta?.defaultCurrency ?? null,
-                )}
-              </p>
-            </div>
+            {canViewPrices ? (
+              <div className="rounded-2xl border border-border bg-card px-4 py-3">
+                <p className="text-xs uppercase tracking-wide text-muted-foreground/70">
+                  Pipeline value
+                </p>
+                <p className="mt-1 text-2xl font-semibold text-foreground">
+                  {formatCurrencyDisplay(
+                    (totalEstimateValue ?? 0).toFixed(3),
+                    meta?.defaultCurrency ?? null,
+                  )}
+                </p>
+              </div>
+            ) : null}
           </div>
 
           {canCreate && hasDependencies ? (
@@ -368,9 +375,11 @@ export default function EstimatesPage() {
                   <th className="px-2 py-3 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
                     Expiry
                   </th>
-                  <th className="px-2 py-3 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
-                    Total
-                  </th>
+                  {canViewPrices ? (
+                    <th className="px-2 py-3 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
+                      Total
+                    </th>
+                  ) : null}
                   <th className="py-3 pl-2 pr-4 text-right text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
                     Actions
                   </th>
@@ -381,6 +390,7 @@ export default function EstimatesPage() {
                   <EstimateRow
                     key={estimate.id}
                     estimate={estimate}
+                    canViewPrices={canViewPrices}
                     isDeleting={
                       deleteEstimate.isPending &&
                       deleteEstimate.variables?.id === estimate.id

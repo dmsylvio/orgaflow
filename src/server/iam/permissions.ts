@@ -11,6 +11,12 @@ const DEFINITIONS = [
     group: "dashboard",
   },
   {
+    key: "dashboard:view-prices",
+    label: "View prices on dashboard & reports",
+    description: "See revenue, expense, and financial metrics on the dashboard and reports pages.",
+    group: "dashboard",
+  },
+  {
     key: "customer:view",
     label: "View customers",
     group: "customers",
@@ -39,16 +45,23 @@ const DEFINITIONS = [
     group: "items",
   },
   {
+    key: "item:view-prices",
+    label: "View item prices",
+    description: "See the price column in the items catalog.",
+    group: "items",
+    dependencies: ["item:view"] as const,
+  },
+  {
     key: "item:create",
     label: "Create items",
     group: "items",
-    dependencies: ["item:view"] as const,
+    dependencies: ["item:view", "item:view-prices"] as const,
   },
   {
     key: "item:edit",
     label: "Edit items",
     group: "items",
-    dependencies: ["item:view"] as const,
+    dependencies: ["item:view", "item:view-prices"] as const,
   },
   {
     key: "item:delete",
@@ -62,16 +75,23 @@ const DEFINITIONS = [
     group: "estimates",
   },
   {
+    key: "estimate:view-prices",
+    label: "View estimate prices",
+    description: "See totals, subtotals, and line item prices on estimates.",
+    group: "estimates",
+    dependencies: ["estimate:view"] as const,
+  },
+  {
     key: "estimate:create",
     label: "Create estimates",
     group: "estimates",
-    dependencies: ["estimate:view", "customer:view", "item:view"] as const,
+    dependencies: ["estimate:view", "customer:view", "item:view", "estimate:view-prices"] as const,
   },
   {
     key: "estimate:edit",
     label: "Edit estimates",
     group: "estimates",
-    dependencies: ["estimate:view"] as const,
+    dependencies: ["estimate:view", "estimate:view-prices"] as const,
   },
   {
     key: "estimate:delete",
@@ -85,16 +105,23 @@ const DEFINITIONS = [
     group: "invoices",
   },
   {
+    key: "invoice:view-prices",
+    label: "View invoice prices",
+    description: "See totals, subtotals, and line item prices on invoices.",
+    group: "invoices",
+    dependencies: ["invoice:view"] as const,
+  },
+  {
     key: "invoice:create",
     label: "Create invoices",
     group: "invoices",
-    dependencies: ["invoice:view", "customer:view", "item:view"] as const,
+    dependencies: ["invoice:view", "customer:view", "item:view", "invoice:view-prices"] as const,
   },
   {
     key: "invoice:edit",
     label: "Edit invoices",
     group: "invoices",
-    dependencies: ["invoice:view"] as const,
+    dependencies: ["invoice:view", "invoice:view-prices"] as const,
   },
   {
     key: "invoice:delete",
@@ -131,16 +158,23 @@ const DEFINITIONS = [
     group: "expenses",
   },
   {
+    key: "expense:view-prices",
+    label: "View expense amounts",
+    description: "See the amount (value) of expenses.",
+    group: "expenses",
+    dependencies: ["expense:view"] as const,
+  },
+  {
     key: "expense:create",
     label: "Create expenses",
     group: "expenses",
-    dependencies: ["expense:view"] as const,
+    dependencies: ["expense:view", "expense:view-prices"] as const,
   },
   {
     key: "expense:edit",
     label: "Edit expenses",
     group: "expenses",
-    dependencies: ["expense:view"] as const,
+    dependencies: ["expense:view", "expense:view-prices"] as const,
   },
   {
     key: "expense:delete",
@@ -154,16 +188,23 @@ const DEFINITIONS = [
     group: "payments",
   },
   {
+    key: "payment:view-prices",
+    label: "View payment amounts",
+    description: "See the amount and remaining balance on payments.",
+    group: "payments",
+    dependencies: ["payment:view"] as const,
+  },
+  {
     key: "payment:create",
     label: "Create payments",
     group: "payments",
-    dependencies: ["payment:view"] as const,
+    dependencies: ["payment:view", "payment:view-prices"] as const,
   },
   {
     key: "payment:edit",
     label: "Edit payments",
     group: "payments",
-    dependencies: ["payment:view"] as const,
+    dependencies: ["payment:view", "payment:view-prices"] as const,
   },
   {
     key: "payment:delete",

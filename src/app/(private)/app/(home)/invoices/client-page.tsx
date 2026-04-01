@@ -14,6 +14,7 @@ import {
 import { toast } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { useTRPC } from "@/trpc/client";
+import { useCanViewPrices } from "@/hooks/use-can-view-prices";
 import { InvoiceActionsDropdown } from "./invoice-actions-dropdown";
 import {
   formatInvoiceDate,
@@ -29,9 +30,9 @@ type InvoiceRecord = {
   invoiceDate: string;
   dueDate: string | null;
   notes: string | null;
-  subTotal: string;
-  total: string;
-  tax: string;
+  subTotal: string | null;
+  total: string | null;
+  tax: string | null;
   createdAt: Date;
   customer: {
     id: string;
@@ -46,6 +47,7 @@ type InvoiceFilter = "ALL" | "DRAFT" | "SENT" | "DUE";
 
 function InvoiceRow({
   invoice,
+  canViewPrices,
   isDeleting,
   isCloning,
   isUpdatingStatus,
@@ -54,6 +56,7 @@ function InvoiceRow({
   onDelete,
 }: {
   invoice: InvoiceRecord;
+  canViewPrices: boolean;
   isDeleting: boolean;
   isCloning: boolean;
   isUpdatingStatus: boolean;
@@ -94,9 +97,11 @@ function InvoiceRow({
       <td className="px-2 py-3 align-top text-sm text-foreground">
         {formatInvoiceDate(invoice.dueDate) ?? "No due date"}
       </td>
-      <td className="px-2 py-3 align-top text-sm font-medium text-foreground">
-        {formatCurrencyDisplay(invoice.total, invoice.currency)}
-      </td>
+      {canViewPrices ? (
+        <td className="px-2 py-3 align-top text-sm font-medium text-foreground">
+          {formatCurrencyDisplay(invoice.total, invoice.currency)}
+        </td>
+      ) : null}
       <td className="py-3 pl-2 pr-4 align-top">
         <div className="flex justify-end">
           <InvoiceActionsDropdown
@@ -120,6 +125,7 @@ export default function InvoicesPage() {
   const trpc = useTRPC();
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { invoice: canViewPrices } = useCanViewPrices();
   const [activeFilter, setActiveFilter] = useState<InvoiceFilter>("ALL");
 
   const { data: invoices = [], isPending: invoicesPending } = useQuery(
@@ -193,10 +199,9 @@ export default function InvoicesPage() {
     );
   }
 
-  const totalInvoiceValue = invoices.reduce(
-    (sum, invoice) => sum + Number(invoice.total),
-    0,
-  );
+  const totalInvoiceValue = canViewPrices
+    ? invoices.reduce((sum, invoice) => sum + Number(invoice.total ?? 0), 0)
+    : null;
   const draftCount = invoices.filter(
     (invoice) => invoice.status === "DRAFT",
   ).length;
@@ -258,17 +263,19 @@ export default function InvoicesPage() {
                 {draftCount}
               </p>
             </div>
-            <div className="rounded-2xl border border-border bg-card px-4 py-3">
-              <p className="text-xs uppercase tracking-wide text-muted-foreground/70">
-                Billed value
-              </p>
-              <p className="mt-1 text-2xl font-semibold text-foreground">
-                {formatCurrencyDisplay(
-                  totalInvoiceValue.toFixed(3),
-                  meta?.defaultCurrency ?? null,
-                )}
-              </p>
-            </div>
+            {canViewPrices ? (
+              <div className="rounded-2xl border border-border bg-card px-4 py-3">
+                <p className="text-xs uppercase tracking-wide text-muted-foreground/70">
+                  Billed value
+                </p>
+                <p className="mt-1 text-2xl font-semibold text-foreground">
+                  {formatCurrencyDisplay(
+                    (totalInvoiceValue ?? 0).toFixed(3),
+                    meta?.defaultCurrency ?? null,
+                  )}
+                </p>
+              </div>
+            ) : null}
           </div>
 
           {canCreate && hasDependencies ? (
@@ -374,9 +381,11 @@ export default function InvoicesPage() {
                   <th className="px-2 py-3 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
                     Due date
                   </th>
-                  <th className="px-2 py-3 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
-                    Total
-                  </th>
+                  {canViewPrices ? (
+                    <th className="px-2 py-3 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
+                      Total
+                    </th>
+                  ) : null}
                   <th className="py-3 pl-2 pr-4 text-right text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
                     Actions
                   </th>
@@ -387,6 +396,7 @@ export default function InvoicesPage() {
                   <InvoiceRow
                     key={invoice.id}
                     invoice={invoice}
+                    canViewPrices={canViewPrices}
                     isDeleting={
                       deleteInvoice.isPending &&
                       deleteInvoice.variables?.id === invoice.id
