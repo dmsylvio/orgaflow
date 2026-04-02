@@ -545,7 +545,7 @@ export const settingsRouter = createTRPCRouter({
         customerEmail: userEmail,
         billingInterval: input.billingInterval,
         successUrl: `${baseUrl}/app/settings/billing?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
-        cancelUrl: input.returnUrl,
+        cancelUrl: `${baseUrl}/app/settings/billing`,
         ...(sub?.stripeCustomerId ? { customerId: sub.stripeCustomerId } : {}),
       });
 
