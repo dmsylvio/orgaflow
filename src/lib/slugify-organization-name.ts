@@ -1,65 +1,31 @@
-/**
- * Pool of funny, workplace-safe English slugs used as the organization URL slug.
- * Uniqueness is enforced downstream via `assertUniqueOrganizationSlug`.
- */
-const FUNNY_ORG_SLUGS = [
-  "patient-platypus",
-  "clever-raccoon",
-  "cozy-muffin-squad",
-  "plot-twist-hq",
-  "definitely-legit-llc",
-  "humble-potato-co",
-  "sneaky-penguin-den",
-  "chaotic-good-guild",
-  "serene-chaos-labs",
-  "accidental-genius-inc",
-  "coffee-powered-hq",
-  "nap-time-industries",
-  "lazy-river-logistics",
-  "certified-human-people",
-  "not-a-robot-probably",
-  "splendid-nonsense-co",
-  "wildcard-energy",
-  "the-good-vibes-dept",
-  "mystery-flavor-studio",
-  "delightful-chaos-llc",
-  "banana-republic-but-legal",
-  "we-tried-our-best",
-  "probably-fine-inc",
-  "trust-the-process-co",
-  "vibes-and-spreadsheets",
-  "slightly-above-average",
-  "extra-medium-studios",
-  "just-winging-it-ltd",
-  "professional-chaos-co",
-  "organized-confusion-hq",
-  "suspiciously-productive",
-  "technically-a-business",
-  "mostly-harmless-llc",
-  "404-motivation-not-found",
-  "big-brain-energy-co",
-  "absolutely-no-drama",
-  "future-billionaires-maybe",
-  "ctrl-alt-defeat",
-  "works-on-my-machine-inc",
-  "ship-it-and-pray",
-  "pivot-again-studios",
-  "minimum-viable-vibes",
-  "synergy-is-a-myth-llc",
-  "aggressive-mediocrity",
-  "certified-overthinking-co",
-  "noodles-and-hustle",
-  "deep-breath-collective",
-  "side-quest-headquarters",
-  "good-enough-industries",
+const ADJECTIVES = [
+  "patient", "clever", "cozy", "sneaky", "serene", "accidental", "lazy",
+  "certified", "splendid", "wild", "delightful", "humble", "probable",
+  "extra", "professional", "organized", "suspicious", "mostly", "big",
+  "absolute", "future", "minimum", "aggressive", "deep", "good",
+  "chaotic", "silent", "rapid", "golden", "cosmic", "tiny", "ancient",
+  "bold", "calm", "daring", "eager", "fancy", "gentle", "happy",
+  "jolly", "kind", "lively", "mighty", "noble", "odd", "peppy",
+  "quirky", "radiant", "swift", "tidy", "upbeat", "vivid", "witty",
+  "zesty", "breezy", "chunky", "dapper", "fluffy", "groovy", "lucky",
 ] as const;
 
-function pickRandomFunnyOrgSlug(): string {
-  const index = Math.floor(Math.random() * FUNNY_ORG_SLUGS.length);
-  return FUNNY_ORG_SLUGS[index] ?? "humble-potato-co";
+const NOUNS = [
+  "platypus", "raccoon", "muffin", "potato", "penguin", "guild", "labs",
+  "studio", "crew", "collective", "squad", "den", "hq", "dept", "co",
+  "works", "hub", "base", "nest", "forge", "vault", "cloud", "spark",
+  "wave", "peak", "grove", "zone", "core", "deck", "orbit", "pulse",
+  "ridge", "shelf", "tower", "yard", "bench", "camp", "dock", "edge",
+  "flare", "gate", "haven", "isle", "junction", "knot", "lodge", "mesa",
+  "node", "outpost", "patch", "reef", "silo", "track", "union", "vibe",
+  "wharf", "axis", "bay", "cove", "burrow",
+] as const;
+
+function pickRandom<T extends readonly string[]>(arr: T): string {
+  return arr[Math.floor(Math.random() * arr.length)] ?? arr[0];
 }
 
-/** Returns a random funny English organization URL slug. */
+/** Returns a random adjective-noun slug. ~3,600 unique base combinations. */
 export function slugifyOrganizationName(): string {
-  return pickRandomFunnyOrgSlug();
+  return `${pickRandom(ADJECTIVES)}-${pickRandom(NOUNS)}`;
 }

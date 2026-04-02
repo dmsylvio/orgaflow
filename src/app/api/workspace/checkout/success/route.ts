@@ -2,6 +2,7 @@ import { and, eq } from "drizzle-orm";
 import { type NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { appPaths } from "@/lib/app-paths";
+import { getAppBaseUrl } from "@/lib/base-url";
 import { db } from "@/server/db";
 import { organizationMembers } from "@/server/db/schemas";
 import { ACTIVE_ORGANIZATION_COOKIE } from "@/server/trpc/constants";
@@ -21,17 +22,17 @@ export async function GET(request: NextRequest) {
       : null;
 
   if (!userId) {
-    return NextResponse.redirect(new URL("/login", request.url));
+    return NextResponse.redirect(new URL("/login", getAppBaseUrl()));
   }
 
   const sessionId = request.nextUrl.searchParams.get("session_id")?.trim();
   if (!sessionId) {
-    return NextResponse.redirect(new URL(appPaths.workspace, request.url));
+    return NextResponse.redirect(new URL(appPaths.workspace, getAppBaseUrl()));
   }
 
   const stripe = getStripe();
   if (!stripe) {
-    return NextResponse.redirect(new URL(appPaths.workspace, request.url));
+    return NextResponse.redirect(new URL(appPaths.workspace, getAppBaseUrl()));
   }
 
   const checkoutSession = await stripe.checkout.sessions.retrieve(sessionId);
@@ -42,7 +43,7 @@ export async function GET(request: NextRequest) {
     checkoutSession.mode !== "subscription" ||
     checkoutSession.status !== "complete"
   ) {
-    return NextResponse.redirect(new URL(appPaths.workspace, request.url));
+    return NextResponse.redirect(new URL(appPaths.workspace, getAppBaseUrl()));
   }
 
   const [member] = await db
@@ -57,10 +58,10 @@ export async function GET(request: NextRequest) {
     .limit(1);
 
   if (!member) {
-    return NextResponse.redirect(new URL(appPaths.workspace, request.url));
+    return NextResponse.redirect(new URL(appPaths.workspace, getAppBaseUrl()));
   }
 
-  const response = NextResponse.redirect(new URL(appPaths.home, request.url));
+  const response = NextResponse.redirect(new URL(appPaths.home, getAppBaseUrl()));
   response.cookies.set(ACTIVE_ORGANIZATION_COOKIE, organizationId, {
     path: "/",
     httpOnly: true,
