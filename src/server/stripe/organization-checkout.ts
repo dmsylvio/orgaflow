@@ -54,6 +54,8 @@ export async function createOrganizationSubscriptionCheckout(params: {
   const session = await stripe.checkout.sessions.create({
     mode: "subscription",
     locale: "en",
+    currency: "usd",
+    allow_promotion_codes: true,
     ...customerField,
     line_items: [{ price: priceId, quantity: 1 }],
     success_url: params.successUrl,
