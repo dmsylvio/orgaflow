@@ -4,11 +4,19 @@ import { TRPCError } from "@trpc/server";
 import { and, asc, eq, gt, sql } from "drizzle-orm";
 import { z } from "zod";
 import {
+  currencies,
+  customers,
+  documentFiles,
+  estimateItems,
+  estimates,
+  invoiceItems,
+  invoices,
   organizationFeatures,
   TASK_PRIORITIES,
   taskStages,
   tasks,
 } from "@/server/db/schemas";
+import { can } from "@/server/iam/ability";
 import { ensureDefaultTaskStages } from "@/server/services/workspace/ensure-default-task-stages";
 import {
   createTRPCRouter,
@@ -280,6 +288,9 @@ export const tasksRouter = createTRPCRouter({
           dueDate: tasks.dueDate,
           ownerId: tasks.ownerId,
           sourceType: tasks.sourceType,
+          sourceId: tasks.sourceId,
+          sourceEvent: tasks.sourceEvent,
+          linkedDocumentType: tasks.linkedDocumentType,
           createdAt: tasks.createdAt,
         })
         .from(tasks)
@@ -304,6 +315,8 @@ export const tasksRouter = createTRPCRouter({
           .optional()
           .nullable(),
         dueDate: z.coerce.date().optional().nullable(),
+        linkedDocumentId: z.string().min(1).optional().nullable(),
+        linkedDocumentType: z.enum(["invoice", "estimate"]).optional().nullable(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -334,6 +347,8 @@ export const tasksRouter = createTRPCRouter({
           estimatedDurationMinutes: input.estimatedDurationMinutes ?? null,
           dueDate: input.dueDate ?? null,
           sourceType: "manual",
+          sourceId: input.linkedDocumentId ?? null,
+          linkedDocumentType: input.linkedDocumentType ?? null,
         })
         .returning({ id: tasks.id });
 
@@ -358,6 +373,8 @@ export const tasksRouter = createTRPCRouter({
           .optional()
           .nullable(),
         dueDate: z.coerce.date().optional().nullable(),
+        linkedDocumentId: z.string().min(1).optional().nullable(),
+        linkedDocumentType: z.enum(["invoice", "estimate"]).optional().nullable(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -393,11 +410,244 @@ export const tasksRouter = createTRPCRouter({
           ...(input.dueDate !== undefined && {
             dueDate: input.dueDate ?? null,
           }),
+          ...(input.linkedDocumentId !== undefined && {
+            sourceId: input.linkedDocumentId ?? null,
+          }),
+          ...(input.linkedDocumentType !== undefined && {
+            linkedDocumentType: input.linkedDocumentType ?? null,
+          }),
           updatedAt: new Date(),
         })
         .where(eq(tasks.id, input.id));
 
       return { ok: true as const };
+    }),
+
+  getLinkedDocument: organizationProcedure
+    .use(requirePermission("task:view"))
+    .use(requirePlan("scale"))
+    .input(z.object({ taskId: z.string().min(1) }))
+    .query(async ({ ctx, input }) => {
+      const [task] = await ctx.db
+        .select({
+          sourceId: tasks.sourceId,
+          linkedDocumentType: tasks.linkedDocumentType,
+        })
+        .from(tasks)
+        .where(
+          and(
+            eq(tasks.id, input.taskId),
+            eq(tasks.organizationId, ctx.organizationId),
+          ),
+        )
+        .limit(1);
+
+      if (!task?.sourceId || !task.linkedDocumentType) return null;
+
+      const { sourceId, linkedDocumentType } = task;
+
+      if (linkedDocumentType === "invoice") {
+        const canViewPrices = can(ctx.ability, "invoice:view-prices");
+
+        const [invoice] = await ctx.db
+          .select({
+            id: invoices.id,
+            invoiceNumber: invoices.invoiceNumber,
+            status: invoices.status,
+            invoiceDate: invoices.invoiceDate,
+            dueDate: invoices.dueDate,
+            notes: invoices.notes,
+            subTotal: invoices.subTotal,
+            total: invoices.total,
+            tax: invoices.tax,
+            customerName: customers.displayName,
+            customerEmail: customers.email,
+            currencyCode: currencies.code,
+            currencySymbol: currencies.symbol,
+            currencyPrecision: currencies.precision,
+            currencyThousandSeparator: currencies.thousandSeparator,
+            currencyDecimalSeparator: currencies.decimalSeparator,
+            currencySwapSymbol: currencies.swapCurrencySymbol,
+          })
+          .from(invoices)
+          .innerJoin(customers, eq(invoices.customerId, customers.id))
+          .innerJoin(currencies, eq(invoices.currencyId, currencies.id))
+          .where(
+            and(
+              eq(invoices.id, sourceId),
+              eq(invoices.organizationId, ctx.organizationId),
+            ),
+          )
+          .limit(1);
+
+        if (!invoice) return null;
+
+        const lineItems = await ctx.db
+          .select({
+            id: invoiceItems.id,
+            name: invoiceItems.name,
+            description: invoiceItems.description,
+            unitName: invoiceItems.unitName,
+            quantity: invoiceItems.quantity,
+            price: invoiceItems.price,
+            total: invoiceItems.total,
+          })
+          .from(invoiceItems)
+          .where(
+            and(
+              eq(invoiceItems.organizationId, ctx.organizationId),
+              eq(invoiceItems.invoiceId, sourceId),
+            ),
+          )
+          .orderBy(asc(invoiceItems.createdAt));
+
+        const files = await ctx.db
+          .select({
+            id: documentFiles.id,
+            fileName: documentFiles.fileName,
+            storageKey: documentFiles.storageKey,
+            mimeType: documentFiles.mimeType,
+            fileSize: documentFiles.fileSize,
+          })
+          .from(documentFiles)
+          .where(
+            and(
+              eq(documentFiles.resourceType, "invoice"),
+              eq(documentFiles.resourceId, sourceId),
+              eq(documentFiles.organizationId, ctx.organizationId),
+            ),
+          )
+          .orderBy(asc(documentFiles.createdAt));
+
+        return {
+          type: "invoice" as const,
+          document: {
+            id: invoice.id,
+            number: invoice.invoiceNumber,
+            status: invoice.status,
+            date: invoice.invoiceDate,
+            dueDate: invoice.dueDate,
+            notes: invoice.notes,
+            subTotal: canViewPrices ? invoice.subTotal : null,
+            total: canViewPrices ? invoice.total : null,
+            tax: canViewPrices ? invoice.tax : null,
+            customer: { displayName: invoice.customerName, email: invoice.customerEmail },
+            currency: {
+              code: invoice.currencyCode,
+              symbol: invoice.currencySymbol,
+              precision: invoice.currencyPrecision,
+              thousandSeparator: invoice.currencyThousandSeparator,
+              decimalSeparator: invoice.currencyDecimalSeparator,
+              swapCurrencySymbol: invoice.currencySwapSymbol,
+            },
+            items: canViewPrices
+              ? lineItems
+              : lineItems.map((item) => ({ ...item, price: null, total: null })),
+            files,
+          },
+        };
+      }
+
+      // estimate
+      const canViewPrices = can(ctx.ability, "estimate:view-prices");
+
+      const [estimate] = await ctx.db
+        .select({
+          id: estimates.id,
+          estimateNumber: estimates.estimateNumber,
+          status: estimates.status,
+          estimateDate: estimates.estimateDate,
+          expiryDate: estimates.expiryDate,
+          notes: estimates.notes,
+          subTotal: estimates.subTotal,
+          total: estimates.total,
+          tax: estimates.tax,
+          customerName: customers.displayName,
+          customerEmail: customers.email,
+          currencyCode: currencies.code,
+          currencySymbol: currencies.symbol,
+          currencyPrecision: currencies.precision,
+          currencyThousandSeparator: currencies.thousandSeparator,
+          currencyDecimalSeparator: currencies.decimalSeparator,
+          currencySwapSymbol: currencies.swapCurrencySymbol,
+        })
+        .from(estimates)
+        .innerJoin(customers, eq(estimates.customerId, customers.id))
+        .innerJoin(currencies, eq(estimates.currencyId, currencies.id))
+        .where(
+          and(
+            eq(estimates.id, sourceId),
+            eq(estimates.organizationId, ctx.organizationId),
+          ),
+        )
+        .limit(1);
+
+      if (!estimate) return null;
+
+      const lineItems = await ctx.db
+        .select({
+          id: estimateItems.id,
+          name: estimateItems.name,
+          description: estimateItems.description,
+          unitName: estimateItems.unitName,
+          quantity: estimateItems.quantity,
+          price: estimateItems.price,
+          total: estimateItems.total,
+        })
+        .from(estimateItems)
+        .where(
+          and(
+            eq(estimateItems.organizationId, ctx.organizationId),
+            eq(estimateItems.estimateId, sourceId),
+          ),
+        )
+        .orderBy(asc(estimateItems.createdAt));
+
+      const files = await ctx.db
+        .select({
+          id: documentFiles.id,
+          fileName: documentFiles.fileName,
+          storageKey: documentFiles.storageKey,
+          mimeType: documentFiles.mimeType,
+          fileSize: documentFiles.fileSize,
+        })
+        .from(documentFiles)
+        .where(
+          and(
+            eq(documentFiles.resourceType, "estimate"),
+            eq(documentFiles.resourceId, sourceId),
+            eq(documentFiles.organizationId, ctx.organizationId),
+          ),
+        )
+        .orderBy(asc(documentFiles.createdAt));
+
+      return {
+        type: "estimate" as const,
+        document: {
+          id: estimate.id,
+          number: estimate.estimateNumber,
+          status: estimate.status,
+          date: estimate.estimateDate,
+          expiryDate: estimate.expiryDate,
+          notes: estimate.notes,
+          subTotal: canViewPrices ? estimate.subTotal : null,
+          total: canViewPrices ? estimate.total : null,
+          tax: canViewPrices ? estimate.tax : null,
+          customer: { displayName: estimate.customerName, email: estimate.customerEmail },
+          currency: {
+            code: estimate.currencyCode,
+            symbol: estimate.currencySymbol,
+            precision: estimate.currencyPrecision,
+            thousandSeparator: estimate.currencyThousandSeparator,
+            decimalSeparator: estimate.currencyDecimalSeparator,
+            swapCurrencySymbol: estimate.currencySwapSymbol,
+          },
+          items: canViewPrices
+            ? lineItems
+            : lineItems.map((item) => ({ ...item, price: null, total: null })),
+          files,
+        },
+      };
     }),
 
   deleteTask: organizationProcedure

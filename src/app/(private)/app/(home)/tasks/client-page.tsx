@@ -1,9 +1,21 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CalendarDays, Clock3, Pencil, Plus, Trash2 } from "lucide-react";
+import {
+  CalendarDays,
+  Clock3,
+  FileText,
+  Link2,
+  Paperclip,
+  Pencil,
+  Plus,
+  Receipt,
+  Trash2,
+  X,
+} from "lucide-react";
 import { useState } from "react";
 import { usePlanCheck } from "@/components/plan-gate";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -19,9 +31,12 @@ import {
   RichTextContent,
   RichTextEditor,
 } from "@/components/ui/rich-text-editor";
+import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
+import { formatCurrencyDisplay } from "@/lib/currency-format";
 import { toast } from "@/lib/toast";
 import { cn } from "@/lib/utils";
+import { useCanViewPrices } from "@/hooks/use-can-view-prices";
 import { useTRPC } from "@/trpc/client";
 
 // ---------------------------------------------------------------------------
@@ -45,6 +60,8 @@ type Task = {
   estimatedDurationMinutes: number | null;
   dueDate: Date | null;
   sourceType: string;
+  sourceId: string | null;
+  linkedDocumentType: "invoice" | "estimate" | null;
   createdAt: Date;
 };
 
@@ -126,6 +143,426 @@ function estimateInputToMinutes(value: string): number | null {
   }
 
   return Math.round(hours * 60);
+}
+
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function formatDocDate(value: Date | string | null | undefined): string {
+  if (!value) return "—";
+  return new Date(value).toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+// ---------------------------------------------------------------------------
+// LinkedInvoicePanel — invoice-specific, independent implementation
+// ---------------------------------------------------------------------------
+
+type InvoiceDoc = {
+  id: string;
+  number: string;
+  status: string;
+  date: Date | string | null;
+  dueDate: Date | string | null;
+  notes: string | null;
+  subTotal: string | null;
+  total: string | null;
+  tax: string | null;
+  customer: { displayName: string; email: string };
+  currency: {
+    code: string;
+    symbol: string;
+    precision: number;
+    thousandSeparator: string;
+    decimalSeparator: string;
+    swapCurrencySymbol: boolean;
+  };
+  items: Array<{
+    id: string;
+    name: string;
+    description: string | null;
+    unitName: string | null;
+    quantity: string;
+    price: string | null;
+    total: string | null;
+  }>;
+  files: Array<{
+    id: string;
+    fileName: string;
+    storageKey: string;
+    mimeType: string;
+    fileSize: number;
+  }>;
+};
+
+function LinkedInvoicePanel({ doc }: { doc: InvoiceDoc }) {
+  const { invoice: canViewPrices } = useCanViewPrices();
+  return (
+    <div className="space-y-4 rounded-xl border border-border bg-muted/30 p-4">
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div>
+          <p className="text-sm font-semibold text-foreground">{doc.number}</p>
+          <p className="text-xs text-muted-foreground">
+            {doc.customer.displayName}
+            {doc.customer.email ? ` · ${doc.customer.email}` : ""}
+          </p>
+        </div>
+        <div className="flex gap-3 text-xs text-muted-foreground">
+          <span>Date: <strong className="text-foreground">{formatDocDate(doc.date)}</strong></span>
+          {doc.dueDate ? (
+            <span>Due: <strong className="text-foreground">{formatDocDate(doc.dueDate)}</strong></span>
+          ) : null}
+        </div>
+      </div>
+
+      {canViewPrices && (
+        <div className="flex flex-wrap gap-4 text-xs">
+          <span className="text-muted-foreground">
+            Subtotal: <strong className="text-foreground">{formatCurrencyDisplay(doc.subTotal ?? "", doc.currency)}</strong>
+          </span>
+          <span className="text-muted-foreground">
+            Tax: <strong className="text-foreground">{formatCurrencyDisplay(doc.tax ?? "", doc.currency)}</strong>
+          </span>
+          <span className="text-muted-foreground">
+            Total: <strong className="text-foreground">{formatCurrencyDisplay(doc.total ?? "", doc.currency)}</strong>
+          </span>
+        </div>
+      )}
+
+      {doc.items.length > 0 && (
+        <div>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground/60">
+            Line items
+          </p>
+          <div className="space-y-1.5">
+            {doc.items.map((item) => (
+              <div key={item.id} className="flex items-start justify-between gap-2 rounded-lg bg-card px-3 py-2">
+                <div className="min-w-0">
+                  <p className="text-xs font-medium text-foreground">{item.name}</p>
+                  {item.description ? (
+                    <p className="text-xs text-muted-foreground">{item.description}</p>
+                  ) : null}
+                  <p className="text-xs text-muted-foreground">
+                    Qty: {item.quantity}
+                    {item.unitName ? ` · ${item.unitName}` : ""}
+                    {canViewPrices && item.price ? ` · ${formatCurrencyDisplay(item.price, doc.currency)} each` : ""}
+                  </p>
+                </div>
+                {canViewPrices && item.total ? (
+                  <p className="shrink-0 text-xs font-semibold text-foreground">
+                    {formatCurrencyDisplay(item.total, doc.currency)}
+                  </p>
+                ) : null}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {doc.files.length > 0 && (
+        <div>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground/60">
+            Files
+          </p>
+          <div className="space-y-1.5">
+            {doc.files.map((file) => (
+              <a
+                key={file.id}
+                href={file.storageKey}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 rounded-lg bg-card px-3 py-2 text-xs text-foreground hover:bg-accent"
+              >
+                <Paperclip className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                <span className="truncate font-medium">{file.fileName}</span>
+                <span className="ml-auto shrink-0 text-muted-foreground">{formatBytes(file.fileSize)}</span>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// LinkedEstimatePanel — estimate-specific, independent implementation
+// ---------------------------------------------------------------------------
+
+type EstimateDoc = {
+  id: string;
+  number: string;
+  status: string;
+  date: Date | string | null;
+  expiryDate: Date | string | null;
+  notes: string | null;
+  subTotal: string | null;
+  total: string | null;
+  tax: string | null;
+  customer: { displayName: string; email: string };
+  currency: {
+    code: string;
+    symbol: string;
+    precision: number;
+    thousandSeparator: string;
+    decimalSeparator: string;
+    swapCurrencySymbol: boolean;
+  };
+  items: Array<{
+    id: string;
+    name: string;
+    description: string | null;
+    unitName: string | null;
+    quantity: string;
+    price: string | null;
+    total: string | null;
+  }>;
+  files: Array<{
+    id: string;
+    fileName: string;
+    storageKey: string;
+    mimeType: string;
+    fileSize: number;
+  }>;
+};
+
+function LinkedEstimatePanel({ doc }: { doc: EstimateDoc }) {
+  const { estimate: canViewPrices } = useCanViewPrices();
+  return (
+    <div className="space-y-4 rounded-xl border border-border bg-muted/30 p-4">
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div>
+          <p className="text-sm font-semibold text-foreground">{doc.number}</p>
+          <p className="text-xs text-muted-foreground">
+            {doc.customer.displayName}
+            {doc.customer.email ? ` · ${doc.customer.email}` : ""}
+          </p>
+        </div>
+        <div className="flex gap-3 text-xs text-muted-foreground">
+          <span>Date: <strong className="text-foreground">{formatDocDate(doc.date)}</strong></span>
+          {doc.expiryDate ? (
+            <span>Expires: <strong className="text-foreground">{formatDocDate(doc.expiryDate)}</strong></span>
+          ) : null}
+        </div>
+      </div>
+
+      {canViewPrices && (
+        <div className="flex flex-wrap gap-4 text-xs">
+          <span className="text-muted-foreground">
+            Subtotal: <strong className="text-foreground">{formatCurrencyDisplay(doc.subTotal ?? "", doc.currency)}</strong>
+          </span>
+          <span className="text-muted-foreground">
+            Tax: <strong className="text-foreground">{formatCurrencyDisplay(doc.tax ?? "", doc.currency)}</strong>
+          </span>
+          <span className="text-muted-foreground">
+            Total: <strong className="text-foreground">{formatCurrencyDisplay(doc.total ?? "", doc.currency)}</strong>
+          </span>
+        </div>
+      )}
+
+      {doc.items.length > 0 && (
+        <div>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground/60">
+            Line items
+          </p>
+          <div className="space-y-1.5">
+            {doc.items.map((item) => (
+              <div key={item.id} className="flex items-start justify-between gap-2 rounded-lg bg-card px-3 py-2">
+                <div className="min-w-0">
+                  <p className="text-xs font-medium text-foreground">{item.name}</p>
+                  {item.description ? (
+                    <p className="text-xs text-muted-foreground">{item.description}</p>
+                  ) : null}
+                  <p className="text-xs text-muted-foreground">
+                    Qty: {item.quantity}
+                    {item.unitName ? ` · ${item.unitName}` : ""}
+                    {canViewPrices && item.price ? ` · ${formatCurrencyDisplay(item.price, doc.currency)} each` : ""}
+                  </p>
+                </div>
+                {canViewPrices && item.total ? (
+                  <p className="shrink-0 text-xs font-semibold text-foreground">
+                    {formatCurrencyDisplay(item.total, doc.currency)}
+                  </p>
+                ) : null}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {doc.files.length > 0 && (
+        <div>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground/60">
+            Files
+          </p>
+          <div className="space-y-1.5">
+            {doc.files.map((file) => (
+              <a
+                key={file.id}
+                href={file.storageKey}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 rounded-lg bg-card px-3 py-2 text-xs text-foreground hover:bg-accent"
+              >
+                <Paperclip className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                <span className="truncate font-medium">{file.fileName}</span>
+                <span className="ml-auto shrink-0 text-muted-foreground">{formatBytes(file.fileSize)}</span>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// LinkedDocumentSection — loads and renders the appropriate panel
+// ---------------------------------------------------------------------------
+
+function LinkedDocumentSection({ taskId, linkedDocumentType }: { taskId: string; linkedDocumentType: "invoice" | "estimate" }) {
+  const trpc = useTRPC();
+  const { data, isPending } = useQuery(
+    trpc.tasks.getLinkedDocument.queryOptions({ taskId }),
+  );
+
+  if (isPending) {
+    return (
+      <div className="flex items-center gap-2 rounded-xl border border-border p-4">
+        <Spinner className="size-4 text-primary" label="Loading document" />
+        <p className="text-xs text-muted-foreground">Loading linked document…</p>
+      </div>
+    );
+  }
+
+  if (!data) {
+    return (
+      <div className="rounded-xl border border-border bg-muted/20 px-4 py-3">
+        <p className="text-xs text-muted-foreground">
+          The linked {linkedDocumentType} is no longer available.
+        </p>
+      </div>
+    );
+  }
+
+  if (data.type === "invoice") {
+    return <LinkedInvoicePanel doc={data.document} />;
+  }
+
+  return <LinkedEstimatePanel doc={data.document} />;
+}
+
+// ---------------------------------------------------------------------------
+// ManualLinkSection — lets users on manual tasks link an invoice or estimate
+// ---------------------------------------------------------------------------
+
+function ManualLinkSection({
+  currentId,
+  currentType,
+  onLink,
+  onRemove,
+}: {
+  currentId: string | null;
+  currentType: "invoice" | "estimate" | null;
+  onLink: (id: string, type: "invoice" | "estimate") => void;
+  onRemove: () => void;
+}) {
+  const trpc = useTRPC();
+  const [linkType, setLinkType] = useState<"invoice" | "estimate">(
+    currentType ?? "invoice",
+  );
+  const [search, setSearch] = useState("");
+
+  const { data: invoices = [] } = useQuery(
+    trpc.invoices.list.queryOptions(),
+  );
+  const { data: estimates = [] } = useQuery(
+    trpc.estimates.list.queryOptions(),
+  );
+
+  const invoiceOptions = invoices.filter(
+    (inv) =>
+      !search ||
+      inv.invoiceNumber.toLowerCase().includes(search.toLowerCase()) ||
+      inv.customer.displayName.toLowerCase().includes(search.toLowerCase()),
+  );
+
+  const estimateOptions = estimates.filter(
+    (est) =>
+      !search ||
+      est.estimateNumber.toLowerCase().includes(search.toLowerCase()) ||
+      est.customer.displayName.toLowerCase().includes(search.toLowerCase()),
+  );
+
+  const options = linkType === "invoice" ? invoiceOptions : estimateOptions;
+
+  return (
+    <div className="space-y-2 rounded-xl border border-border bg-muted/20 p-3">
+      <div className="flex items-center justify-between">
+        <p className="text-xs font-semibold text-muted-foreground">Link document</p>
+        {currentId && currentType ? (
+          <button
+            type="button"
+            onClick={onRemove}
+            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive"
+          >
+            <X className="h-3 w-3" /> Remove link
+          </button>
+        ) : null}
+      </div>
+      <div className="flex gap-2">
+        <select
+          value={linkType}
+          onChange={(e) => { setLinkType(e.target.value as "invoice" | "estimate"); setSearch(""); }}
+          className="h-8 rounded-md border border-input bg-transparent px-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+        >
+          <option value="invoice">Invoice</option>
+          <option value="estimate">Estimate</option>
+        </select>
+        <Input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search by number or customer…"
+          className="h-8 text-xs"
+        />
+      </div>
+      <div className="max-h-40 overflow-y-auto space-y-1">
+        {options.slice(0, 20).map((opt) => {
+          const id = opt.id;
+          const number = linkType === "invoice"
+            ? (opt as (typeof invoices)[0]).invoiceNumber
+            : (opt as (typeof estimates)[0]).estimateNumber;
+          const customerName = opt.customer.displayName;
+          const isCurrent = currentId === id && currentType === linkType;
+          return (
+            <button
+              key={id}
+              type="button"
+              onClick={() => onLink(id, linkType)}
+              className={cn(
+                "flex w-full items-center justify-between rounded-lg px-3 py-1.5 text-left text-xs transition-colors",
+                isCurrent
+                  ? "bg-primary/10 text-primary font-medium"
+                  : "hover:bg-accent text-foreground",
+              )}
+            >
+              <span>{number}</span>
+              <span className="text-muted-foreground">{customerName}</span>
+            </button>
+          );
+        })}
+        {options.length === 0 ? (
+          <p className="px-3 py-2 text-xs text-muted-foreground">No results.</p>
+        ) : null}
+      </div>
+    </div>
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -353,6 +790,12 @@ function EditTaskDialog({
     estimatedDurationMinutesToInputValue(task.estimatedDurationMinutes),
   );
   const [dueDate, setDueDate] = useState(toInputDate(task.dueDate));
+  const [linkedDocumentId, setLinkedDocumentId] = useState<string | null>(
+    task.sourceId ?? null,
+  );
+  const [linkedDocumentType, setLinkedDocumentType] = useState<
+    "invoice" | "estimate" | null
+  >(task.linkedDocumentType ?? null);
   const trpc = useTRPC();
 
   const update = useMutation(
@@ -407,6 +850,31 @@ function EditTaskDialog({
                     This task was created automatically by a workflow
                     automation.
                   </p>
+                </div>
+              ) : null}
+
+              {/* Manual link section */}
+              {task.sourceType === "manual" ? (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-1.5">
+                    <Link2 className="h-3.5 w-3.5 text-muted-foreground" />
+                    <Label className="text-xs font-semibold text-muted-foreground">
+                      Linked document{" "}
+                      <span className="font-normal">(optional)</span>
+                    </Label>
+                  </div>
+                  <ManualLinkSection
+                    currentId={linkedDocumentId}
+                    currentType={linkedDocumentType}
+                    onLink={(id, type) => {
+                      setLinkedDocumentId(id);
+                      setLinkedDocumentType(type);
+                    }}
+                    onRemove={() => {
+                      setLinkedDocumentId(null);
+                      setLinkedDocumentType(null);
+                    }}
+                  />
                 </div>
               ) : null}
             </div>
@@ -485,6 +953,27 @@ function EditTaskDialog({
               </div>
             </div>
           </div>
+
+          {/* Linked document viewer (read-only, shown when a document is attached) */}
+          {(linkedDocumentType ?? task.linkedDocumentType) ? (
+            <div className="mt-4 space-y-2">
+              <Separator />
+              <div className="flex items-center gap-1.5 pt-2">
+                {(linkedDocumentType ?? task.linkedDocumentType) === "invoice" ? (
+                  <Receipt className="h-3.5 w-3.5 text-muted-foreground" />
+                ) : (
+                  <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+                )}
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                  Linked {linkedDocumentType ?? task.linkedDocumentType}
+                </p>
+              </div>
+              <LinkedDocumentSection
+                taskId={task.id}
+                linkedDocumentType={linkedDocumentType ?? task.linkedDocumentType!}
+              />
+            </div>
+          ) : null}
         </DialogBody>
         <DialogFooter className="justify-between">
           <Button
@@ -523,6 +1012,8 @@ function EditTaskDialog({
                   estimatedDurationMinutes:
                     estimateInputToMinutes(estimateHours),
                   dueDate: dueDate ? new Date(dueDate) : null,
+                  linkedDocumentId: task.sourceType === "manual" ? linkedDocumentId : undefined,
+                  linkedDocumentType: task.sourceType === "manual" ? linkedDocumentType : undefined,
                 })
               }
             >
@@ -591,6 +1082,18 @@ function TaskCard({
           <span className="inline-flex items-center rounded-full bg-violet-100 px-2 py-0.5 text-xs font-medium text-violet-700">
             Auto
           </span>
+        ) : null}
+        {task.linkedDocumentType === "invoice" ? (
+          <Badge variant="outline" className="gap-1 px-1.5 py-0 text-xs">
+            <Receipt className="h-3 w-3" />
+            Invoice
+          </Badge>
+        ) : null}
+        {task.linkedDocumentType === "estimate" ? (
+          <Badge variant="outline" className="gap-1 px-1.5 py-0 text-xs">
+            <FileText className="h-3 w-3" />
+            Estimate
+          </Badge>
         ) : null}
       </div>
       <div className="absolute right-2 top-2 opacity-0 transition-opacity group-hover:opacity-100">

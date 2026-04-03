@@ -68,6 +68,7 @@ export const automationRules = pgTable(
       onDelete: "set null",
     }),
     dueDateOffsetDays: integer("due_date_offset_days"),
+    attachDocument: boolean("attach_document").notNull().default(true),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
       .defaultNow()
       .notNull(),

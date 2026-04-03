@@ -45,6 +45,7 @@ const ruleInputSchema = z.object({
   taskStageId: z.string().min(1).optional().nullable(),
   assignStrategy: z.enum(ASSIGN_STRATEGIES).default("document_owner"),
   dueDateOffsetDays: z.number().int().min(0).max(365).optional().nullable(),
+  attachDocument: z.boolean().default(true),
 });
 
 export const automationsRouter = createTRPCRouter({
@@ -83,6 +84,7 @@ export const automationsRouter = createTRPCRouter({
         taskStageId: input.taskStageId ?? null,
         assignStrategy: input.assignStrategy,
         dueDateOffsetDays: input.dueDateOffsetDays ?? null,
+        attachDocument: input.attachDocument,
         isEnabled: true,
       });
 
@@ -142,6 +144,9 @@ export const automationsRouter = createTRPCRouter({
           }),
           ...(input.dueDateOffsetDays !== undefined && {
             dueDateOffsetDays: input.dueDateOffsetDays ?? null,
+          }),
+          ...(input.attachDocument !== undefined && {
+            attachDocument: input.attachDocument,
           }),
           updatedAt: new Date(),
         })

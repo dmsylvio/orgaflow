@@ -11,6 +11,9 @@ export type TaskPriority = (typeof TASK_PRIORITIES)[number];
 export const TASK_SOURCE_TYPES = ["manual", "automation"] as const;
 export type TaskSourceType = (typeof TASK_SOURCE_TYPES)[number];
 
+export const TASK_LINKED_DOCUMENT_TYPES = ["invoice", "estimate"] as const;
+export type TaskLinkedDocumentType = (typeof TASK_LINKED_DOCUMENT_TYPES)[number];
+
 export const tasks = pgTable(
   "tasks",
   {
@@ -40,6 +43,7 @@ export const tasks = pgTable(
       .default("manual"),
     sourceEvent: text("source_event"),
     sourceId: text("source_id"),
+    linkedDocumentType: text("linked_document_type").$type<TaskLinkedDocumentType>(),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
       .defaultNow()
       .notNull(),

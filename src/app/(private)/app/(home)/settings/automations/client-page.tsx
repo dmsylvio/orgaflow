@@ -101,6 +101,7 @@ type Rule = {
   taskTitleTemplate: string;
   taskDescriptionTemplate: string | null;
   dueDateOffsetDays: number | null;
+  attachDocument: boolean;
 };
 
 // ---------------------------------------------------------------------------
@@ -173,6 +174,7 @@ function CreateRuleDialog({
   const [title, setTitle] = useState(initTpl.title);
   const [description, setDescription] = useState(initTpl.description);
   const [dueDays, setDueDays] = useState("");
+  const [attachDocument, setAttachDocument] = useState(true);
   const trpc = useTRPC();
 
   function handleDocChange(newDoc: TriggerDoc) {
@@ -198,6 +200,7 @@ function CreateRuleDialog({
     setTitle(initTpl.title);
     setDescription(initTpl.description);
     setDueDays("");
+    setAttachDocument(true);
   }
 
   const create = useMutation(
@@ -296,6 +299,15 @@ function CreateRuleDialog({
                 />
               </div>
             </div>
+            <div className="flex items-start justify-between gap-4 rounded-lg border border-border bg-muted/30 px-4 py-3">
+              <div className="space-y-0.5">
+                <Label htmlFor="cr-attach" className="text-sm font-medium">Attach document to task</Label>
+                <p className="text-xs text-muted-foreground">
+                  The linked {doc} will be visible inside the created task.
+                </p>
+              </div>
+              <Switch id="cr-attach" checked={attachDocument} onCheckedChange={setAttachDocument} />
+            </div>
           </div>
         </DialogBody>
         <DialogFooter>
@@ -314,6 +326,7 @@ function CreateRuleDialog({
                 taskDescriptionTemplate: description.trim() || null,
                 taskStageId: stageId || null,
                 dueDateOffsetDays: dueDays ? Number(dueDays) : null,
+                attachDocument,
               })
             }
           >
@@ -348,6 +361,7 @@ function EditRuleDialog({
   const [title, setTitle] = useState(rule.taskTitleTemplate);
   const [description, setDescription] = useState(rule.taskDescriptionTemplate ?? "");
   const [dueDays, setDueDays] = useState(rule.dueDateOffsetDays !== null ? String(rule.dueDateOffsetDays) : "");
+  const [attachDocument, setAttachDocument] = useState(rule.attachDocument);
   const trpc = useTRPC();
 
   function handleDocChange(newDoc: TriggerDoc) {
@@ -449,6 +463,15 @@ function EditRuleDialog({
                 />
               </div>
             </div>
+            <div className="flex items-start justify-between gap-4 rounded-lg border border-border bg-muted/30 px-4 py-3">
+              <div className="space-y-0.5">
+                <Label htmlFor="er-attach" className="text-sm font-medium">Attach document to task</Label>
+                <p className="text-xs text-muted-foreground">
+                  The linked {doc} will be visible inside the created task.
+                </p>
+              </div>
+              <Switch id="er-attach" checked={attachDocument} onCheckedChange={setAttachDocument} />
+            </div>
           </div>
         </DialogBody>
         <DialogFooter>
@@ -468,6 +491,7 @@ function EditRuleDialog({
                 taskDescriptionTemplate: description.trim() || null,
                 taskStageId: stageId || null,
                 dueDateOffsetDays: dueDays ? Number(dueDays) : null,
+                attachDocument,
               })
             }
           >
@@ -523,6 +547,7 @@ function RuleRow({
           <span className="font-medium">{statusLabel(rule.triggerDocument, rule.triggerStatus)}</span>
           {" → Create Task"}
           {stageName ? ` · ${stageName}` : ""}
+          {rule.attachDocument ? " · Doc attached" : ""}
         </p>
       </td>
       <td className="py-3 pl-2 pr-4 w-20">

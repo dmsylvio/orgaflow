@@ -46,7 +46,8 @@
       "Bash(grep -r \"download\\\\|pdf\\\\|PDF\" /c/Users/slima/projetos/orgaflow/src/app/invoice/[token]/)",
       "Bash(find /c/Users/slima/projetos/orgaflow/src/server/trpc/routers -name \"*.ts\" -type f -exec grep -l \"throw.*not.*implement\\\\|return.*null\\\\|throw.*Error\" {} \\\\;)",
       "Bash(grep -n \"return.*Mock\\\\|// TODO\\\\|// FIXME\\\\|// stub\" /c/Users/slima/projetos/orgaflow/src/app/\\\\\\(private\\\\\\)/app/\\\\\\(home\\\\\\)/**/*.tsx)",
-      "Bash(xargs grep:*)"
+      "Bash(xargs grep:*)",
+      "Bash(grep -E \"\\\\.ts$\")"
     ]
   }
 }

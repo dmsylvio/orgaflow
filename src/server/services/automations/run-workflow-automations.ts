@@ -175,6 +175,7 @@ export async function runWorkflowAutomations(
         assignStrategy: automationRules.assignStrategy,
         assignedUserId: automationRules.assignedUserId,
         dueDateOffsetDays: automationRules.dueDateOffsetDays,
+        attachDocument: automationRules.attachDocument,
       })
       .from(automationRules)
       .where(
@@ -335,6 +336,7 @@ export async function runWorkflowAutomations(
         sourceType: "automation",
         sourceEvent,
         sourceId: input.documentId,
+        linkedDocumentType: rule.attachDocument ? input.triggerDocument : null,
       });
 
       createdTasks += 1;
