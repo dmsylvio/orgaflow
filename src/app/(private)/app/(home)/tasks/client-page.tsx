@@ -13,7 +13,7 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { usePlanCheck } from "@/components/plan-gate";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -455,16 +455,37 @@ function ManualLinkSection({
   onRemove: () => void;
 }) {
   const trpc = useTRPC();
+  const { data: session } = useQuery(trpc.iam.session.queryOptions());
+  const isOwner = session?.ability.isOwner ?? false;
+  const permissions = session?.ability.permissions ?? [];
+  const canViewInvoices = isOwner || permissions.includes("invoice:view");
+  const canViewEstimates = isOwner || permissions.includes("estimate:view");
+  const availableTypes = [
+    ...(canViewInvoices ? (["invoice"] as const) : []),
+    ...(canViewEstimates ? (["estimate"] as const) : []),
+  ];
   const [linkType, setLinkType] = useState<"invoice" | "estimate">(
-    currentType ?? "invoice",
+    currentType ?? (canViewInvoices ? "invoice" : "estimate"),
   );
   const [search, setSearch] = useState("");
 
+  useEffect(() => {
+    if (availableTypes.length > 0 && !availableTypes.includes(linkType)) {
+      setLinkType(availableTypes[0]);
+    }
+  }, [availableTypes, linkType]);
+
   const { data: invoices = [] } = useQuery(
-    trpc.invoices.list.queryOptions(),
+    {
+      ...trpc.invoices.list.queryOptions(),
+      enabled: canViewInvoices,
+    },
   );
   const { data: estimates = [] } = useQuery(
-    trpc.estimates.list.queryOptions(),
+    {
+      ...trpc.estimates.list.queryOptions(),
+      enabled: canViewEstimates,
+    },
   );
 
   const invoiceOptions = invoices.filter(
@@ -497,14 +518,16 @@ function ManualLinkSection({
           </button>
         ) : null}
       </div>
+      {availableTypes.length > 0 ? (
+        <>
       <div className="flex gap-2">
         <select
           value={linkType}
           onChange={(e) => { setLinkType(e.target.value as "invoice" | "estimate"); setSearch(""); }}
           className="h-8 rounded-md border border-input bg-transparent px-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
         >
-          <option value="invoice">Invoice</option>
-          <option value="estimate">Estimate</option>
+          {canViewInvoices ? <option value="invoice">Invoice</option> : null}
+          {canViewEstimates ? <option value="estimate">Estimate</option> : null}
         </select>
         <Input
           value={search}
@@ -542,6 +565,15 @@ function ManualLinkSection({
           <p className="px-3 py-2 text-xs text-muted-foreground">No results.</p>
         ) : null}
       </div>
+        </>
+      ) : (
+        <div className="rounded-lg border border-dashed border-border px-3 py-2">
+          <p className="text-xs text-muted-foreground">
+            You can work with tasks, but linking invoices or estimates requires
+            document view permission.
+          </p>
+        </div>
+      )}
     </div>
   );
 }

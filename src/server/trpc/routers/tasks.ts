@@ -38,7 +38,8 @@ function slugify(name: string): string {
 export const tasksRouter = createTRPCRouter({
   // ---- Stages ---------------------------------------------------------------
 
-  listStages: ownerProcedure
+  listStages: organizationProcedure
+    .use(requirePermission("task:view"))
     .use(requirePlan("scale"))
     .query(async ({ ctx }) => {
       await ensureDefaultTaskStages(ctx.db, ctx.organizationId);
@@ -222,19 +223,21 @@ export const tasksRouter = createTRPCRouter({
 
   // ---- Feature toggle -------------------------------------------------------
 
-  getKanbanEnabled: ownerProcedure.query(async ({ ctx }) => {
-    const [row] = await ctx.db
-      .select({ enabled: organizationFeatures.enabled })
-      .from(organizationFeatures)
-      .where(
-        and(
-          eq(organizationFeatures.organizationId, ctx.organizationId),
-          eq(organizationFeatures.featureKey, "kanban"),
-        ),
-      )
-      .limit(1);
-    return { enabled: row?.enabled ?? false };
-  }),
+  getKanbanEnabled: organizationProcedure
+    .use(requirePermission("task:view"))
+    .query(async ({ ctx }) => {
+      const [row] = await ctx.db
+        .select({ enabled: organizationFeatures.enabled })
+        .from(organizationFeatures)
+        .where(
+          and(
+            eq(organizationFeatures.organizationId, ctx.organizationId),
+            eq(organizationFeatures.featureKey, "kanban"),
+          ),
+        )
+        .limit(1);
+      return { enabled: row?.enabled ?? false };
+    }),
 
   setKanbanEnabled: ownerProcedure
     .use(requirePlan("scale"))
