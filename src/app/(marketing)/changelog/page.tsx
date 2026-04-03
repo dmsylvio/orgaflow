@@ -34,6 +34,51 @@ interface ChangelogEntry {
 
 const ENTRIES: ChangelogEntry[] = [
   {
+    version: "1.5.1",
+    date: "April 2, 2026",
+    badge: "patch",
+    summary:
+      "Tasks workflow polish, richer notifications, and billing checkout improvements shipped together today.",
+    changes: [
+      {
+        type: "improved",
+        text: "Add Task and Edit Task now open in dedicated right-side drawers instead of centered dialogs, making it easier to work without losing board context.",
+      },
+      {
+        type: "improved",
+        text: "Linked invoices and estimates from tasks now open in a second side drawer when selected, creating a clearer layered workflow for reviewing related documents.",
+      },
+      {
+        type: "improved",
+        text: "Task drawers are wider and now include explicit close buttons in the header for faster navigation and a more app-like editing flow.",
+      },
+      {
+        type: "fixed",
+        text: "Linked task document currency payloads are now aligned with the shared CurrencyFormat contract, resolving production type-check failures during build.",
+      },
+      {
+        type: "new",
+        text: "Tasks and workflow automations now support linked invoices and estimates, so follow-up work can keep a direct connection to the related document.",
+      },
+      {
+        type: "new",
+        text: "Notification settings and event handling were expanded with new outbound emails for estimate status changes, overdue invoices, and received payments.",
+      },
+      {
+        type: "new",
+        text: "Public invoice PDF route added, making invoice PDFs available directly from the client-facing public flow.",
+      },
+      {
+        type: "improved",
+        text: "Stripe subscription checkout now supports organization currency and promotion codes during checkout creation.",
+      },
+      {
+        type: "fixed",
+        text: "Subscription checkout routing now uses the correct cancel URL and a shared base URL helper for a more reliable post-checkout success flow.",
+      },
+    ],
+  },
+  {
     version: "1.5.0",
     date: "April 1, 2026",
     badge: "minor",

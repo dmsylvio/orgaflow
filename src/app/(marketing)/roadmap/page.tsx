@@ -141,6 +141,46 @@ const ITEMS: RoadmapItem[] = [
     category: "RBAC",
   },
   {
+    id: 19,
+    Icon: Layers,
+    title: "Task Side Drawers & Linked Document Review",
+    description:
+      "Tasks now open in dedicated right-side drawers with wider editing space, explicit close actions, and a second layered drawer for reviewing linked invoices and estimates without leaving the board.",
+    status: "shipped",
+    effort: "Low",
+    category: "UX",
+  },
+  {
+    id: 20,
+    Icon: Zap,
+    title: "Tasks Linked to Invoices & Estimates",
+    description:
+      "Tasks and automations can now attach related invoices and estimates directly, making follow-up work easier to review and act on from the task flow.",
+    status: "shipped",
+    effort: "Medium",
+    category: "Automation",
+  },
+  {
+    id: 21,
+    Icon: Mail,
+    title: "Expanded Notification Events",
+    description:
+      "Notification settings now cover more lifecycle events, including estimate status updates, overdue invoices, and payment received emails.",
+    status: "shipped",
+    effort: "Medium",
+    category: "Communication",
+  },
+  {
+    id: 22,
+    Icon: CreditCard,
+    title: "Checkout Currency & Promo Codes",
+    description:
+      "Stripe checkout now supports organization currency and promotion codes, with cleaner success and cancel routing for subscription flows.",
+    status: "shipped",
+    effort: "Low",
+    category: "Billing",
+  },
+  {
     id: 17,
     Icon: ShieldCheck,
     title: "Payment Reliability & Retry Flow",
@@ -305,7 +345,7 @@ const COLUMNS: { status: Status; title: string; description: string }[] = [
 ];
 
 export default function RoadmapPage() {
-  const lastUpdated = "April 1, 2026 (v1.5.0)";
+  const lastUpdated = "April 2, 2026 (v1.5.1)";
 
   return (
     <div className="overflow-hidden">
