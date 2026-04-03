@@ -1,10 +1,10 @@
 import { put } from "@vercel/blob";
 import { and, eq } from "drizzle-orm";
+import { getCurrentSession } from "@/server/auth/session";
 import { db } from "@/server/db";
 import { documentFiles } from "@/server/db/schemas";
 import { getCurrentAbility } from "@/server/services/iam/get-current-ability";
 import { getOrganizationIdFromHeaders } from "@/server/trpc/context";
-import { auth } from "../../../../auth";
 
 const ALLOWED_MIME_TYPES = new Set([
   "image/jpeg",
@@ -32,7 +32,7 @@ export async function POST(request: Request) {
 }
 
 async function handleUpload(request: Request) {
-  const session = await auth();
+  const session = await getCurrentSession();
   const userId =
     session?.user && "id" in session.user
       ? (session.user as { id: string }).id
@@ -180,4 +180,3 @@ async function handleUpload(request: Request) {
 
   return Response.json(inserted);
 }
-

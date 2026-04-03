@@ -1,7 +1,7 @@
-import { redirect } from "next/navigation";
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
-import { auth } from "../../../../auth";
+import { getCurrentSession } from "@/server/auth/session";
 
 export const metadata: Metadata = {
   title: "App",
@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 export default async function PrivateAppLayout({
   children,
 }: Readonly<{ children: ReactNode }>) {
-  const session = await auth();
+  const session = await getCurrentSession();
   if (!session?.user) {
     redirect("/login");
   }

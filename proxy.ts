@@ -1,9 +1,5 @@
 import { NextResponse } from "next/server";
-import NextAuth from "next-auth";
-
-import authConfig from "./auth.config";
-
-const { auth } = NextAuth(authConfig);
+import { auth } from "./auth";
 
 const PUBLIC_ROUTES = ["/", "/pricing"];
 const AUTH_ROUTES = ["/login", "/register", "/auth/error"];
@@ -29,10 +25,8 @@ export const proxy = auth((req) => {
   }
 
   if (!isAuthenticated && isAppRoute && !isPublicRoute) {
-    const callbackUrl = encodeURIComponent(`${pathname}${search}`);
-    return NextResponse.redirect(
-      new URL(`/sign-in?callbackUrl=${callbackUrl}`, nextUrl),
-    );
+    const next = encodeURIComponent(`${pathname}${search}`);
+    return NextResponse.redirect(new URL(`/login?next=${next}`, nextUrl));
   }
 
   return NextResponse.next();

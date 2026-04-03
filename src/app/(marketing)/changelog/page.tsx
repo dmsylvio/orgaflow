@@ -34,6 +34,27 @@ interface ChangelogEntry {
 
 const ENTRIES: ChangelogEntry[] = [
   {
+    version: "1.5.2",
+    date: "April 2, 2026",
+    badge: "patch",
+    summary:
+      "Marketing navbar now includes a cleaner authenticated user menu across desktop and mobile.",
+    changes: [
+      {
+        type: "new",
+        text: "Public marketing pages now show an authenticated user dropdown in the top navigation, including quick access to the active workspace and sign out.",
+      },
+      {
+        type: "improved",
+        text: "The user menu was adapted for both desktop and mobile layouts, with a more compact trigger and a mobile-friendly dropdown offset.",
+      },
+      {
+        type: "fixed",
+        text: "Dropdown layering and background styling were adjusted so the menu now renders cleanly above the navbar on changelog and other marketing pages.",
+      },
+    ],
+  },
+  {
     version: "1.5.1",
     date: "April 2, 2026",
     badge: "patch",
