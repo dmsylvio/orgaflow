@@ -17,14 +17,6 @@ import { useState } from "react";
 import { usePlanCheck } from "@/components/plan-gate";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogBody,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -40,6 +32,7 @@ import { toast } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { useCanViewPrices } from "@/hooks/use-can-view-prices";
 import { useTRPC } from "@/trpc/client";
+import { TaskDrawer } from "./task-drawer";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -603,18 +596,44 @@ function AddTaskDialog({
   const systemStage = stages.find((s) => s.isSystem);
 
   return (
-    <Dialog
+    <TaskDrawer
       open={open}
       onOpenChange={(v) => {
         onOpenChange(v);
         if (!v) reset();
       }}
+      title="Add Task"
+      footer={
+        <div className="flex justify-end gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            loading={create.isPending}
+            disabled={create.isPending || !title.trim()}
+            onClick={() =>
+              create.mutate({
+                title: title.trim(),
+                description: description.trim() || null,
+                priority,
+                stageId: stageId || null,
+                estimatedDurationMinutes: estimateInputToMinutes(estimateHours),
+                dueDate: dueDate ? new Date(dueDate) : null,
+              })
+            }
+          >
+            Create Task
+          </Button>
+        </div>
+      }
+      widthClassName="max-w-[1120px]"
     >
-      <DialogContent className="max-h-[90vh] max-w-5xl overflow-hidden p-0">
-        <DialogHeader className="border-b border-border px-6 py-4">
-          <DialogTitle>Add Task</DialogTitle>
-        </DialogHeader>
-        <DialogBody className="max-h-[calc(90vh-9rem)] overflow-y-auto px-6 py-5">
+      <div className="overflow-y-auto px-6 py-5">
           <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.85fr)]">
             {/* Left: title + description */}
             <div className="space-y-5">
@@ -726,35 +745,8 @@ function AddTaskDialog({
               </div>
             </div>
           </div>
-        </DialogBody>
-        <DialogFooter className="border-t border-border px-6 py-4">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-          >
-            Cancel
-          </Button>
-          <Button
-            type="button"
-            loading={create.isPending}
-            disabled={create.isPending || !title.trim()}
-            onClick={() =>
-              create.mutate({
-                title: title.trim(),
-                description: description.trim() || null,
-                priority,
-                stageId: stageId || null,
-                estimatedDurationMinutes: estimateInputToMinutes(estimateHours),
-                dueDate: dueDate ? new Date(dueDate) : null,
-              })
-            }
-          >
-            Create Task
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </TaskDrawer>
   );
 }
 
@@ -793,6 +785,7 @@ function EditTaskDialog({
   const [linkedDocumentType, setLinkedDocumentType] = useState<
     "invoice" | "estimate" | null
   >(task.linkedDocumentType ?? null);
+  const [documentDrawerOpen, setDocumentDrawerOpen] = useState(false);
   const trpc = useTRPC();
 
   const update = useMutation(
@@ -808,14 +801,78 @@ function EditTaskDialog({
   );
 
   const systemStage = stages.find((s) => s.isSystem);
+  const persistedLinkedDocumentType =
+    linkedDocumentId === task.sourceId &&
+    linkedDocumentType === task.linkedDocumentType
+      ? linkedDocumentType
+      : null;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[92vh] max-w-6xl overflow-hidden p-0">
-        <DialogHeader className="border-b border-border px-6 py-4">
-          <DialogTitle>Edit Task</DialogTitle>
-        </DialogHeader>
-        <DialogBody className="max-h-[calc(92vh-9rem)] overflow-y-auto px-6 py-5">
+    <>
+      <TaskDrawer
+        open={open}
+        onOpenChange={(nextOpen) => {
+          if (!nextOpen) {
+            setDocumentDrawerOpen(false);
+          }
+          onOpenChange(nextOpen);
+        }}
+        title="Edit Task"
+        footer={
+          <div className="flex items-center justify-between gap-3">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              disabled={isDeletePending}
+              onClick={() => {
+                onDelete(task.id);
+                onOpenChange(false);
+              }}
+              className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+            >
+              <Trash2 className="h-4 w-4" />
+              Delete
+            </Button>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                loading={update.isPending}
+                disabled={update.isPending || !title.trim()}
+                onClick={() =>
+                  update.mutate({
+                    id: task.id,
+                    title: title.trim(),
+                    description: description.trim() || null,
+                    priority,
+                    stageId: stageId || null,
+                    estimatedDurationMinutes:
+                      estimateInputToMinutes(estimateHours),
+                    dueDate: dueDate ? new Date(dueDate) : null,
+                    linkedDocumentId:
+                      task.sourceType === "manual" ? linkedDocumentId : undefined,
+                    linkedDocumentType:
+                      task.sourceType === "manual"
+                        ? linkedDocumentType
+                        : undefined,
+                  })
+                }
+              >
+                Save Changes
+              </Button>
+            </div>
+          </div>
+        }
+        widthClassName="max-w-7xl"
+      >
+        <div className="overflow-y-auto px-6 py-5">
           <div className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(340px,0.85fr)]">
             {/* Left: title + description */}
             <div className="space-y-5">
@@ -961,77 +1018,70 @@ function EditTaskDialog({
               </div>
 
               {/* Linked document viewer (read-only, shown when a document is attached) */}
-              {(linkedDocumentType ?? task.linkedDocumentType) ? (
+              {persistedLinkedDocumentType ? (
                 <div className="rounded-xl border border-border bg-card p-4">
-                  <div className="mb-3 flex items-center gap-1.5">
-                    {(linkedDocumentType ?? task.linkedDocumentType) === "invoice" ? (
-                      <Receipt className="h-3.5 w-3.5 text-muted-foreground" />
-                    ) : (
-                      <FileText className="h-3.5 w-3.5 text-muted-foreground" />
-                    )}
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                      Linked {linkedDocumentType ?? task.linkedDocumentType}
+                  <button
+                    type="button"
+                    onClick={() => setDocumentDrawerOpen(true)}
+                    className="w-full rounded-lg border border-border bg-muted/30 px-4 py-3 text-left transition-colors hover:bg-accent/60"
+                  >
+                    <div className="flex items-center gap-2">
+                      {persistedLinkedDocumentType === "invoice" ? (
+                        <Receipt className="h-3.5 w-3.5 text-muted-foreground" />
+                      ) : (
+                        <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+                      )}
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                        Linked {persistedLinkedDocumentType}
+                      </p>
+                    </div>
+                    <p className="mt-2 text-sm text-foreground">
+                      Open linked {persistedLinkedDocumentType} in a side drawer
                     </p>
-                  </div>
-                  <div className="max-h-[28rem] overflow-y-auto pr-1">
-                    <LinkedDocumentSection
-                      taskId={task.id}
-                      linkedDocumentType={linkedDocumentType ?? task.linkedDocumentType!}
-                    />
-                  </div>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Changes to the linked document are read-only here.
+                    </p>
+                  </button>
                 </div>
               ) : null}
             </div>
           </div>
-        </DialogBody>
-        <DialogFooter className="justify-between border-t border-border px-6 py-4">
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            disabled={isDeletePending}
-            onClick={() => {
-              onDelete(task.id);
-              onOpenChange(false);
-            }}
-            className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-          >
-            <Trash2 className="h-4 w-4" />
-            Delete
-          </Button>
-          <div className="flex gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              loading={update.isPending}
-              disabled={update.isPending || !title.trim()}
-              onClick={() =>
-                update.mutate({
-                  id: task.id,
-                  title: title.trim(),
-                  description: description.trim() || null,
-                  priority,
-                  stageId: stageId || null,
-                  estimatedDurationMinutes:
-                    estimateInputToMinutes(estimateHours),
-                  dueDate: dueDate ? new Date(dueDate) : null,
-                  linkedDocumentId: task.sourceType === "manual" ? linkedDocumentId : undefined,
-                  linkedDocumentType: task.sourceType === "manual" ? linkedDocumentType : undefined,
-                })
-              }
-            >
-              Save Changes
-            </Button>
+        </div>
+      </TaskDrawer>
+
+      {persistedLinkedDocumentType ? (
+        <TaskDrawer
+          open={documentDrawerOpen}
+          onOpenChange={setDocumentDrawerOpen}
+          title={
+            persistedLinkedDocumentType === "invoice"
+              ? "Linked Invoice"
+              : "Linked Estimate"
+          }
+          description="Review the linked document without leaving the task flow."
+          widthClassName="max-w-[980px]"
+        >
+          <div className="overflow-y-auto px-6 py-5">
+            <div className="rounded-xl border border-border bg-card p-4">
+              <div className="mb-3 flex items-center gap-1.5">
+                {persistedLinkedDocumentType === "invoice" ? (
+                  <Receipt className="h-3.5 w-3.5 text-muted-foreground" />
+                ) : (
+                  <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+                )}
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                  Linked {persistedLinkedDocumentType}
+                </p>
+              </div>
+              <LinkedDocumentSection
+                taskId={task.id}
+                linkedDocumentType={persistedLinkedDocumentType}
+              />
+            </div>
           </div>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </TaskDrawer>
+      ) : null}
+    </>
   );
 }
 
