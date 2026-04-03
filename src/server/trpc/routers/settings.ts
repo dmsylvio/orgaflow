@@ -372,6 +372,10 @@ export const settingsRouter = createTRPCRouter({
         notifyEmail: z.email().nullable().optional(),
         invoiceViewed: z.boolean().optional(),
         estimateViewed: z.boolean().optional(),
+        estimateApproved: z.boolean().optional(),
+        estimateRejected: z.boolean().optional(),
+        invoiceOverdue: z.boolean().optional(),
+        paymentReceived: z.boolean().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -395,6 +399,18 @@ export const settingsRouter = createTRPCRouter({
         }),
         ...(input.estimateViewed !== undefined && {
           estimateViewed: input.estimateViewed,
+        }),
+        ...(input.estimateApproved !== undefined && {
+          estimateApproved: input.estimateApproved,
+        }),
+        ...(input.estimateRejected !== undefined && {
+          estimateRejected: input.estimateRejected,
+        }),
+        ...(input.invoiceOverdue !== undefined && {
+          invoiceOverdue: input.invoiceOverdue,
+        }),
+        ...(input.paymentReceived !== undefined && {
+          paymentReceived: input.paymentReceived,
         }),
         updatedAt: new Date(),
       };

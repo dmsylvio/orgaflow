@@ -32,6 +32,16 @@ export const organizationNotificationSettings = pgTable(
     invoiceViewed: boolean("invoice_viewed").default(false).notNull(),
     estimateViewed: boolean("estimate_viewed").default(false).notNull(),
 
+    // Estimate events
+    estimateApproved: boolean("estimate_approved").default(false).notNull(),
+    estimateRejected: boolean("estimate_rejected").default(false).notNull(),
+
+    // Invoice events
+    invoiceOverdue: boolean("invoice_overdue").default(false).notNull(),
+
+    // Payment events
+    paymentReceived: boolean("payment_received").default(false).notNull(),
+
     createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
       .defaultNow()
       .notNull(),

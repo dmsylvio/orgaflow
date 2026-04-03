@@ -22,6 +22,7 @@ import { runWorkflowAutomations } from "@/server/services/automations/run-workfl
 import { getOrganizationPlan } from "@/server/services/billing/get-organization-plan";
 import { getUsageLimit } from "@/server/services/billing/plan-limits";
 import { sendTransactionalEmail } from "@/server/services/email/resend";
+import { sendEstimateStatusNotification } from "@/server/services/notifications/send-estimate-status-notification";
 import { sendViewedNotification } from "@/server/services/notifications/send-viewed-notification";
 import { can } from "@/server/iam/ability";
 import {
@@ -648,12 +649,15 @@ export const estimatesRouter = createTRPCRouter({
           id: estimates.id,
           organizationId: estimates.organizationId,
           status: estimates.status,
+          estimateNumber: estimates.estimateNumber,
+          customerName: customers.displayName,
           publicLinkCreatedAt: estimates.publicLinkCreatedAt,
           publicLinksExpireEnabled:
             organizationPreferences.publicLinksExpireEnabled,
           publicLinksExpireDays: organizationPreferences.publicLinksExpireDays,
         })
         .from(estimates)
+        .leftJoin(customers, eq(customers.id, estimates.customerId))
         .leftJoin(
           organizationPreferences,
           eq(organizationPreferences.organizationId, estimates.organizationId),
@@ -703,6 +707,15 @@ export const estimatesRouter = createTRPCRouter({
         triggeredAt: now,
       });
 
+      void sendEstimateStatusNotification({
+        db: ctx.db,
+        organizationId: estimate.organizationId,
+        status: "APPROVED",
+        estimateNumber: estimate.estimateNumber,
+        customerName: estimate.customerName ?? "Client",
+        documentUrl: `${getAppBaseUrl()}/app/estimates/${estimate.id}`,
+      });
+
       return { ok: true };
     }),
 
@@ -721,12 +734,15 @@ export const estimatesRouter = createTRPCRouter({
           id: estimates.id,
           organizationId: estimates.organizationId,
           status: estimates.status,
+          estimateNumber: estimates.estimateNumber,
+          customerName: customers.displayName,
           publicLinkCreatedAt: estimates.publicLinkCreatedAt,
           publicLinksExpireEnabled:
             organizationPreferences.publicLinksExpireEnabled,
           publicLinksExpireDays: organizationPreferences.publicLinksExpireDays,
         })
         .from(estimates)
+        .leftJoin(customers, eq(customers.id, estimates.customerId))
         .leftJoin(
           organizationPreferences,
           eq(organizationPreferences.organizationId, estimates.organizationId),
@@ -778,6 +794,16 @@ export const estimatesRouter = createTRPCRouter({
         documentId: estimate.id,
         actorUserId: null,
         triggeredAt: now,
+      });
+
+      void sendEstimateStatusNotification({
+        db: ctx.db,
+        organizationId: estimate.organizationId,
+        status: "REJECTED",
+        estimateNumber: estimate.estimateNumber,
+        customerName: estimate.customerName ?? "Client",
+        documentUrl: `${getAppBaseUrl()}/app/estimates/${estimate.id}`,
+        rejectionReason: reason,
       });
 
       return { ok: true };

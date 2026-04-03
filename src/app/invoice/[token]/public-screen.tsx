@@ -1,9 +1,10 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { CalendarClock, Receipt, TriangleAlert } from "lucide-react";
+import { CalendarClock, Download, Receipt, TriangleAlert } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -111,12 +112,23 @@ export function InvoicePublicScreen({ token }: { token: string }) {
                 Invoice
               </Badge>
 
-              <div className="text-xs text-muted-foreground">
-                {expiresAt ? (
-                  <>Link expires {formatDateTime(expiresAt)}</>
-                ) : (
-                  <>No link expiration</>
-                )}
+              <div className="flex items-center gap-3">
+                <div className="text-xs text-muted-foreground">
+                  {expiresAt ? (
+                    <>Link expires {formatDateTime(expiresAt)}</>
+                  ) : (
+                    <>No link expiration</>
+                  )}
+                </div>
+                <Button asChild size="sm" variant="outline" className="gap-1.5">
+                  <a
+                    href={`/api/pdf/invoice/public/${token}`}
+                    download={`${invoice.invoiceNumber}.pdf`}
+                  >
+                    <Download className="h-3.5 w-3.5" />
+                    Download PDF
+                  </a>
+                </Button>
               </div>
             </div>
 

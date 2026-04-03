@@ -12,8 +12,10 @@ import {
   paymentModes,
   payments,
 } from "@/server/db/schemas";
+import { getAppBaseUrl } from "@/lib/base-url";
 import { runWorkflowAutomations } from "@/server/services/automations/run-workflow-automations";
 import { ensureDefaultPaymentModes } from "@/server/services/workspace/ensure-default-payment-modes";
+import { sendPaymentReceivedNotification } from "@/server/services/notifications/send-payment-received-notification";
 import { can } from "@/server/iam/ability";
 import {
   createTRPCRouter,
@@ -245,7 +247,37 @@ export const paymentsRouter = createTRPCRouter({
           ? await refreshInvoicePaymentStatus(tx, ctx.organizationId, invoiceRow.id)
           : null;
 
-        return { statusChange, invoiceId: invoiceRow?.id ?? null };
+        // Fetch data needed for notification
+        const customerId = invoiceRow?.customerId ?? (input.customerId ?? null);
+        let customerName: string | null = null;
+        if (customerId) {
+          const [c] = await tx
+            .select({ displayName: customers.displayName })
+            .from(customers)
+            .where(eq(customers.id, customerId))
+            .limit(1);
+          customerName = c?.displayName ?? null;
+        }
+
+        const [currencyRow] = await tx
+          .select({ symbol: currencies.symbol })
+          .from(currencies)
+          .where(
+            eq(
+              currencies.id,
+              invoiceRow?.currencyId ?? (prefs?.defaultCurrencyId ?? ""),
+            ),
+          )
+          .limit(1);
+
+        return {
+          statusChange,
+          invoiceId: invoiceRow?.id ?? null,
+          invoiceNumber: invoiceRow?.invoiceNumber ?? null,
+          paymentNumber: formatPaymentNumber(nextSeq),
+          customerName,
+          currencySymbol: currencyRow?.symbol ?? "$",
+        };
       });
 
       if (result.statusChange && result.invoiceId) {
@@ -258,6 +290,17 @@ export const paymentsRouter = createTRPCRouter({
           triggeredAt: new Date(),
         });
       }
+
+      void sendPaymentReceivedNotification({
+        db: ctx.db,
+        organizationId: ctx.organizationId,
+        paymentNumber: result.paymentNumber,
+        customerName: result.customerName,
+        amount: input.amount,
+        currencySymbol: result.currencySymbol,
+        invoiceNumber: result.invoiceNumber,
+        documentUrl: `${getAppBaseUrl()}/app/payments`,
+      });
 
       return { ok: true as const };
     }),

@@ -92,6 +92,13 @@
       "when": 1774465217948,
       "tag": "0012_invoice_status_partially_paid",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1775176761829,
+      "tag": "0013_shiny_spot",
+      "breakpoints": true
     }
   ]
 }

@@ -42,7 +42,11 @@
       "Bash(ls /Users/sylviolima/Desktop/projects/orgaflow/eslint*)",
       "Bash(grep -r \"getBilling\\\\|createUpgradeSession\\\\|createBillingPortalSession\" /Users/sylviolima/Desktop/projects/orgaflow/src/server/trpc --include=*.ts)",
       "Bash(grep -r \"isWorkspaceAccessible\\\\|ACCESSIBLE_WORKSPACE_STATUS\" /Users/sylviolima/Desktop/projects/orgaflow/src --include=*.ts)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(grep -r \"download\\\\|pdf\\\\|PDF\" /c/Users/slima/projetos/orgaflow/src/app/invoice/[token]/)",
+      "Bash(find /c/Users/slima/projetos/orgaflow/src/server/trpc/routers -name \"*.ts\" -type f -exec grep -l \"throw.*not.*implement\\\\|return.*null\\\\|throw.*Error\" {} \\\\;)",
+      "Bash(grep -n \"return.*Mock\\\\|// TODO\\\\|// FIXME\\\\|// stub\" /c/Users/slima/projetos/orgaflow/src/app/\\\\\\(private\\\\\\)/app/\\\\\\(home\\\\\\)/**/*.tsx)",
+      "Bash(xargs grep:*)"
     ]
   }
 }

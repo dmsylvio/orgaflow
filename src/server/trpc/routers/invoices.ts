@@ -24,6 +24,7 @@ import { runWorkflowAutomations } from "@/server/services/automations/run-workfl
 import { getOrganizationPlan } from "@/server/services/billing/get-organization-plan";
 import { getUsageLimit } from "@/server/services/billing/plan-limits";
 import { sendTransactionalEmail } from "@/server/services/email/resend";
+import { sendInvoiceOverdueNotification } from "@/server/services/notifications/send-invoice-overdue-notification";
 import { sendViewedNotification } from "@/server/services/notifications/send-viewed-notification";
 import { can } from "@/server/iam/ability";
 import {
@@ -1270,6 +1271,30 @@ export const invoicesRouter = createTRPCRouter({
         actorUserId: getSessionUserId(ctx),
         triggeredAt: updatedAt,
       });
+
+      if (input.status === "OVERDUE") {
+        const [inv] = await ctx.db
+          .select({
+            invoiceNumber: invoices.invoiceNumber,
+            dueDate: invoices.dueDate,
+            customerName: customers.displayName,
+          })
+          .from(invoices)
+          .leftJoin(customers, eq(customers.id, invoices.customerId))
+          .where(eq(invoices.id, existing.id))
+          .limit(1);
+
+        if (inv?.dueDate) {
+          void sendInvoiceOverdueNotification({
+            db: ctx.db,
+            organizationId: ctx.organizationId,
+            invoiceNumber: inv.invoiceNumber,
+            customerName: inv.customerName ?? "Client",
+            dueDate: inv.dueDate,
+            documentUrl: `${getAppBaseUrl()}/app/invoices/${existing.id}`,
+          });
+        }
+      }
 
       return { ok: true as const, id: existing.id, status: input.status };
     }),

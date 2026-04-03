@@ -109,12 +109,20 @@ export default function NotificationsPage() {
   const [notifyEmail, setNotifyEmail] = useState("");
   const [invoiceViewed, setInvoiceViewed] = useState(false);
   const [estimateViewed, setEstimateViewed] = useState(false);
+  const [estimateApproved, setEstimateApproved] = useState(false);
+  const [estimateRejected, setEstimateRejected] = useState(false);
+  const [invoiceOverdue, setInvoiceOverdue] = useState(false);
+  const [paymentReceived, setPaymentReceived] = useState(false);
 
   useEffect(() => {
     if (!data) return;
     setNotifyEmail(data.notifyEmail ?? DEFAULT_NOTIFICATION_EMAIL);
     setInvoiceViewed(data.invoiceViewed ?? false);
     setEstimateViewed(data.estimateViewed ?? false);
+    setEstimateApproved(data.estimateApproved ?? false);
+    setEstimateRejected(data.estimateRejected ?? false);
+    setInvoiceOverdue(data.invoiceOverdue ?? false);
+    setPaymentReceived(data.paymentReceived ?? false);
   }, [data]);
 
   const update = useMutation(
@@ -138,6 +146,10 @@ export default function NotificationsPage() {
       notifyEmail: notifyEmail.trim() || null,
       invoiceViewed,
       estimateViewed,
+      estimateApproved,
+      estimateRejected,
+      invoiceOverdue,
+      paymentReceived,
     });
   }
 
@@ -191,6 +203,50 @@ export default function NotificationsPage() {
             description="When your customer opens an estimate shared via a public link."
             checked={estimateViewed}
             onCheckedChange={setEstimateViewed}
+          />
+        </Section>
+
+        {/* Estimate events */}
+        <Section
+          title="Estimate events"
+          description="Get notified when customers respond to your estimates."
+        >
+          <SwitchRow
+            id="notif-estimate-approved"
+            label="Estimate approved"
+            description="When your customer approves an estimate via the public link."
+            checked={estimateApproved}
+            onCheckedChange={setEstimateApproved}
+          />
+          <Separator />
+          <SwitchRow
+            id="notif-estimate-rejected"
+            label="Estimate rejected"
+            description="When your customer rejects an estimate via the public link."
+            checked={estimateRejected}
+            onCheckedChange={setEstimateRejected}
+          />
+        </Section>
+
+        {/* Invoice & payment events */}
+        <Section
+          title="Invoice & payment events"
+          description="Get notified about invoice due dates and incoming payments."
+        >
+          <SwitchRow
+            id="notif-invoice-overdue"
+            label="Invoice overdue"
+            description="When an invoice is manually marked as overdue."
+            checked={invoiceOverdue}
+            onCheckedChange={setInvoiceOverdue}
+          />
+          <Separator />
+          <SwitchRow
+            id="notif-payment-received"
+            label="Payment received"
+            description="When a payment is recorded in your workspace."
+            checked={paymentReceived}
+            onCheckedChange={setPaymentReceived}
           />
         </Section>
 
