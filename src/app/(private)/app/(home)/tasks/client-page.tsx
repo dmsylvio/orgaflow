@@ -31,9 +31,11 @@ import {
   RichTextContent,
   RichTextEditor,
 } from "@/components/ui/rich-text-editor";
-import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
-import { formatCurrencyDisplay } from "@/lib/currency-format";
+import {
+  type CurrencyFormat,
+  formatCurrencyDisplay,
+} from "@/lib/currency-format";
 import { toast } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { useCanViewPrices } from "@/hooks/use-can-view-prices";
@@ -174,15 +176,8 @@ type InvoiceDoc = {
   subTotal: string | null;
   total: string | null;
   tax: string | null;
-  customer: { displayName: string; email: string };
-  currency: {
-    code: string;
-    symbol: string;
-    precision: number;
-    thousandSeparator: string;
-    decimalSeparator: string;
-    swapCurrencySymbol: boolean;
-  };
+  customer: { displayName: string; email: string | null };
+  currency: NonNullable<CurrencyFormat>;
   items: Array<{
     id: string;
     name: string;
@@ -305,15 +300,8 @@ type EstimateDoc = {
   subTotal: string | null;
   total: string | null;
   tax: string | null;
-  customer: { displayName: string; email: string };
-  currency: {
-    code: string;
-    symbol: string;
-    precision: number;
-    thousandSeparator: string;
-    decimalSeparator: string;
-    swapCurrencySymbol: boolean;
-  };
+  customer: { displayName: string; email: string | null };
+  currency: NonNullable<CurrencyFormat>;
   items: Array<{
     id: string;
     name: string;
@@ -622,15 +610,16 @@ function AddTaskDialog({
         if (!v) reset();
       }}
     >
-      <DialogContent className="max-w-4xl">
-        <DialogHeader>
+      <DialogContent className="max-h-[90vh] max-w-5xl overflow-hidden p-0">
+        <DialogHeader className="border-b border-border px-6 py-4">
           <DialogTitle>Add Task</DialogTitle>
         </DialogHeader>
-        <DialogBody>
-          <div className="grid grid-cols-[1fr_220px] gap-6">
+        <DialogBody className="max-h-[calc(90vh-9rem)] overflow-y-auto px-6 py-5">
+          <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.85fr)]">
             {/* Left: title + description */}
-            <div className="space-y-4">
-              <div className="space-y-1.5">
+            <div className="space-y-5">
+              <div className="rounded-xl border border-border bg-card p-4">
+                <div className="space-y-1.5">
                 <Label htmlFor="at-title">Title</Label>
                 <Input
                   id="at-title"
@@ -639,8 +628,8 @@ function AddTaskDialog({
                   placeholder="What needs to be done?"
                   autoFocus
                 />
-              </div>
-              <div className="space-y-1.5">
+                </div>
+              <div className="mt-4 space-y-1.5">
                 <Label>
                   Description
                   <span className="text-xs text-muted-foreground">
@@ -653,11 +642,17 @@ function AddTaskDialog({
                   placeholder="Add more details…"
                 />
               </div>
+              </div>
             </div>
 
             {/* Right: meta fields */}
-            <div className="space-y-4">
-              <div className="space-y-1.5">
+            <div className="space-y-5">
+              <div className="rounded-xl border border-border bg-muted/20 p-4">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Details
+                </p>
+                <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
+                  <div className="space-y-1.5">
                 <Label htmlFor="at-priority">Priority</Label>
                 <select
                   id="at-priority"
@@ -671,9 +666,9 @@ function AddTaskDialog({
                     </option>
                   ))}
                 </select>
-              </div>
+                  </div>
 
-              <div className="space-y-1.5">
+                  <div className="space-y-1.5">
                 <Label htmlFor="at-stage">Stage</Label>
                 <select
                   id="at-stage"
@@ -692,45 +687,47 @@ function AddTaskDialog({
                       </option>
                     ))}
                 </select>
-              </div>
+                  </div>
 
-              <div className="space-y-1.5">
+                  <div className="space-y-1.5">
                 <Label htmlFor="at-estimate">
                   Estimate (hours){" "}
                   <span className="text-xs text-muted-foreground">
                     (optional)
                   </span>
                 </Label>
-                <Input
-                  id="at-estimate"
-                  type="number"
-                  min="0"
-                  step="0.25"
-                  inputMode="decimal"
-                  value={estimateHours}
-                  onChange={(e) => setEstimateHours(e.target.value)}
-                  placeholder="2.5"
-                />
-              </div>
+                  <Input
+                    id="at-estimate"
+                    type="number"
+                    min="0"
+                    step="0.25"
+                    inputMode="decimal"
+                    value={estimateHours}
+                    onChange={(e) => setEstimateHours(e.target.value)}
+                    placeholder="2.5"
+                  />
+                  </div>
 
-              <div className="space-y-1.5">
+                  <div className="space-y-1.5">
                 <Label htmlFor="at-due">
                   Due Date{" "}
                   <span className="text-xs text-muted-foreground">
                     (optional)
                   </span>
                 </Label>
-                <Input
-                  id="at-due"
-                  type="date"
-                  value={dueDate}
-                  onChange={(e) => setDueDate(e.target.value)}
-                />
+                  <Input
+                    id="at-due"
+                    type="date"
+                    value={dueDate}
+                    onChange={(e) => setDueDate(e.target.value)}
+                  />
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </DialogBody>
-        <DialogFooter>
+        <DialogFooter className="border-t border-border px-6 py-4">
           <Button
             type="button"
             variant="outline"
@@ -814,15 +811,16 @@ function EditTaskDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl">
-        <DialogHeader>
+      <DialogContent className="max-h-[92vh] max-w-6xl overflow-hidden p-0">
+        <DialogHeader className="border-b border-border px-6 py-4">
           <DialogTitle>Edit Task</DialogTitle>
         </DialogHeader>
-        <DialogBody>
-          <div className="grid grid-cols-[1fr_220px] gap-6">
+        <DialogBody className="max-h-[calc(92vh-9rem)] overflow-y-auto px-6 py-5">
+          <div className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(340px,0.85fr)]">
             {/* Left: title + description */}
-            <div className="space-y-4">
-              <div className="space-y-1.5">
+            <div className="space-y-5">
+              <div className="rounded-xl border border-border bg-card p-4">
+                <div className="space-y-1.5">
                 <Label htmlFor="et-title">Title</Label>
                 <Input
                   id="et-title"
@@ -830,8 +828,8 @@ function EditTaskDialog({
                   onChange={(e) => setTitle(e.target.value)}
                   autoFocus
                 />
-              </div>
-              <div className="space-y-1.5">
+                </div>
+              <div className="mt-4 space-y-1.5">
                 <Label>
                   Description{" "}
                   <span className="text-xs text-muted-foreground">
@@ -844,8 +842,9 @@ function EditTaskDialog({
                   placeholder="Add more details…"
                 />
               </div>
+              </div>
               {task.sourceType === "automation" ? (
-                <div className="rounded-lg border border-border bg-muted/40 px-3 py-2">
+                <div className="rounded-xl border border-border bg-muted/40 px-4 py-3">
                   <p className="text-xs text-muted-foreground">
                     This task was created automatically by a workflow
                     automation.
@@ -855,7 +854,7 @@ function EditTaskDialog({
 
               {/* Manual link section */}
               {task.sourceType === "manual" ? (
-                <div className="space-y-2">
+                <div className="rounded-xl border border-border bg-card p-4">
                   <div className="flex items-center gap-1.5">
                     <Link2 className="h-3.5 w-3.5 text-muted-foreground" />
                     <Label className="text-xs font-semibold text-muted-foreground">
@@ -863,25 +862,32 @@ function EditTaskDialog({
                       <span className="font-normal">(optional)</span>
                     </Label>
                   </div>
-                  <ManualLinkSection
-                    currentId={linkedDocumentId}
-                    currentType={linkedDocumentType}
-                    onLink={(id, type) => {
-                      setLinkedDocumentId(id);
-                      setLinkedDocumentType(type);
-                    }}
-                    onRemove={() => {
-                      setLinkedDocumentId(null);
-                      setLinkedDocumentType(null);
-                    }}
-                  />
+                  <div className="mt-3">
+                    <ManualLinkSection
+                      currentId={linkedDocumentId}
+                      currentType={linkedDocumentType}
+                      onLink={(id, type) => {
+                        setLinkedDocumentId(id);
+                        setLinkedDocumentType(type);
+                      }}
+                      onRemove={() => {
+                        setLinkedDocumentId(null);
+                        setLinkedDocumentType(null);
+                      }}
+                    />
+                  </div>
                 </div>
               ) : null}
             </div>
 
             {/* Right: meta fields */}
-            <div className="space-y-4">
-              <div className="space-y-1.5">
+            <div className="space-y-5">
+              <div className="rounded-xl border border-border bg-muted/20 p-4">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Details
+                </p>
+                <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
+                  <div className="space-y-1.5">
                 <Label htmlFor="et-priority">Priority</Label>
                 <select
                   id="et-priority"
@@ -895,9 +901,9 @@ function EditTaskDialog({
                     </option>
                   ))}
                 </select>
-              </div>
+                  </div>
 
-              <div className="space-y-1.5">
+                  <div className="space-y-1.5">
                 <Label htmlFor="et-stage">Stage</Label>
                 <select
                   id="et-stage"
@@ -916,66 +922,69 @@ function EditTaskDialog({
                       </option>
                     ))}
                 </select>
-              </div>
+                  </div>
 
-              <div className="space-y-1.5">
+                  <div className="space-y-1.5">
                 <Label htmlFor="et-estimate">
                   Estimate (hours){" "}
                   <span className="text-xs text-muted-foreground">
                     (optional)
                   </span>
                 </Label>
-                <Input
-                  id="et-estimate"
-                  type="number"
-                  min="0"
-                  step="0.25"
-                  inputMode="decimal"
-                  value={estimateHours}
-                  onChange={(e) => setEstimateHours(e.target.value)}
-                  placeholder="2.5"
-                />
-              </div>
+                  <Input
+                    id="et-estimate"
+                    type="number"
+                    min="0"
+                    step="0.25"
+                    inputMode="decimal"
+                    value={estimateHours}
+                    onChange={(e) => setEstimateHours(e.target.value)}
+                    placeholder="2.5"
+                  />
+                  </div>
 
-              <div className="space-y-1.5">
+                  <div className="space-y-1.5">
                 <Label htmlFor="et-due">
                   Due Date{" "}
                   <span className="text-xs text-muted-foreground">
                     (optional)
                   </span>
                 </Label>
-                <Input
-                  id="et-due"
-                  type="date"
-                  value={dueDate}
-                  onChange={(e) => setDueDate(e.target.value)}
-                />
+                  <Input
+                    id="et-due"
+                    type="date"
+                    value={dueDate}
+                    onChange={(e) => setDueDate(e.target.value)}
+                  />
+                  </div>
+                </div>
               </div>
+
+              {/* Linked document viewer (read-only, shown when a document is attached) */}
+              {(linkedDocumentType ?? task.linkedDocumentType) ? (
+                <div className="rounded-xl border border-border bg-card p-4">
+                  <div className="mb-3 flex items-center gap-1.5">
+                    {(linkedDocumentType ?? task.linkedDocumentType) === "invoice" ? (
+                      <Receipt className="h-3.5 w-3.5 text-muted-foreground" />
+                    ) : (
+                      <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+                    )}
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                      Linked {linkedDocumentType ?? task.linkedDocumentType}
+                    </p>
+                  </div>
+                  <div className="max-h-[28rem] overflow-y-auto pr-1">
+                    <LinkedDocumentSection
+                      taskId={task.id}
+                      linkedDocumentType={linkedDocumentType ?? task.linkedDocumentType!}
+                    />
+                  </div>
+                </div>
+              ) : null}
             </div>
           </div>
-
-          {/* Linked document viewer (read-only, shown when a document is attached) */}
-          {(linkedDocumentType ?? task.linkedDocumentType) ? (
-            <div className="mt-4 space-y-2">
-              <Separator />
-              <div className="flex items-center gap-1.5 pt-2">
-                {(linkedDocumentType ?? task.linkedDocumentType) === "invoice" ? (
-                  <Receipt className="h-3.5 w-3.5 text-muted-foreground" />
-                ) : (
-                  <FileText className="h-3.5 w-3.5 text-muted-foreground" />
-                )}
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                  Linked {linkedDocumentType ?? task.linkedDocumentType}
-                </p>
-              </div>
-              <LinkedDocumentSection
-                taskId={task.id}
-                linkedDocumentType={linkedDocumentType ?? task.linkedDocumentType!}
-              />
-            </div>
-          ) : null}
         </DialogBody>
-        <DialogFooter className="justify-between">
+        <DialogFooter className="justify-between border-t border-border px-6 py-4">
           <Button
             type="button"
             variant="ghost"

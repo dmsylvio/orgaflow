@@ -462,6 +462,7 @@ export const tasksRouter = createTRPCRouter({
             tax: invoices.tax,
             customerName: customers.displayName,
             customerEmail: customers.email,
+            currencyId: currencies.id,
             currencyCode: currencies.code,
             currencySymbol: currencies.symbol,
             currencyPrecision: currencies.precision,
@@ -533,6 +534,7 @@ export const tasksRouter = createTRPCRouter({
             tax: canViewPrices ? invoice.tax : null,
             customer: { displayName: invoice.customerName, email: invoice.customerEmail },
             currency: {
+              id: invoice.currencyId,
               code: invoice.currencyCode,
               symbol: invoice.currencySymbol,
               precision: invoice.currencyPrecision,
@@ -564,6 +566,7 @@ export const tasksRouter = createTRPCRouter({
           tax: estimates.tax,
           customerName: customers.displayName,
           customerEmail: customers.email,
+          currencyId: currencies.id,
           currencyCode: currencies.code,
           currencySymbol: currencies.symbol,
           currencyPrecision: currencies.precision,
@@ -635,6 +638,7 @@ export const tasksRouter = createTRPCRouter({
           tax: canViewPrices ? estimate.tax : null,
           customer: { displayName: estimate.customerName, email: estimate.customerEmail },
           currency: {
+            id: estimate.currencyId,
             code: estimate.currencyCode,
             symbol: estimate.currencySymbol,
             precision: estimate.currencyPrecision,
