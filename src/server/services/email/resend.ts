@@ -46,14 +46,16 @@ function buildResendErrorMessage(error: unknown): string {
 
 export async function sendTransactionalEmail(params: {
   to: string | string[];
+  cc?: string | string[];
   subject: string;
   html: string;
   text: string;
   from?: string;
+  replyTo?: string;
 }) {
   const client = getClient();
   const from = params.from?.trim() ? params.from.trim() : getFromEmail();
-  const replyTo = getReplyToEmail();
+  const replyTo = params.replyTo?.trim() ? params.replyTo.trim() : getReplyToEmail();
 
   try {
     const result = await client.emails.send({
@@ -63,6 +65,7 @@ export async function sendTransactionalEmail(params: {
       html: params.html,
       text: params.text,
       ...(replyTo ? { replyTo } : {}),
+      ...(params.cc ? { cc: params.cc } : {}),
     });
 
     if (result.error) {

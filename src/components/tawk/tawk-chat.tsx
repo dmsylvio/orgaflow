@@ -12,11 +12,16 @@ export function TawkChat() {
 
   const noop = () => {};
 
+  const handleLoad = () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (window as any).Tawk_API?.minimize?.();
+  };
+
   return (
     <TawkMessengerReact
       propertyId={propertyId}
       widgetId={widgetId}
-      onLoad={noop}
+      onLoad={handleLoad}
       onStatusChange={noop}
       onBeforeLoad={noop}
       onChatMaximized={noop}

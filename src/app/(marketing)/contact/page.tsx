@@ -1,9 +1,6 @@
 import { Mail, MapPin } from "lucide-react";
 import type { Metadata } from "next";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { ContactForm } from "./contact-form";
 
 export const metadata: Metadata = {
   title: "Contact",
@@ -51,14 +48,6 @@ const CONTACT_ITEMS = [
   },
 ];
 
-const TOPICS = [
-  "General inquiry",
-  "Sales & pricing",
-  "Technical support",
-  "Billing",
-  "Partnership",
-  "Other",
-];
 
 export default function ContactPage() {
   return (
@@ -127,57 +116,7 @@ export default function ContactPage() {
               <p className="mb-8 text-sm text-muted-foreground">
                 We read every message and reply as soon as we can.
               </p>
-
-              <form className="flex flex-col gap-5">
-                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-                  <div className="flex flex-col gap-2">
-                    <Label>First name</Label>
-                    <Input placeholder="John" />
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <Label>Last name</Label>
-                    <Input placeholder="Doe" />
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <Label>Work email</Label>
-                  <Input type="email" placeholder="john@company.com" />
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <Label>Topic</Label>
-                  <select className="h-9 w-full rounded-lg border border-input bg-background px-3 text-sm text-foreground focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-ring/20">
-                    <option value="">Select a topic</option>
-                    {TOPICS.map((t) => (
-                      <option key={t} value={t}>
-                        {t}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <Label>Message</Label>
-                  <Textarea
-                    placeholder="Tell us how we can help..."
-                    rows={5}
-                    className="resize-none"
-                  />
-                </div>
-
-                <Button
-                  type="submit"
-                  size="lg"
-                  className="w-full shadow-md shadow-primary/20"
-                >
-                  Send message
-                </Button>
-
-                <p className="text-center text-xs text-muted-foreground">
-                  By sending this form you agree to our Privacy Policy.
-                </p>
-              </form>
+              <ContactForm />
             </div>
           </div>
 

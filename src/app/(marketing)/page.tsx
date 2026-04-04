@@ -37,11 +37,21 @@ export const metadata: Metadata = {
       "Create estimates and invoices, accept payments, manage tasks, and automate workflows in one place.",
     url: "/",
     type: "website",
+    images: [
+      {
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "Orgaflow — estimates, invoices, and payments for small businesses",
+      },
+    ],
   },
   twitter: {
+    card: "summary_large_image",
     title: "Estimates & invoices for small businesses",
     description:
       "Create estimates and invoices, accept payments, manage tasks, and automate workflows in one place.",
+    images: ["/opengraph-image"],
   },
 };
 
@@ -50,10 +60,10 @@ export const metadata: Metadata = {
 ───────────────────────────────────────────── */
 
 const STATS = [
-  { value: "200+", label: "Businesses" },
-  { value: "98.9%", label: "Uptime" },
-  { value: "120k", label: "Invoices" },
-  { value: "4.9★", label: "Rating" },
+  { value: "200+", label: "Businesses", Icon: Users },
+  { value: "98.9%", label: "Uptime", Icon: Zap },
+  { value: "120k", label: "Invoices", Icon: FileText },
+  { value: "4.9★", label: "Rating", Icon: Star },
 ];
 
 const TESTIMONIALS = [
@@ -83,6 +93,33 @@ const TESTIMONIALS = [
     content:
       "Finally a platform that actually understands how small businesses work. The Kanban linked to invoices is a game-changer.",
     stars: 5,
+  },
+];
+
+const FAQS = [
+  {
+    q: "How is Orgaflow different from FreshBooks or QuickBooks?",
+    a: "Orgaflow is built around the estimate-to-payment workflow. It combines quoting, invoicing, task management, and automations in one place — without the accounting complexity.",
+  },
+  {
+    q: "Can clients sign estimates electronically?",
+    a: "Yes. Every estimate gets a secure shareable link where clients can review and approve with one click — no account required.",
+  },
+  {
+    q: "What happens after the 15-day trial?",
+    a: "After your trial you can choose any plan. Your data is never deleted. If you don't upgrade, your account moves to a read-only state.",
+  },
+  {
+    q: "Does Orgaflow support multiple currencies?",
+    a: "Yes. You can configure your organization's default currency and set per-client currencies for international work.",
+  },
+  {
+    q: "Is Orgaflow good for solo freelancers?",
+    a: "Absolutely. The Starter plan is built for one-person operations, and many features scale with you as your team grows.",
+  },
+  {
+    q: "Can I import my existing clients and invoices?",
+    a: "Yes. You can add clients individually or in bulk, and the platform is designed to get you running in under 5 minutes.",
   },
 ];
 
@@ -363,14 +400,14 @@ export default function LandingPage() {
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-60" />
               <span className="relative h-2 w-2 rounded-full bg-primary" />
             </span>
-            Now live — built for small businesses
+            Trusted by 200+ small businesses
           </div>
 
           <h1 className="mx-auto mb-6 max-w-4xl text-[clamp(2.5rem,6vw,4.5rem)] font-bold leading-[1.1] tracking-tight text-foreground">
-            The smarter way to run{" "}
+            From quote to payment,{" "}
             <span className="relative inline-block">
               <span className="bg-gradient-to-r from-primary via-violet-500 to-cyan-500 bg-clip-text text-transparent">
-                your business
+                without the chaos
               </span>
               <svg
                 aria-hidden
@@ -402,9 +439,8 @@ export default function LandingPage() {
           </h1>
 
           <p className="mx-auto mb-10 max-w-xl text-lg leading-relaxed text-muted-foreground">
-            Estimates, invoices, payments, automations, and tasks — all in one
-            platform built for small teams that want to close more deals with
-            less busywork.
+            Close more deals, collect faster, and stop losing jobs to admin
+            work — all from one platform built for small teams.
           </p>
 
           <div className="flex flex-wrap items-center justify-center gap-3">
@@ -474,11 +510,12 @@ export default function LandingPage() {
         {/* stats strip — overlaps image */}
         <div className="relative mx-auto -mt-8 max-w-6xl px-6">
           <div className="flex divide-x divide-border overflow-hidden rounded-2xl border border-border bg-background/80 shadow-lg backdrop-blur-sm">
-            {STATS.map(({ value, label }) => (
+            {STATS.map(({ value, label, Icon }) => (
               <div
                 key={label}
                 className="flex flex-1 flex-col items-center py-6 px-4"
               >
+                <Icon className="mb-1.5 h-4 w-4 text-primary/60" aria-hidden />
                 <span className="text-2xl font-bold text-foreground sm:text-3xl">
                   {value}
                 </span>
@@ -758,21 +795,21 @@ export default function LandingPage() {
             {[
               {
                 step: "01",
-                title: "Create your workspace",
+                title: "Set up in 2 minutes",
                 description:
                   "Sign up, name your organization, and invite your team. Configure currencies, taxes, and preferences.",
                 accent: "bg-primary/8 border-primary/20 text-primary",
               },
               {
                 step: "02",
-                title: "Add clients & send quotes",
+                title: "Win clients with shareable quotes",
                 description:
                   "Import or add clients, build estimates with line items, and share a secure link for client approval.",
                 accent: "bg-violet-50 border-violet-200 text-violet-700",
               },
               {
                 step: "03",
-                title: "Invoice, collect & automate",
+                title: "Get paid and automate the rest",
                 description:
                   "Convert approved quotes to invoices, collect payments, and let automations handle task creation.",
                 accent: "bg-emerald-50 border-emerald-200 text-emerald-700",
@@ -849,6 +886,33 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ── FAQ ── */}
+      <section className="bg-muted/40 py-28">
+        <div className="mx-auto max-w-4xl px-6">
+          <div className="mb-14 text-center">
+            <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-primary">
+              FAQ
+            </p>
+            <h2 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
+              Common questions
+            </h2>
+          </div>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            {FAQS.map(({ q, a }) => (
+              <div
+                key={q}
+                className="rounded-2xl border border-border bg-background p-6 shadow-sm"
+              >
+                <h3 className="mb-2 font-semibold text-foreground">{q}</h3>
+                <p className="text-sm leading-relaxed text-muted-foreground">
+                  {a}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ── CTA ── */}
       <section className="pb-28">
         <div className="mx-auto max-w-5xl px-6">
@@ -864,11 +928,11 @@ export default function LandingPage() {
             <div className="relative">
               <Layers className="mx-auto mb-6 h-14 w-14 text-white/70" />
               <h2 className="mb-4 text-4xl font-bold text-white sm:text-5xl lg:text-6xl">
-                Ready to grow faster?
+                Join 200+ businesses closing deals faster
               </h2>
               <p className="mx-auto mb-10 max-w-xl text-lg text-white/70">
-                Join 200+ businesses already saving time and closing more deals
-                with Orgaflow. Set up takes under 5 minutes.
+                Stop juggling tools. Start your free 15-day trial and see why
+                small teams choose Orgaflow. Set up takes under 5 minutes.
               </p>
               <div className="flex flex-wrap items-center justify-center gap-4">
                 <Button

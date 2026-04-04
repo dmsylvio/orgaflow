@@ -88,20 +88,9 @@ export function MarketingFooter() {
           <p className="text-center text-xs text-muted-foreground sm:text-left">
             Copyright 2026 Orgaflow LLC. All rights reserved.
           </p>
-          <div className="flex flex-col items-center gap-1 text-center sm:items-end sm:text-right">
-            <p className="text-xs text-muted-foreground/60">
-              Built for small businesses that mean business.
-            </p>
-            <p className="text-xs text-muted-foreground/60">
-              Created by Sylvio Lima ·{" "}
-              <Link
-                href="https://github.com/dmsylvio"
-                className="font-medium text-muted-foreground transition-colors hover:text-foreground"
-              >
-                @dmsylvio
-              </Link>
-            </p>
-          </div>
+          <p className="text-center text-xs text-muted-foreground/60 sm:text-right">
+            Built for small businesses that mean business.
+          </p>
         </div>
       </div>
     </footer>
