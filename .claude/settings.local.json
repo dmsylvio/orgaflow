@@ -52,7 +52,8 @@
       "Bash(node -e \"const cron = require\\('node-cron'\\); console.log\\(Object.keys\\(cron\\)\\);\")",
       "Bash(pnpm db:migrate)",
       "Bash(node -e ':*)",
-      "Bash(pnpm db:generate)"
+      "Bash(pnpm db:generate)",
+      "Bash(grep -v \"//.*require\")"
     ]
   }
 }

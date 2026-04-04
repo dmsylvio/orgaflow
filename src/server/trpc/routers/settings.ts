@@ -24,7 +24,11 @@ import {
 } from "@/server/db/schemas";
 import { ensureDefaultPaymentModes } from "@/server/services/workspace/ensure-default-payment-modes";
 import { createOrganizationSubscriptionCheckout } from "@/server/stripe/organization-checkout";
-import { createTRPCRouter, ownerProcedure } from "@/server/trpc/init";
+import {
+  createTRPCRouter,
+  organizationProcedure,
+  ownerProcedure,
+} from "@/server/trpc/init";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -436,6 +440,21 @@ export const settingsRouter = createTRPCRouter({
     }),
 
   // ---- Billing ------------------------------------------------------------
+
+  /**
+   * Lightweight subscription status check available to all org members.
+   * Used by PaymentAlertBanner in app-shell to show past_due / unpaid alerts.
+   * Does NOT expose Stripe IDs, pricing, or other billing details.
+   */
+  getSubscriptionStatus: organizationProcedure.query(async ({ ctx }) => {
+    const [sub] = await ctx.db
+      .select({ status: organizationSubscriptions.status })
+      .from(organizationSubscriptions)
+      .where(eq(organizationSubscriptions.organizationId, ctx.organizationId))
+      .limit(1);
+
+    return { status: sub?.status ?? null };
+  }),
 
   getBilling: ownerProcedure.query(async ({ ctx }) => {
     const [sub] = await ctx.db

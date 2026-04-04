@@ -63,10 +63,12 @@ const PAYMENT_ALERT_STATUSES = new Set(["past_due", "unpaid"]);
 
 function PaymentAlertBanner() {
   const trpc = useTRPC();
-  const { data: billing } = useQuery(trpc.settings.getBilling.queryOptions());
-  if (!billing || !PAYMENT_ALERT_STATUSES.has(billing.status)) return null;
+  const { data } = useQuery(
+    trpc.settings.getSubscriptionStatus.queryOptions(),
+  );
+  if (!data?.status || !PAYMENT_ALERT_STATUSES.has(data.status)) return null;
 
-  const isPastDue = billing.status === "past_due";
+  const isPastDue = data.status === "past_due";
 
   return (
     <div className="flex items-center gap-3 border-b border-amber-500/20 bg-amber-50 px-4 py-2.5 dark:bg-amber-950/30">
