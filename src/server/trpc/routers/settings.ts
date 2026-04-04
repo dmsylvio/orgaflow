@@ -456,6 +456,33 @@ export const settingsRouter = createTRPCRouter({
     return { status: sub?.status ?? null };
   }),
 
+  /**
+   * Lightweight plan summary available to all org members for entitlement checks.
+   * Does NOT expose Stripe customer IDs or other billing management details.
+   */
+  getPlanSummary: organizationProcedure.query(async ({ ctx }) => {
+    const [sub] = await ctx.db
+      .select({
+        plan: organizationSubscriptions.plan,
+        status: organizationSubscriptions.status,
+        stripePriceId: organizationSubscriptions.stripePriceId,
+      })
+      .from(organizationSubscriptions)
+      .where(eq(organizationSubscriptions.organizationId, ctx.organizationId))
+      .limit(1);
+
+    if (!sub) {
+      return null;
+    }
+
+    return {
+      plan: sub.plan,
+      status: sub.status,
+      billingInterval: getStripeBillingIntervalFromPriceId(sub.stripePriceId),
+      canManageBilling: ctx.ability.isOwner,
+    };
+  }),
+
   getBilling: ownerProcedure.query(async ({ ctx }) => {
     const [sub] = await ctx.db
       .select()

@@ -60,15 +60,13 @@ function planAtLeast(actual: Plan, required: Plan): boolean {
 function UpgradeBanner({
   currentPlan,
   requiredPlan,
+  canManageBilling,
 }: {
   currentPlan: Plan;
   requiredPlan: Plan;
+  canManageBilling: boolean;
 }) {
   const router = useRouter();
-  const trpc = useTRPC();
-
-  const upgrade = useQuery(trpc.settings.getBilling.queryOptions());
-  void upgrade; // ensure query is prefetched; we only use the router
 
   return (
     <div className="flex min-h-[420px] flex-col items-center justify-center px-6 py-12 text-center">
@@ -90,6 +88,11 @@ function UpgradeBanner({
         </span>{" "}
         plan.
       </p>
+      <p className="mt-2 max-w-sm text-xs text-muted-foreground">
+        {canManageBilling
+          ? "Upgrade your workspace plan to unlock this area."
+          : "Ask your organization owner to upgrade the workspace plan to unlock this area."}
+      </p>
 
       {/* Feature list */}
       <ul className="mt-6 space-y-2 text-left">
@@ -106,12 +109,14 @@ function UpgradeBanner({
         ))}
       </ul>
 
-      <Button
-        className="mt-8"
-        onClick={() => router.push("/app/settings/billing")}
-      >
-        Upgrade to {PLAN_LABEL[requiredPlan]}
-      </Button>
+      {canManageBilling ? (
+        <Button
+          className="mt-8"
+          onClick={() => router.push("/app/settings/billing")}
+        >
+          Upgrade to {PLAN_LABEL[requiredPlan]}
+        </Button>
+      ) : null}
     </div>
   );
 }
@@ -130,13 +135,16 @@ function UpgradeBanner({
  */
 export function usePlanCheck(requiredPlan: Plan): { allowed: boolean } {
   const trpc = useTRPC();
-  const { data: billing, isPending } = useQuery(
-    trpc.settings.getBilling.queryOptions(),
+  const { data: planSummary, isPending } = useQuery(
+    trpc.settings.getPlanSummary.queryOptions(),
   );
   if (isPending) return { allowed: false };
   // No billing record means org was created before billing was set up — treat as unrestricted.
-  if (!billing) return { allowed: true };
-  const effectivePlan = getEffectivePlan(billing.plan as Plan, billing.status);
+  if (!planSummary) return { allowed: true };
+  const effectivePlan = getEffectivePlan(
+    planSummary.plan as Plan,
+    planSummary.status,
+  );
   return { allowed: planAtLeast(effectivePlan, requiredPlan) };
 }
 
@@ -157,8 +165,8 @@ export function PlanGate({
   children: React.ReactNode;
 }) {
   const trpc = useTRPC();
-  const { data: billing, isPending } = useQuery(
-    trpc.settings.getBilling.queryOptions(),
+  const { data: planSummary, isPending } = useQuery(
+    trpc.settings.getPlanSummary.queryOptions(),
   );
 
   if (isPending) {
@@ -170,13 +178,20 @@ export function PlanGate({
   }
 
   // No billing record — org has no subscription yet, treat as unrestricted.
-  if (!billing) return <>{children}</>;
+  if (!planSummary) return <>{children}</>;
 
-  const currentPlan = getEffectivePlan(billing.plan as Plan, billing.status);
+  const currentPlan = getEffectivePlan(
+    planSummary.plan as Plan,
+    planSummary.status,
+  );
 
   if (!planAtLeast(currentPlan, requiredPlan)) {
     return (
-      <UpgradeBanner currentPlan={currentPlan} requiredPlan={requiredPlan} />
+      <UpgradeBanner
+        currentPlan={currentPlan}
+        requiredPlan={requiredPlan}
+        canManageBilling={planSummary.canManageBilling}
+      />
     );
   }
 
