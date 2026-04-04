@@ -99,6 +99,20 @@
       "when": 1775176761829,
       "tag": "0013_shiny_spot",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1775300000000,
+      "tag": "0014_recurring_invoices",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1775309170847,
+      "tag": "0015_curious_newton_destine",
+      "breakpoints": true
     }
   ]
 }

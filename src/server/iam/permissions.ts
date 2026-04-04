@@ -212,6 +212,45 @@ const DEFINITIONS = [
     group: "payments",
     dependencies: ["payment:view"] as const,
   },
+  {
+    key: "recurring-invoice:view",
+    label: "View recurring invoices",
+    group: "recurring-invoices",
+  },
+  {
+    key: "recurring-invoice:view-prices",
+    label: "View recurring invoice prices",
+    group: "recurring-invoices",
+    dependencies: ["recurring-invoice:view"] as const,
+  },
+  {
+    key: "recurring-invoice:create",
+    label: "Create recurring invoices",
+    group: "recurring-invoices",
+    dependencies: [
+      "recurring-invoice:view",
+      "recurring-invoice:view-prices",
+      "customer:view",
+      "item:view",
+    ] as const,
+  },
+  {
+    key: "recurring-invoice:edit",
+    label: "Edit recurring invoices",
+    group: "recurring-invoices",
+    dependencies: [
+      "recurring-invoice:view",
+      "recurring-invoice:view-prices",
+      "customer:view",
+      "item:view",
+    ] as const,
+  },
+  {
+    key: "recurring-invoice:delete",
+    label: "Delete recurring invoices",
+    group: "recurring-invoices",
+    dependencies: ["recurring-invoice:view"] as const,
+  },
 ] as const;
 
 export type PermissionKey = (typeof DEFINITIONS)[number]["key"];

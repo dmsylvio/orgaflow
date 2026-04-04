@@ -11,6 +11,7 @@ import { estimatesRouter } from "@/server/trpc/routers/estimates";
 import { expensesRouter } from "@/server/trpc/routers/expenses";
 import { iamRouter } from "@/server/trpc/routers/iam";
 import { invoicesRouter } from "@/server/trpc/routers/invoices";
+import { recurringInvoicesRouter } from "@/server/trpc/routers/recurring-invoices";
 import { itemsRouter } from "@/server/trpc/routers/items";
 import { paymentsRouter } from "@/server/trpc/routers/payments";
 import { reportsRouter } from "@/server/trpc/routers/reports";
@@ -35,6 +36,7 @@ export const appRouter = createTRPCRouter({
   expenses: expensesRouter,
   iam: iamRouter,
   invoices: invoicesRouter,
+  recurringInvoices: recurringInvoicesRouter,
   items: itemsRouter,
   payments: paymentsRouter,
   reports: reportsRouter,

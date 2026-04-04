@@ -276,8 +276,8 @@ const ITEMS: RoadmapItem[] = [
     Icon: RefreshCw,
     title: "Recurring Invoices",
     description:
-      "Schedule invoices to be generated automatically on a set interval — ideal for monthly retainers and ongoing contracts.",
-    status: "considering",
+      "Schedule invoices to be generated automatically on a set interval — ideal for monthly retainers and ongoing contracts. Configurable frequency, start date, limits, due-date offset, and optional auto-send.",
+    status: "shipped",
     effort: "High",
     category: "Automation",
   },
@@ -346,7 +346,7 @@ const COLUMNS: { status: Status; title: string; description: string }[] = [
 ];
 
 export default function RoadmapPage() {
-  const lastUpdated = "April 2, 2026 (v1.5.1)";
+  const lastUpdated = "April 4, 2026 (v1.6.0)";
 
   return (
     <div className="overflow-hidden">

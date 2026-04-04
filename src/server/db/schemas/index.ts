@@ -24,6 +24,8 @@ export * from "./organizations";
 export * from "./payment-modes";
 export * from "./payments";
 export * from "./role-permissions";
+export * from "./recurring-invoice-template-items";
+export * from "./recurring-invoice-templates";
 export * from "./roles";
 export * from "./sessions";
 export * from "./task-stages";

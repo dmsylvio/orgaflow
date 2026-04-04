@@ -16,6 +16,7 @@ import { customers } from "./customers";
 import { invoiceStatusEnum } from "./enum";
 import { invoiceItems } from "./invoice-items";
 import { organizations } from "./organizations";
+import { recurringInvoiceTemplates } from "./recurring-invoice-templates";
 
 export const invoices = pgTable(
   "invoices",
@@ -57,6 +58,10 @@ export const invoices = pgTable(
     baseTotal: numeric("base_total", { precision: 13, scale: 3 }),
     baseTax: numeric("base_tax", { precision: 13, scale: 3 }),
     salesTax: numeric("sales_tax", { precision: 8, scale: 4 }),
+    recurringTemplateId: text("recurring_template_id").references(
+      () => recurringInvoiceTemplates.id,
+      { onDelete: "set null" },
+    ),
     createdAt: timestamp("created_at", {
       withTimezone: true,
       mode: "date",
@@ -82,6 +87,7 @@ export const invoices = pgTable(
       table.invoiceNumber,
     ),
     uniqueIndex("invoices_public_link_token_unique").on(table.publicLinkToken),
+    index("invoices_recurring_template_idx").on(table.recurringTemplateId),
   ],
 );
 

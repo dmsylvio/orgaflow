@@ -66,6 +66,13 @@ export const appMenu: MainMenuItem[] = [
     permissions: ["invoice:view"],
   },
   {
+    key: "recurring-invoices",
+    label: "Recurring Invoice",
+    href: "/app/recurring-invoices",
+    group: 1,
+    permissions: ["recurring-invoice:view"],
+  },
+  {
     key: "payments",
     label: "Payments",
     href: "/app/payments",

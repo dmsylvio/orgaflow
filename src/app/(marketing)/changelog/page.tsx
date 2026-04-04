@@ -34,6 +34,43 @@ interface ChangelogEntry {
 
 const ENTRIES: ChangelogEntry[] = [
   {
+    version: "1.6.0",
+    date: "April 4, 2026",
+    badge: "minor",
+    summary:
+      "Recurring Invoices — automatically generate invoices on a configurable schedule with optional auto-send.",
+    changes: [
+      {
+        type: "new",
+        text: "Recurring Invoices module: create templates that automatically generate invoices on a set frequency — every hour, day, week, 15 days, month, 6 months, or year.",
+      },
+      {
+        type: "new",
+        text: "Each template supports a start date, optional end limit by date or invoice count, and a due-date offset (e.g. net 30 days).",
+      },
+      {
+        type: "new",
+        text: "Send Automatically toggle: when enabled, the generated invoice is emailed to the customer immediately upon creation with a secure view link.",
+      },
+      {
+        type: "new",
+        text: "Template status lifecycle: Active, On Hold (paused manually), and Completed (set automatically when a limit is reached).",
+      },
+      {
+        type: "new",
+        text: "Edit page shows all previously generated invoices for a template with direct links to the invoice detail.",
+      },
+      {
+        type: "new",
+        text: "Dedicated sidebar menu item under Invoices, with its own IAM permissions (view, view-prices, create, edit, delete).",
+      },
+      {
+        type: "new",
+        text: "Server-side cron job fires every hour via Next.js instrumentation, processes due templates, copies line items, and advances nextRunAt automatically.",
+      },
+    ],
+  },
+  {
     version: "1.5.2",
     date: "April 2, 2026",
     badge: "patch",

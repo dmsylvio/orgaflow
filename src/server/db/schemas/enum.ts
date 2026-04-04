@@ -30,6 +30,29 @@ export const invoiceStatusEnum = pgEnum("invoice_status", [
   "VOID",
 ]);
 
+export const recurringFrequencyEnum = pgEnum("recurring_frequency", [
+  "every_hour",
+  "every_2_hours",
+  "every_day",
+  "every_week",
+  "every_15_days",
+  "every_month",
+  "every_6_months",
+  "every_year",
+]);
+
+export const recurringLimitTypeEnum = pgEnum("recurring_limit_type", [
+  "none",
+  "date",
+  "count",
+]);
+
+export const recurringStatusEnum = pgEnum("recurring_status", [
+  "active",
+  "on_hold",
+  "completed",
+]);
+
 export const subscriptionPlanEnum = pgEnum("subscription_plan", [
   "starter",
   "growth",
