@@ -3,7 +3,7 @@ import {
   ACTIVE_ORGANIZATION_COOKIE,
   ACTIVE_ORGANIZATION_HEADER,
 } from "@/server/trpc/constants";
-import { auth } from "../../../auth";
+import { getCurrentSession } from "../auth/session";
 
 function getCookieValue(cookieHeader: string | null, name: string) {
   if (!cookieHeader) return null;
@@ -31,7 +31,7 @@ export function getOrganizationIdFromHeaders(headers: Headers): string | null {
 }
 
 export async function createTRPCContext(opts: { headers: Headers }) {
-  const session = await auth();
+  const session = await getCurrentSession();
 
   return {
     db,

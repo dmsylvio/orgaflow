@@ -1,6 +1,8 @@
-import { and, asc, eq } from "drizzle-orm";
 import { type DocumentProps, renderToBuffer } from "@react-pdf/renderer";
+import { and, asc, eq } from "drizzle-orm";
 import { type ReactElement, createElement } from "react";
+import { DocumentPdf } from "@/lib/pdf/document-pdf";
+import { getCurrentSession } from "@/server/auth/session";
 import { db } from "@/server/db";
 import {
   currencies,
@@ -11,15 +13,13 @@ import {
 } from "@/server/db/schemas";
 import { getCurrentAbility } from "@/server/services/iam/get-current-ability";
 import { getOrganizationIdFromHeaders } from "@/server/trpc/context";
-import { auth } from "../../../../../../auth";
-import { DocumentPdf } from "@/lib/pdf/document-pdf";
 
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const session = await auth();
+    const session = await getCurrentSession();
     const userId =
       session?.user && "id" in session.user
         ? (session.user as { id: string }).id

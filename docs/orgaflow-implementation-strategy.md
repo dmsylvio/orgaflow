@@ -85,7 +85,7 @@ This section reflects the **Next.js monolith** layout (`src/app/`, `src/server/`
 
 ### 4.1 Server and data layer
 
-Typical locations: `src/server/trpc/`, `src/server/db/`, Auth config at repo root (`auth.ts`, `auth.config.ts`), Zod schemas colocated or under `/schemas` as the project matures.
+Typical locations: `src/server/trpc/`, `src/server/db/`, Auth entrypoint at repo root (`auth.ts`) with config under `src/server/auth/auth.config.ts`, Zod schemas colocated or under `/schemas` as the project matures.
 
 Implemented or planned server concerns:
 

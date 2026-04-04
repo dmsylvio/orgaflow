@@ -3,10 +3,10 @@ import { type NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { appPaths } from "@/lib/app-paths";
 import { getAppBaseUrl } from "@/lib/base-url";
+import { getCurrentSession } from "@/server/auth/session";
 import { db } from "@/server/db";
 import { organizationMembers } from "@/server/db/schemas";
 import { ACTIVE_ORGANIZATION_COOKIE } from "@/server/trpc/constants";
-import { auth } from "../../../../../../auth";
 
 function getStripe(): Stripe | null {
   const key = process.env.STRIPE_SECRET_KEY?.trim();
@@ -15,7 +15,7 @@ function getStripe(): Stripe | null {
 }
 
 export async function GET(request: NextRequest) {
-  const authSession = await auth();
+  const authSession = await getCurrentSession();
   const userId =
     authSession?.user && "id" in authSession.user
       ? (authSession.user as { id: string }).id
@@ -61,7 +61,9 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL(appPaths.workspace, getAppBaseUrl()));
   }
 
-  const response = NextResponse.redirect(new URL(appPaths.home, getAppBaseUrl()));
+  const response = NextResponse.redirect(
+    new URL(appPaths.home, getAppBaseUrl()),
+  );
   response.cookies.set(ACTIVE_ORGANIZATION_COOKIE, organizationId, {
     path: "/",
     httpOnly: true,

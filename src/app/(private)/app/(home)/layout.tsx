@@ -4,13 +4,13 @@ import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 import { appPaths } from "@/lib/app-paths";
 import { isWorkspaceAccessible } from "@/lib/subscription-plans";
+import { getCurrentSession } from "@/server/auth/session";
 import { db } from "@/server/db";
 import {
   organizationMembers,
   organizationSubscriptions,
 } from "@/server/db/schemas";
 import { ACTIVE_ORGANIZATION_COOKIE } from "@/server/trpc/constants";
-import { auth } from "../../../../../auth";
 import { AppShell } from "./app-shell";
 
 /**
@@ -19,7 +19,7 @@ import { AppShell } from "./app-shell";
 export default async function AppHomeLayout({
   children,
 }: Readonly<{ children: ReactNode }>) {
-  const session = await auth();
+  const session = await getCurrentSession();
   if (!session?.user) {
     redirect("/login");
   }
