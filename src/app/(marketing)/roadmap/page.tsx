@@ -12,6 +12,7 @@ import {
   RefreshCw,
   Settings,
   ShieldCheck,
+  Smartphone,
   Zap,
 } from "lucide-react";
 import type { Metadata } from "next";
@@ -191,16 +192,6 @@ const ITEMS: RoadmapItem[] = [
     category: "Billing",
   },
   {
-    id: 5,
-    Icon: Mail,
-    title: "Extended Notifications",
-    description:
-      "More notification triggers: estimate approved or rejected, invoice due, payment received. Configurable per event with per-user preferences.",
-    status: "planned",
-    effort: "Low",
-    category: "Communication",
-  },
-  {
     id: 6,
     Icon: Settings,
     title: "Expanded Settings",
@@ -239,6 +230,16 @@ const ITEMS: RoadmapItem[] = [
     status: "planned",
     effort: "Medium",
     category: "UX",
+  },
+  {
+    id: 23,
+    Icon: Smartphone,
+    title: "SMS Notifications",
+    description:
+      "Send automated SMS messages to clients for key events: unpaid invoice reminders, estimate awaiting approval, payment received confirmations, and overdue alerts. Businesses can enable SMS per-client and configure which events trigger messages.",
+    status: "considering",
+    effort: "High",
+    category: "Communication",
   },
   {
     id: 9,
@@ -350,7 +351,7 @@ export default function RoadmapPage() {
   return (
     <div className="overflow-hidden">
       {/* Hero */}
-      <section className="relative pb-16 pt-20 text-center">
+      <section className="relative pb-8 pt-12 text-center">
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0 overflow-hidden"
@@ -376,7 +377,7 @@ export default function RoadmapPage() {
       </section>
 
       {/* Legend */}
-      <section className="mx-auto max-w-7xl px-6 pb-8">
+      <section className="mx-auto max-w-7xl px-6 pb-4">
         <div className="flex flex-wrap items-center justify-center gap-5">
           {COLUMNS.map(({ status, title, description }) => {
             const cfg = STATUS_CONFIG[status];
@@ -396,8 +397,8 @@ export default function RoadmapPage() {
       </section>
 
       {/* Board */}
-      <section className="mx-auto max-w-7xl px-6 pb-28">
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
+      <section className="mx-auto max-w-7xl px-6 pb-12">
+        <div className="grid grid-cols-1 gap-4 items-start lg:grid-cols-4">
           {COLUMNS.map(({ status, title }) => {
             const cfg = STATUS_CONFIG[status];
             const items = ITEMS.filter((i) => i.status === status);
@@ -414,7 +415,7 @@ export default function RoadmapPage() {
                 </div>
 
                 {/* Cards */}
-                <div className="flex flex-col gap-3">
+                <div className="roadmap-cards-container flex flex-col gap-2 max-h-[520px] overflow-y-auto pr-1">
                   {items.map(
                     ({ id, Icon, title: itemTitle, description, effort, category }) => {
                       const effortCfg = EFFORT_CONFIG[effort];
@@ -422,33 +423,36 @@ export default function RoadmapPage() {
                       return (
                         <div
                           key={id}
-                          className="rounded-2xl border border-border bg-background p-5 shadow-sm"
+                          className="rounded-xl border border-border bg-background p-4 shadow-sm"
                         >
                           {/* Top row */}
-                          <div className="mb-3 flex items-start justify-between gap-3">
-                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-muted">
-                              <Icon className="h-4 w-4 text-muted-foreground" />
+                          <div className="mb-2 flex items-start justify-between gap-3">
+                            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-muted">
+                              <Icon className="h-3.5 w-3.5 text-muted-foreground" />
                             </div>
                             <span
-                              className={`mt-1 rounded-full border px-2.5 py-0.5 text-xs font-medium ${cfg.badge} ${cfg.text}`}
+                              className={`mt-0.5 rounded-full border px-2.5 py-0.5 text-xs font-medium ${cfg.badge} ${cfg.text}`}
                             >
                               {cfg.label}
                             </span>
                           </div>
 
-                          <h3 className="mb-1.5 font-semibold text-foreground">
+                          <h3 className="mb-1 text-sm font-semibold text-foreground">
                             {itemTitle}
                           </h3>
-                          <p className="mb-4 text-sm leading-relaxed text-muted-foreground">
+                          <p
+                            className="mb-2 line-clamp-2 text-xs leading-snug text-muted-foreground"
+                            title={description}
+                          >
                             {description}
                           </p>
 
                           {/* Footer */}
                           <div className="flex items-center justify-between">
-                            <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs text-muted-foreground">
+                            <span className="rounded-full bg-muted px-2 py-px text-[10px] text-muted-foreground">
                               {category}
                             </span>
-                            <span className={`text-xs font-medium ${effortCfg.color}`}>
+                            <span className={`text-[10px] font-medium ${effortCfg.color}`}>
                               {effortCfg.label}
                             </span>
                           </div>

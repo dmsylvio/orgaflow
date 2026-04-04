@@ -58,6 +58,24 @@
   }
 }
 
+.roadmap-cards-container {
+  scrollbar-width: thin;
+  scrollbar-color: #e5e7eb transparent;
+}
+
+.roadmap-cards-container::-webkit-scrollbar {
+  width: 4px;
+}
+
+.roadmap-cards-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.roadmap-cards-container::-webkit-scrollbar-thumb {
+  background-color: #e5e7eb;
+  border-radius: 9999px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
