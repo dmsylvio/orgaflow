@@ -53,7 +53,7 @@ export function MarketingFooter() {
                 </svg>
               </Link>
               <Link
-                href="https://www.instagram.com/orgaflowapp"
+                href="https://www.instagram.com/orgaflow.app"
                 className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground transition-colors hover:border-primary/30 hover:text-primary"
               >
                 <Instagram className="h-4 w-4" aria-hidden />
