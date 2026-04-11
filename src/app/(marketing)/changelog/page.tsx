@@ -34,6 +34,35 @@ interface ChangelogEntry {
 
 const ENTRIES: ChangelogEntry[] = [
   {
+    version: "1.7.0",
+    date: "April 11, 2026",
+    badge: "minor",
+    summary:
+      "Mobile-first app shell — fully responsive layout with a slide-in drawer, mobile top bar, and user dropdown with account and logout actions.",
+    changes: [
+      {
+        type: "new",
+        text: "App shell is now fully responsive — on mobile the sidebar becomes a slide-in drawer from the left with a translucent backdrop and smooth CSS transition.",
+      },
+      {
+        type: "new",
+        text: "Mobile top bar with hamburger button, Orgaflow logo, and user avatar always visible on small screens.",
+      },
+      {
+        type: "new",
+        text: "Sidebar auto-closes when navigating to a new route on mobile, and the page body scroll is locked while the drawer is open.",
+      },
+      {
+        type: "new",
+        text: "Settings navigation on mobile renders as a scrollable horizontal pill-tab bar at the top of the content area, replacing the desktop secondary sidebar.",
+      },
+      {
+        type: "new",
+        text: "User dropdown in the sidebar footer and mobile header — opens a menu with Account Settings (links to /app/settings/account) and Log out actions.",
+      },
+    ],
+  },
+  {
     version: "1.6.0",
     date: "April 4, 2026",
     badge: "minor",

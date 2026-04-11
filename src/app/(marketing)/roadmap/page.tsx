@@ -281,6 +281,16 @@ const ITEMS: RoadmapItem[] = [
     effort: "High",
     category: "Automation",
   },
+  {
+    id: 24,
+    Icon: Smartphone,
+    title: "Mobile-Responsive App Shell",
+    description:
+      "The private app shell is now fully responsive. On mobile the sidebar becomes a slide-in drawer with backdrop, a top bar with hamburger and logo, auto-close on navigation, horizontal scrollable settings tabs, and a user dropdown with Account Settings and Log out.",
+    status: "shipped",
+    effort: "Medium",
+    category: "UX",
+  },
 ];
 
 const STATUS_CONFIG: Record<
@@ -346,7 +356,7 @@ const COLUMNS: { status: Status; title: string; description: string }[] = [
 ];
 
 export default function RoadmapPage() {
-  const lastUpdated = "April 4, 2026 (v1.6.0)";
+  const lastUpdated = "April 11, 2026 (v1.7.0)";
 
   return (
     <div className="overflow-hidden">
