@@ -65,6 +65,159 @@ function isFinancialYearValue(value: string): value is FinancialYearValue {
 }
 
 // ---------------------------------------------------------------------------
+// Template selector
+// ---------------------------------------------------------------------------
+
+interface PdfTemplateOption {
+  id: 1 | 2 | 3;
+  name: string;
+  description: string;
+  preview: React.ReactNode;
+}
+
+function TemplatePreview1() {
+  return (
+    <div className="flex h-20 w-full flex-col items-center gap-1 rounded border border-border bg-white p-2 text-[5px] text-gray-400">
+      <div className="h-2 w-8 rounded bg-violet-300" />
+      <div className="h-px w-full bg-gray-200" />
+      <div className="mt-0.5 flex w-full gap-1">
+        <div className="flex flex-col gap-0.5">
+          <div className="h-1 w-8 rounded bg-gray-200" />
+          <div className="h-1 w-6 rounded bg-gray-200" />
+        </div>
+        <div className="ml-auto flex flex-col items-end gap-0.5">
+          <div className="h-1 w-10 rounded bg-gray-200" />
+          <div className="h-1 w-8 rounded bg-gray-200" />
+        </div>
+      </div>
+      <div className="mt-1 w-full rounded bg-gray-100 px-1 py-0.5">
+        <div className="flex justify-between">
+          <div className="h-1 w-12 rounded bg-gray-300" />
+          <div className="h-1 w-6 rounded bg-gray-300" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TemplatePreview2() {
+  return (
+    <div className="flex h-20 w-full flex-col overflow-hidden rounded border border-border bg-white text-[5px]">
+      <div className="flex items-center justify-between bg-violet-400 px-2 py-1.5">
+        <div className="h-2 w-6 rounded bg-white/70" />
+        <div className="flex flex-col items-end gap-0.5">
+          <div className="h-1.5 w-10 rounded bg-white/90" />
+          <div className="h-1 w-6 rounded bg-white/60" />
+        </div>
+      </div>
+      <div className="flex flex-1 gap-2 p-2">
+        <div className="flex flex-col gap-0.5">
+          <div className="h-1 w-8 rounded bg-gray-200" />
+          <div className="h-1 w-6 rounded bg-gray-200" />
+        </div>
+        <div className="ml-auto flex flex-col items-end gap-0.5">
+          <div className="h-1 w-10 rounded bg-gray-200" />
+          <div className="h-1 w-8 rounded bg-gray-200" />
+        </div>
+      </div>
+      <div className="mx-2 mb-1 rounded bg-gray-100 px-1 py-0.5">
+        <div className="flex justify-between">
+          <div className="h-1 w-12 rounded bg-gray-300" />
+          <div className="h-1 w-6 rounded bg-gray-300" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TemplatePreview3() {
+  return (
+    <div className="flex h-20 w-full flex-col gap-1 rounded border border-border bg-white p-2 text-[5px]">
+      <div className="flex items-start justify-between">
+        <div className="h-2 w-6 rounded bg-violet-300" />
+        <div className="flex flex-col items-end gap-0.5">
+          <div className="h-1 w-10 rounded bg-gray-200" />
+          <div className="h-1 w-8 rounded bg-gray-200" />
+        </div>
+      </div>
+      <div className="h-px w-full bg-gray-200" />
+      <div className="flex gap-2">
+        <div className="flex flex-col gap-0.5">
+          <div className="h-1 w-8 rounded bg-gray-200" />
+          <div className="h-1 w-6 rounded bg-gray-200" />
+        </div>
+        <div className="ml-auto flex flex-col items-end gap-0.5">
+          <div className="h-1 w-10 rounded bg-gray-200" />
+          <div className="h-1 w-8 rounded bg-gray-200" />
+        </div>
+      </div>
+      <div className="mt-0.5 w-full rounded bg-gray-100 px-1 py-0.5">
+        <div className="flex justify-between">
+          <div className="h-1 w-12 rounded bg-gray-300" />
+          <div className="h-1 w-6 rounded bg-gray-300" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const PDF_TEMPLATES: PdfTemplateOption[] = [
+  {
+    id: 1,
+    name: "Classic",
+    description: "Centered logo, clean divider, side-by-side info layout.",
+    preview: <TemplatePreview1 />,
+  },
+  {
+    id: 2,
+    name: "Branded",
+    description: "Purple header band with doc title and logo.",
+    preview: <TemplatePreview2 />,
+  },
+  {
+    id: 3,
+    name: "Modern",
+    description: "Split header: logo left, address right, doc info on side.",
+    preview: <TemplatePreview3 />,
+  },
+];
+
+function TemplateCard({
+  template,
+  selected,
+  onSelect,
+}: {
+  template: PdfTemplateOption;
+  selected: boolean;
+  onSelect: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      className={`flex cursor-pointer flex-col gap-2 rounded-lg border-2 p-3 text-left transition-colors ${
+        selected
+          ? "border-primary bg-primary/5"
+          : "border-border bg-card hover:border-primary/40"
+      }`}
+    >
+      {template.preview}
+      <div>
+        <p className="text-sm font-semibold text-foreground">{template.name}</p>
+        <p className="text-xs text-muted-foreground">{template.description}</p>
+      </div>
+      <div
+        className={`ml-auto h-3.5 w-3.5 rounded-full border-2 ${
+          selected
+            ? "border-primary bg-primary"
+            : "border-muted-foreground/40 bg-transparent"
+        }`}
+      />
+    </button>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Layout helpers
 // ---------------------------------------------------------------------------
 
@@ -191,6 +344,8 @@ export default function PreferencesPage() {
     useState(false);
   const [publicLinksExpireDays, setPublicLinksExpireDays] = useState(7);
   const [discountPerItem, setDiscountPerItem] = useState(false);
+  const [invoiceTemplate, setInvoiceTemplate] = useState<1 | 2 | 3>(1);
+  const [estimateTemplate, setEstimateTemplate] = useState<1 | 2 | 3>(1);
 
   // ---- Hydrate from server --------------------------------------------------
   useEffect(() => {
@@ -212,6 +367,10 @@ export default function PreferencesPage() {
     setPublicLinksExpireEnabled(p?.publicLinksExpireEnabled ?? true);
     setPublicLinksExpireDays(p?.publicLinksExpireDays ?? 7);
     setDiscountPerItem(p?.discountPerItem ?? false);
+    const inv = p?.invoiceTemplate ?? 1;
+    const est = p?.estimateTemplate ?? 1;
+    setInvoiceTemplate((inv >= 1 && inv <= 3 ? inv : 1) as 1 | 2 | 3);
+    setEstimateTemplate((est >= 1 && est <= 3 ? est : 1) as 1 | 2 | 3);
   }, [data]);
 
   // ---- Mutation -------------------------------------------------------------
@@ -239,6 +398,8 @@ export default function PreferencesPage() {
       publicLinksExpireEnabled,
       publicLinksExpireDays,
       discountPerItem,
+      invoiceTemplate,
+      estimateTemplate,
     });
   }
 
@@ -378,6 +539,43 @@ export default function PreferencesPage() {
             checked={discountPerItem}
             onCheckedChange={setDiscountPerItem}
           />
+        </Section>
+
+        {/* PDF Templates */}
+        <Section title="PDF templates">
+          <div className="space-y-6">
+            <div>
+              <p className="mb-3 text-sm font-medium text-foreground">
+                Invoice template
+              </p>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                {PDF_TEMPLATES.map((tpl) => (
+                  <TemplateCard
+                    key={tpl.id}
+                    template={tpl}
+                    selected={invoiceTemplate === tpl.id}
+                    onSelect={() => setInvoiceTemplate(tpl.id as 1 | 2 | 3)}
+                  />
+                ))}
+              </div>
+            </div>
+            <Separator />
+            <div>
+              <p className="mb-3 text-sm font-medium text-foreground">
+                Estimate template
+              </p>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                {PDF_TEMPLATES.map((tpl) => (
+                  <TemplateCard
+                    key={tpl.id}
+                    template={tpl}
+                    selected={estimateTemplate === tpl.id}
+                    onSelect={() => setEstimateTemplate(tpl.id as 1 | 2 | 3)}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
         </Section>
 
         <div className="flex justify-end">

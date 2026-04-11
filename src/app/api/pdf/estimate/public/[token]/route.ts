@@ -1,6 +1,7 @@
 import { and, asc, eq } from "drizzle-orm";
 import { type DocumentProps, renderToBuffer } from "@react-pdf/renderer";
 import { type ReactElement, createElement } from "react";
+import { formatOrgAddress, getPdfComponent } from "@/lib/pdf/get-pdf-component";
 import { db } from "@/server/db";
 import {
   currencies,
@@ -10,7 +11,6 @@ import {
   organizations,
   organizationPreferences,
 } from "@/server/db/schemas";
-import { DocumentPdf } from "@/lib/pdf/document-pdf";
 
 export async function GET(
   _request: Request,
@@ -32,8 +32,16 @@ export async function GET(
         publicLinkCreatedAt: estimates.publicLinkCreatedAt,
         organizationId: estimates.organizationId,
         organizationName: organizations.name,
+        orgAddressLine1: organizations.addressLine1,
+        orgAddressLine2: organizations.addressLine2,
+        orgCity: organizations.city,
+        orgRegion: organizations.region,
+        orgPostalCode: organizations.postalCode,
+        orgPhone: organizations.businessPhone,
+        orgLogoUrl: organizations.logoUrl,
         customerName: customers.displayName,
         customerEmail: customers.email,
+        customerAddress: customers.address,
         currencyCode: currencies.code,
         currencySymbol: currencies.symbol,
         currencyPrecision: currencies.precision,
@@ -42,6 +50,7 @@ export async function GET(
         currencySwapSymbol: currencies.swapCurrencySymbol,
         publicLinksExpireEnabled: organizationPreferences.publicLinksExpireEnabled,
         publicLinksExpireDays: organizationPreferences.publicLinksExpireDays,
+        estimateTemplate: organizationPreferences.estimateTemplate,
       })
       .from(estimates)
       .innerJoin(organizations, eq(estimates.organizationId, organizations.id))
@@ -98,17 +107,29 @@ export async function GET(
       swapCurrencySymbol: estimate.currencySwapSymbol,
     };
 
-    const element = createElement(DocumentPdf, {
+    const templateId = (estimate.estimateTemplate ?? 1) as 1 | 2 | 3;
+    const Component = getPdfComponent("estimate", templateId);
+
+    const element = createElement(Component, {
       data: {
-        type: "estimate",
         number: estimate.estimateNumber,
         date: estimate.estimateDate,
         secondaryDate: estimate.expiryDate,
-        secondaryDateLabel: "Expiry",
+        secondaryDateLabel: "Expiry Date",
         organizationName: estimate.organizationName,
+        organizationAddress: formatOrgAddress({
+          addressLine1: estimate.orgAddressLine1,
+          addressLine2: estimate.orgAddressLine2,
+          city: estimate.orgCity,
+          region: estimate.orgRegion,
+          postalCode: estimate.orgPostalCode,
+          businessPhone: estimate.orgPhone,
+        }),
+        logoUrl: estimate.orgLogoUrl,
         customer: {
           displayName: estimate.customerName,
           email: estimate.customerEmail,
+          address: estimate.customerAddress,
         },
         currency,
         items: lineItems,

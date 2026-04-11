@@ -191,13 +191,14 @@ function SectionHeader({ children }: { children: React.ReactNode }) {
 // File Storage Usage
 // ---------------------------------------------------------------------------
 
-/**
- * Mockup: no real storage tracking yet. Shows 0 used.
- * Replace `usedBytes` with a real query when storage tracking is implemented.
- */
 function StorageUsageSection({ plan }: { plan: Plan }) {
+  const trpc = useTRPC();
+  const { data: storageData } = useQuery(
+    trpc.settings.getStorageUsage.queryOptions(),
+  );
+
   const limitBytes = PLAN_STORAGE_BYTES[plan];
-  const usedBytes = 0; // mockup — swap with real data later
+  const usedBytes = storageData?.usedBytes ?? 0;
 
   const percent =
     limitBytes && limitBytes > 0

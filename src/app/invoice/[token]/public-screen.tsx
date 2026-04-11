@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { CalendarClock, Download, Receipt, TriangleAlert } from "lucide-react";
+import { CalendarClock, Download, FileText, ImageIcon, Receipt, TriangleAlert } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,62 @@ import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
 import { formatCurrencyDisplay } from "@/lib/currency-format";
 import { useTRPC } from "@/trpc/client";
+
+function formatBytes(bytes: number) {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+type FileItem = {
+  id: string;
+  fileName: string;
+  storageKey: string;
+  mimeType: string;
+  fileSize: number;
+};
+
+function FileCard({ file }: { file: FileItem }) {
+  const isImage = file.mimeType.startsWith("image/");
+  return (
+    <a
+      href={file.storageKey}
+      target="_blank"
+      rel="noreferrer"
+      className="group flex flex-col overflow-hidden rounded-xl border border-border bg-background transition-shadow hover:shadow-md"
+    >
+      <div className="flex h-32 items-center justify-center overflow-hidden bg-muted/40">
+        {isImage ? (
+          // biome-ignore lint/performance/noImgElement: public user-uploaded image
+          <img
+            src={file.storageKey}
+            alt={file.fileName}
+            className="h-full w-full object-cover transition-transform group-hover:scale-105"
+          />
+        ) : (
+          <div className="flex flex-col items-center gap-2 text-muted-foreground/50">
+            {file.mimeType === "application/pdf" ? (
+              <FileText className="h-9 w-9" />
+            ) : (
+              <ImageIcon className="h-9 w-9" />
+            )}
+          </div>
+        )}
+      </div>
+      <div className="flex items-center gap-2 px-3 py-2.5">
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-xs font-medium text-foreground">
+            {file.fileName}
+          </p>
+          <p className="text-[10px] text-muted-foreground">
+            {formatBytes(file.fileSize)}
+          </p>
+        </div>
+        <Download className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50 transition-colors group-hover:text-primary" />
+      </div>
+    </a>
+  );
+}
 
 function formatDate(value: string | null | undefined): string {
   if (!value) return "—";
@@ -258,6 +314,25 @@ export function InvoicePublicScreen({ token }: { token: string }) {
                 </div>
               </div>
             </div>
+
+            {invoice.files && invoice.files.length > 0 ? (
+              <div className="rounded-2xl border border-border bg-card p-5">
+                <div className="mb-4 flex items-center justify-between">
+                  <h2 className="text-lg font-semibold text-foreground">
+                    Attachments
+                  </h2>
+                  <span className="text-sm text-muted-foreground">
+                    {invoice.files.length} file
+                    {invoice.files.length !== 1 ? "s" : ""}
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+                  {invoice.files.map((file) => (
+                    <FileCard key={file.id} file={file} />
+                  ))}
+                </div>
+              </div>
+            ) : null}
 
             {invoice.notes ? (
               <div className="rounded-2xl border border-border bg-card p-5">

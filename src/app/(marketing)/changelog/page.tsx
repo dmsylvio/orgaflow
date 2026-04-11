@@ -34,6 +34,72 @@ interface ChangelogEntry {
 
 const ENTRIES: ChangelogEntry[] = [
   {
+    version: "1.9.0",
+    date: "April 11, 2026",
+    badge: "minor",
+    summary:
+      "Three selectable PDF templates for invoices and estimates — Classic, Branded, and Modern — each with full logo and address support.",
+    changes: [
+      {
+        type: "new",
+        text: "PDF templates: choose between three layouts per document type (invoice and estimate). Templates are selected independently in Settings → Preferences → PDF templates.",
+      },
+      {
+        type: "new",
+        text: "Template 1 — Classic: centered logo or company name, horizontal divider, company address left / document details right, and a bordered total box.",
+      },
+      {
+        type: "new",
+        text: "Template 2 — Branded: full-width purple header band with logo left and document title in white on the right. Company address and customer info shown below.",
+      },
+      {
+        type: "new",
+        text: "Template 3 — Modern: split header with logo on the left and company address on the right, then customer block and document metadata side by side.",
+      },
+      {
+        type: "improved",
+        text: "All PDF exports now include the company logo (from Company Settings) and the formatted organization address directly inside the document.",
+      },
+      {
+        type: "improved",
+        text: "Customer billing address is now fetched and embedded in every generated PDF, eliminating the need to repeat it manually in notes.",
+      },
+    ],
+  },
+  {
+    version: "1.8.0",
+    date: "April 11, 2026",
+    badge: "minor",
+    summary:
+      "Company logo upload, file visibility toggle on estimates, attachments on public invoices, real storage tracking, and automatic blob cleanup on deletions.",
+    changes: [
+      {
+        type: "new",
+        text: "Company Settings now has a dedicated Logo section — upload a PNG/JPG/WebP/SVG (max 5 MB), preview it inline, and remove it with one click. The logo is stored on Vercel Blob and appears on document pages.",
+      },
+      {
+        type: "new",
+        text: "Each file attached to an estimate now has a visibility toggle (eye icon). Only files marked as visible are shown on the public estimate link — files default to hidden.",
+      },
+      {
+        type: "new",
+        text: "Public invoice pages now display an Attachments section with a file grid, matching the existing public estimate page experience.",
+      },
+      {
+        type: "new",
+        text: "File attachment storage usage in Billing settings now shows real data — bytes consumed are summed live from the database instead of a hardcoded zero.",
+      },
+      {
+        type: "fixed",
+        text: "Deleting an estimate or invoice now removes all associated files from Vercel Blob storage, preventing orphaned blobs from accumulating.",
+      },
+      {
+        type: "fixed",
+        text: "Deleting an organization now removes all document attachments and the company logo from blob storage before the record is deleted.",
+      },
+    ],
+  },
+  {
     version: "1.7.0",
     date: "April 11, 2026",
     badge: "minor",

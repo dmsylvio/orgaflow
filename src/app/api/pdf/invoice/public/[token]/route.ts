@@ -1,6 +1,7 @@
 import { and, asc, eq } from "drizzle-orm";
 import { type DocumentProps, renderToBuffer } from "@react-pdf/renderer";
 import { type ReactElement, createElement } from "react";
+import { formatOrgAddress, getPdfComponent } from "@/lib/pdf/get-pdf-component";
 import { db } from "@/server/db";
 import {
   currencies,
@@ -10,7 +11,6 @@ import {
   organizations,
   organizationPreferences,
 } from "@/server/db/schemas";
-import { DocumentPdf } from "@/lib/pdf/document-pdf";
 
 export async function GET(
   _request: Request,
@@ -32,8 +32,16 @@ export async function GET(
         publicLinkCreatedAt: invoices.publicLinkCreatedAt,
         organizationId: invoices.organizationId,
         organizationName: organizations.name,
+        orgAddressLine1: organizations.addressLine1,
+        orgAddressLine2: organizations.addressLine2,
+        orgCity: organizations.city,
+        orgRegion: organizations.region,
+        orgPostalCode: organizations.postalCode,
+        orgPhone: organizations.businessPhone,
+        orgLogoUrl: organizations.logoUrl,
         customerName: customers.displayName,
         customerEmail: customers.email,
+        customerAddress: customers.address,
         currencyCode: currencies.code,
         currencySymbol: currencies.symbol,
         currencyPrecision: currencies.precision,
@@ -42,6 +50,7 @@ export async function GET(
         currencySwapSymbol: currencies.swapCurrencySymbol,
         publicLinksExpireEnabled: organizationPreferences.publicLinksExpireEnabled,
         publicLinksExpireDays: organizationPreferences.publicLinksExpireDays,
+        invoiceTemplate: organizationPreferences.invoiceTemplate,
       })
       .from(invoices)
       .innerJoin(organizations, eq(invoices.organizationId, organizations.id))
@@ -98,17 +107,29 @@ export async function GET(
       swapCurrencySymbol: invoice.currencySwapSymbol,
     };
 
-    const element = createElement(DocumentPdf, {
+    const templateId = (invoice.invoiceTemplate ?? 1) as 1 | 2 | 3;
+    const Component = getPdfComponent("invoice", templateId);
+
+    const element = createElement(Component, {
       data: {
-        type: "invoice",
         number: invoice.invoiceNumber,
         date: invoice.invoiceDate,
         secondaryDate: invoice.dueDate,
-        secondaryDateLabel: "Due date",
+        secondaryDateLabel: "Due Date",
         organizationName: invoice.organizationName,
+        organizationAddress: formatOrgAddress({
+          addressLine1: invoice.orgAddressLine1,
+          addressLine2: invoice.orgAddressLine2,
+          city: invoice.orgCity,
+          region: invoice.orgRegion,
+          postalCode: invoice.orgPostalCode,
+          businessPhone: invoice.orgPhone,
+        }),
+        logoUrl: invoice.orgLogoUrl,
         customer: {
           displayName: invoice.customerName,
           email: invoice.customerEmail,
+          address: invoice.customerAddress,
         },
         currency,
         items: lineItems,

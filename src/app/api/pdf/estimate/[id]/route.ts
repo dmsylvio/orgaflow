@@ -1,7 +1,7 @@
 import { type DocumentProps, renderToBuffer } from "@react-pdf/renderer";
 import { and, asc, eq } from "drizzle-orm";
 import { type ReactElement, createElement } from "react";
-import { DocumentPdf } from "@/lib/pdf/document-pdf";
+import { formatOrgAddress, getPdfComponent } from "@/lib/pdf/get-pdf-component";
 import { getCurrentSession } from "@/server/auth/session";
 import { db } from "@/server/db";
 import {
@@ -9,6 +9,7 @@ import {
   customers,
   estimateItems,
   estimates,
+  organizationPreferences,
   organizations,
 } from "@/server/db/schemas";
 import { getCurrentAbility } from "@/server/services/iam/get-current-ability";
@@ -46,19 +47,32 @@ export async function GET(
         total: estimates.total,
         tax: estimates.tax,
         organizationName: organizations.name,
+        orgAddressLine1: organizations.addressLine1,
+        orgAddressLine2: organizations.addressLine2,
+        orgCity: organizations.city,
+        orgRegion: organizations.region,
+        orgPostalCode: organizations.postalCode,
+        orgPhone: organizations.businessPhone,
+        orgLogoUrl: organizations.logoUrl,
         customerName: customers.displayName,
         customerEmail: customers.email,
+        customerAddress: customers.address,
         currencyCode: currencies.code,
         currencySymbol: currencies.symbol,
         currencyPrecision: currencies.precision,
         currencyThousandSeparator: currencies.thousandSeparator,
         currencyDecimalSeparator: currencies.decimalSeparator,
         currencySwapSymbol: currencies.swapCurrencySymbol,
+        estimateTemplate: organizationPreferences.estimateTemplate,
       })
       .from(estimates)
       .innerJoin(organizations, eq(estimates.organizationId, organizations.id))
       .innerJoin(customers, eq(estimates.customerId, customers.id))
       .innerJoin(currencies, eq(estimates.currencyId, currencies.id))
+      .leftJoin(
+        organizationPreferences,
+        eq(organizationPreferences.organizationId, estimates.organizationId),
+      )
       .where(
         and(eq(estimates.id, id), eq(estimates.organizationId, organizationId)),
       )
@@ -95,17 +109,29 @@ export async function GET(
       swapCurrencySymbol: estimate.currencySwapSymbol,
     };
 
-    const element = createElement(DocumentPdf, {
+    const templateId = (estimate.estimateTemplate ?? 1) as 1 | 2 | 3;
+    const Component = getPdfComponent("estimate", templateId);
+
+    const element = createElement(Component, {
       data: {
-        type: "estimate",
         number: estimate.estimateNumber,
         date: estimate.estimateDate,
         secondaryDate: estimate.expiryDate,
-        secondaryDateLabel: "Expiry",
+        secondaryDateLabel: "Expiry Date",
         organizationName: estimate.organizationName,
+        organizationAddress: formatOrgAddress({
+          addressLine1: estimate.orgAddressLine1,
+          addressLine2: estimate.orgAddressLine2,
+          city: estimate.orgCity,
+          region: estimate.orgRegion,
+          postalCode: estimate.orgPostalCode,
+          businessPhone: estimate.orgPhone,
+        }),
+        logoUrl: estimate.orgLogoUrl,
         customer: {
           displayName: estimate.customerName,
           email: estimate.customerEmail,
+          address: estimate.customerAddress,
         },
         currency,
         items: lineItems,

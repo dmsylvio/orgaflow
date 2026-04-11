@@ -1,7 +1,8 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { Building2, ImagePlus, Trash2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,6 +10,10 @@ import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
 import { toast } from "@/lib/toast";
 import { useTRPC } from "@/trpc/client";
+
+// ---------------------------------------------------------------------------
+// Layout helpers
+// ---------------------------------------------------------------------------
 
 function SettingsPage({
   title,
@@ -71,6 +76,160 @@ function Field({
     </div>
   );
 }
+
+// ---------------------------------------------------------------------------
+// Logo upload section
+// ---------------------------------------------------------------------------
+
+function LogoSection({ currentLogoUrl }: { currentLogoUrl?: string | null }) {
+  const queryClient = useQueryClient();
+  const trpc = useTRPC();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [removing, setRemoving] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(
+    currentLogoUrl ?? null,
+  );
+
+  useEffect(() => {
+    setPreviewUrl(currentLogoUrl ?? null);
+  }, [currentLogoUrl]);
+
+  async function handleFileChange(files: FileList | null) {
+    if (!files || files.length === 0) return;
+    const file = files[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch("/api/upload/logo", {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+      });
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(
+          (body as { error?: string }).error ?? "Upload failed",
+        );
+      }
+
+      const { logoUrl } = (await res.json()) as { logoUrl: string };
+      setPreviewUrl(logoUrl);
+      await queryClient.invalidateQueries(
+        trpc.settings.getCompany.queryOptions(),
+      );
+      toast.success("Logo updated.");
+    } catch (err) {
+      toast.error("Upload failed", {
+        description: err instanceof Error ? err.message : undefined,
+      });
+    } finally {
+      setUploading(false);
+      if (inputRef.current) inputRef.current.value = "";
+    }
+  }
+
+  async function handleRemove() {
+    setRemoving(true);
+    try {
+      const res = await fetch("/api/upload/logo", {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Failed to remove logo");
+      setPreviewUrl(null);
+      await queryClient.invalidateQueries(
+        trpc.settings.getCompany.queryOptions(),
+      );
+      toast.success("Logo removed.");
+    } catch (err) {
+      toast.error("Could not remove logo", {
+        description: err instanceof Error ? err.message : undefined,
+      });
+    } finally {
+      setRemoving(false);
+    }
+  }
+
+  return (
+    <Section title="Company logo">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+        {/* Preview */}
+        <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border bg-muted/40">
+          {previewUrl ? (
+            // biome-ignore lint/performance/noImgElement: user-uploaded org logo
+            <img
+              src={previewUrl}
+              alt="Company logo"
+              className="h-full w-full object-contain p-1"
+            />
+          ) : (
+            <Building2 className="h-8 w-8 text-muted-foreground/40" />
+          )}
+        </div>
+
+        {/* Actions */}
+        <div className="flex flex-col gap-2">
+          <p className="text-sm text-muted-foreground">
+            This logo appears on estimates, invoices, and public document pages.
+            Recommended size: 400 × 200 px. Max 5 MB.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <input
+              ref={inputRef}
+              type="file"
+              accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"
+              className="hidden"
+              onChange={(e) => handleFileChange(e.target.files)}
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={uploading || removing}
+              onClick={() => inputRef.current?.click()}
+              className="gap-1.5"
+            >
+              {uploading ? (
+                <Spinner className="h-3.5 w-3.5" />
+              ) : (
+                <ImagePlus className="h-3.5 w-3.5" />
+              )}
+              {previewUrl ? "Replace logo" : "Upload logo"}
+            </Button>
+
+            {previewUrl ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                disabled={removing || uploading}
+                onClick={handleRemove}
+                className="gap-1.5 text-destructive hover:text-destructive"
+              >
+                {removing ? (
+                  <Spinner className="h-3.5 w-3.5" />
+                ) : (
+                  <Trash2 className="h-3.5 w-3.5" />
+                )}
+                Remove
+              </Button>
+            ) : null}
+          </div>
+        </div>
+      </div>
+    </Section>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Page
+// ---------------------------------------------------------------------------
 
 export default function CompanySettingsPage() {
   const trpc = useTRPC();
@@ -135,8 +294,11 @@ export default function CompanySettingsPage() {
   return (
     <SettingsPage
       title="Company Settings"
-      description="Name, address, and default currency shown on estimates and invoices."
+      description="Name, logo, address, and contact info shown on estimates and invoices."
     >
+      {/* Logo */}
+      <LogoSection currentLogoUrl={data?.org.logoUrl} />
+
       <form onSubmit={handleSubmit} className="space-y-8">
         {/* Identity */}
         <Section title="Identity">

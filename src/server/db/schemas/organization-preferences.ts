@@ -82,6 +82,8 @@ export const organizationPreferences = pgTable(
       .notNull(),
     discountPerItem: boolean("discount_per_item").default(false).notNull(),
     taxPerItem: boolean("tax_per_item").default(false).notNull(),
+    invoiceTemplate: integer("invoice_template").default(1).notNull(),
+    estimateTemplate: integer("estimate_template").default(1).notNull(),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
       .defaultNow()
       .notNull(),

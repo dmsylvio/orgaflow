@@ -23,6 +23,7 @@ export const organizations = pgTable(
     region: text("region"),
     postalCode: text("postal_code"),
     businessPhone: text("business_phone"),
+    logoUrl: text("logo_url"),
     createdAt: timestamp("created_at", {
       withTimezone: true,
       mode: "date",

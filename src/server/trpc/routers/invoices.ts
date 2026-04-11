@@ -537,6 +537,24 @@ export const invoicesRouter = createTRPCRouter({
         )
         .orderBy(asc(invoiceItems.createdAt));
 
+      const publicFiles = await ctx.db
+        .select({
+          id: documentFiles.id,
+          fileName: documentFiles.fileName,
+          storageKey: documentFiles.storageKey,
+          mimeType: documentFiles.mimeType,
+          fileSize: documentFiles.fileSize,
+        })
+        .from(documentFiles)
+        .where(
+          and(
+            eq(documentFiles.resourceType, "invoice"),
+            eq(documentFiles.resourceId, invoice.id),
+            eq(documentFiles.isPublic, true),
+          ),
+        )
+        .orderBy(asc(documentFiles.createdAt));
+
       let nextStatus = invoice.status;
       let nextUpdatedAt = invoice.updatedAt;
 
@@ -603,6 +621,7 @@ export const invoicesRouter = createTRPCRouter({
             swapCurrencySymbol: invoice.currencySwapSymbol,
           },
           items: lineItems,
+          files: publicFiles,
         },
       };
     }),
@@ -1461,6 +1480,22 @@ export const invoicesRouter = createTRPCRouter({
     .use(requirePermission("invoice:delete"))
     .input(z.object({ id: z.string().trim().min(1) }))
     .mutation(async ({ ctx, input }) => {
+      // Remove blobs antes de excluir o registro
+      const { del } = await import("@vercel/blob");
+      const files = await ctx.db
+        .select({ storageKey: documentFiles.storageKey })
+        .from(documentFiles)
+        .where(
+          and(
+            eq(documentFiles.organizationId, ctx.organizationId),
+            eq(documentFiles.resourceType, "invoice"),
+            eq(documentFiles.resourceId, input.id),
+          ),
+        );
+      for (const file of files) {
+        await del(file.storageKey).catch(() => null);
+      }
+
       await ctx.db
         .delete(invoices)
         .where(

@@ -1,7 +1,7 @@
 import "server-only";
 
 import { TRPCError } from "@trpc/server";
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, eq, sum } from "drizzle-orm";
 import Stripe from "stripe";
 import { z } from "zod";
 import { getAppBaseUrl } from "@/lib/base-url";
@@ -12,6 +12,7 @@ import {
 import {
   currencies,
   DATE_FORMAT_VALUES,
+  documentFiles,
   expenseCategories,
   FINANCIAL_YEAR_VALUES,
   notes,
@@ -54,6 +55,7 @@ export const settingsRouter = createTRPCRouter({
         name: organizations.name,
         slug: organizations.slug,
         businessPhone: organizations.businessPhone,
+        logoUrl: organizations.logoUrl,
         addressLine1: organizations.addressLine1,
         addressLine2: organizations.addressLine2,
         city: organizations.city,
@@ -72,6 +74,40 @@ export const settingsRouter = createTRPCRouter({
     }
 
     return { org };
+  }),
+
+  updateCompanyLogo: ownerProcedure
+    .input(z.object({ logoUrl: z.string().url().nullable() }))
+    .mutation(async ({ ctx, input }) => {
+      // Se está removendo o logo, apaga o blob antigo
+      if (input.logoUrl === null) {
+        const [org] = await ctx.db
+          .select({ logoUrl: organizations.logoUrl })
+          .from(organizations)
+          .where(eq(organizations.id, ctx.organizationId))
+          .limit(1);
+
+        if (org?.logoUrl) {
+          const { del } = await import("@vercel/blob");
+          await del(org.logoUrl).catch(() => null);
+        }
+      }
+
+      await ctx.db
+        .update(organizations)
+        .set({ logoUrl: input.logoUrl, updatedAt: new Date() })
+        .where(eq(organizations.id, ctx.organizationId));
+
+      return { ok: true as const };
+    }),
+
+  getStorageUsage: organizationProcedure.query(async ({ ctx }) => {
+    const [row] = await ctx.db
+      .select({ totalBytes: sum(documentFiles.fileSize) })
+      .from(documentFiles)
+      .where(eq(documentFiles.organizationId, ctx.organizationId));
+
+    return { usedBytes: Number(row?.totalBytes ?? 0) };
   }),
 
   updateCompany: ownerProcedure
@@ -308,6 +344,8 @@ export const settingsRouter = createTRPCRouter({
         publicLinksExpireEnabled: z.boolean().optional(),
         publicLinksExpireDays: z.number().int().min(1).max(365).optional(),
         discountPerItem: z.boolean().optional(),
+        invoiceTemplate: z.number().int().min(1).max(3).optional(),
+        estimateTemplate: z.number().int().min(1).max(3).optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -335,6 +373,12 @@ export const settingsRouter = createTRPCRouter({
         }),
         ...(input.discountPerItem !== undefined && {
           discountPerItem: input.discountPerItem,
+        }),
+        ...(input.invoiceTemplate !== undefined && {
+          invoiceTemplate: input.invoiceTemplate,
+        }),
+        ...(input.estimateTemplate !== undefined && {
+          estimateTemplate: input.estimateTemplate,
         }),
         updatedAt: new Date(),
       };
@@ -626,6 +670,28 @@ export const settingsRouter = createTRPCRouter({
   deleteOrganization: ownerProcedure
     .input(z.object({ confirm: z.literal("confirm") }))
     .mutation(async ({ ctx }) => {
+      // Remove todos os blobs de arquivos da organização
+      const { del } = await import("@vercel/blob");
+      const files = await ctx.db
+        .select({ storageKey: documentFiles.storageKey })
+        .from(documentFiles)
+        .where(eq(documentFiles.organizationId, ctx.organizationId));
+
+      for (const file of files) {
+        await del(file.storageKey).catch(() => null);
+      }
+
+      // Remove logo da org se existir
+      const [org] = await ctx.db
+        .select({ logoUrl: organizations.logoUrl })
+        .from(organizations)
+        .where(eq(organizations.id, ctx.organizationId))
+        .limit(1);
+
+      if (org?.logoUrl) {
+        await del(org.logoUrl).catch(() => null);
+      }
+
       await ctx.db
         .delete(organizations)
         .where(eq(organizations.id, ctx.organizationId));

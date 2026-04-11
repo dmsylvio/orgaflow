@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Download, FileText, Paperclip, Pencil, Trash2, Upload } from "lucide-react";
+import { ArrowLeft, Download, Eye, EyeOff, FileText, Paperclip, Pencil, Trash2, Upload } from "lucide-react";
 import NextLink from "next/link";
 import { useParams } from "next/navigation";
 import { useRef, useState } from "react";
@@ -37,6 +37,17 @@ function EstimateFilesSection({ estimateId }: { estimateId: string }) {
         ),
       onError: (e) =>
         toast.error("Couldn't delete file", { description: e.message }),
+    }),
+  );
+
+  const toggleVisibility = useMutation(
+    trpc.estimates.toggleFileVisibility.mutationOptions({
+      onSuccess: () =>
+        queryClient.invalidateQueries(
+          trpc.estimates.listFiles.queryOptions({ estimateId }),
+        ),
+      onError: (e) =>
+        toast.error("Couldn't update visibility", { description: e.message }),
     }),
   );
 
@@ -136,17 +147,49 @@ function EstimateFilesSection({ estimateId }: { estimateId: string }) {
                 <span className="shrink-0 text-xs text-muted-foreground">
                   {formatBytes(file.fileSize)}
                 </span>
+
+                {/* Toggle visibilidade pública */}
+                <button
+                  type="button"
+                  title={
+                    file.isPublic
+                      ? "Visible to client — click to hide"
+                      : "Hidden from client — click to show"
+                  }
+                  disabled={toggleVisibility.isPending}
+                  onClick={() =>
+                    toggleVisibility.mutate({
+                      fileId: file.id,
+                      isPublic: !file.isPublic,
+                    })
+                  }
+                  className="shrink-0 rounded p-0.5 transition-colors disabled:opacity-40"
+                >
+                  {file.isPublic ? (
+                    <Eye className="h-3.5 w-3.5 text-primary" />
+                  ) : (
+                    <EyeOff className="h-3.5 w-3.5 text-muted-foreground/40" />
+                  )}
+                </button>
+
                 <button
                   type="button"
                   disabled={deleteFile.isPending}
                   onClick={() => deleteFile.mutate({ fileId: file.id })}
-                  className="ml-1 shrink-0 rounded p-0.5 text-muted-foreground/50 hover:text-destructive disabled:opacity-40"
+                  className="shrink-0 rounded p-0.5 text-muted-foreground/50 hover:text-destructive disabled:opacity-40"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                 </button>
               </li>
             ))}
           </ul>
+        )}
+
+        {files.length > 0 && (
+          <p className="text-[11px] text-muted-foreground">
+            <Eye className="mr-1 inline h-3 w-3 text-primary" />
+            Visible files are shown on the public estimate link.
+          </p>
         )}
       </div>
     </div>

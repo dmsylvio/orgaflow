@@ -264,10 +264,10 @@ const ITEMS: RoadmapItem[] = [
   {
     id: 11,
     Icon: Zap,
-    title: "Document Templates & Custom Branding",
+    title: "Advanced Custom Branding",
     description:
-      "Upload your logo, pick your colors, and customize the header and footer of your estimates and invoices.",
-    status: "considering",
+      "Pick brand colors, customize fonts, and fully control the header and footer of your estimates and invoices beyond the current template options.",
+    status: "planned",
     effort: "High",
     category: "Customization",
   },
@@ -280,6 +280,26 @@ const ITEMS: RoadmapItem[] = [
     status: "shipped",
     effort: "High",
     category: "Automation",
+  },
+  {
+    id: 26,
+    Icon: FileText,
+    title: "PDF Templates",
+    description:
+      "Three selectable layouts per document type: Classic (centered logo, clean divider), Branded (purple header band with white doc title), and Modern (split header with logo and address). Each template embeds the company logo, org address, and customer billing address.",
+    status: "shipped",
+    effort: "Medium",
+    category: "Customization",
+  },
+  {
+    id: 25,
+    Icon: Paperclip,
+    title: "Company Logo & File Visibility",
+    description:
+      "Upload a company logo in Settings — shown on document pages. Toggle file visibility per attachment on estimates so only selected files appear on the public link. Public invoice pages now display attachments. Blob cleanup on deletion keeps storage tidy.",
+    status: "shipped",
+    effort: "Medium",
+    category: "Core",
   },
   {
     id: 24,
@@ -356,7 +376,7 @@ const COLUMNS: { status: Status; title: string; description: string }[] = [
 ];
 
 export default function RoadmapPage() {
-  const lastUpdated = "April 11, 2026 (v1.7.0)";
+  const lastUpdated = "April 11, 2026 (v1.9.0)";
 
   return (
     <div className="overflow-hidden">

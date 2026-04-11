@@ -563,6 +563,7 @@ export const estimatesRouter = createTRPCRouter({
           and(
             eq(documentFiles.resourceType, "estimate"),
             eq(documentFiles.resourceId, estimate.id),
+            eq(documentFiles.isPublic, true),
           ),
         )
         .orderBy(asc(documentFiles.createdAt));
@@ -1334,6 +1335,22 @@ export const estimatesRouter = createTRPCRouter({
     .use(requirePermission("estimate:delete"))
     .input(z.object({ id: z.string().trim().min(1) }))
     .mutation(async ({ ctx, input }) => {
+      // Remove blobs antes de excluir o registro
+      const { del } = await import("@vercel/blob");
+      const files = await ctx.db
+        .select({ storageKey: documentFiles.storageKey })
+        .from(documentFiles)
+        .where(
+          and(
+            eq(documentFiles.organizationId, ctx.organizationId),
+            eq(documentFiles.resourceType, "estimate"),
+            eq(documentFiles.resourceId, input.id),
+          ),
+        );
+      for (const file of files) {
+        await del(file.storageKey).catch(() => null);
+      }
+
       await ctx.db
         .delete(estimates)
         .where(
