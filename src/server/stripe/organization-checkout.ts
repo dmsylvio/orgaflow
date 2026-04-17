@@ -55,6 +55,9 @@ export async function createOrganizationSubscriptionCheckout(params: {
     mode: "subscription",
     locale: "en",
     currency: "usd",
+    adaptive_pricing: {
+      enabled: false,
+    },
     allow_promotion_codes: true,
     ...customerField,
     line_items: [{ price: priceId, quantity: 1 }],
