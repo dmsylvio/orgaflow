@@ -8,7 +8,6 @@ import { getAppBaseUrl } from "@/lib/base-url";
 import {
   getDefaultStripeBillingInterval,
   getStripeBillingIntervalFromPriceId,
-  getStripePriceIdForPlan,
 } from "@/lib/stripe-subscription-prices";
 import { isWorkspaceAccessible } from "@/lib/subscription-plans";
 import type { WorkspacePlan } from "@/schemas/workspace";
@@ -22,6 +21,10 @@ import {
   organizationSubscriptions,
   organizations,
 } from "@/server/db/schemas";
+import {
+  getTrialPeriodEnd,
+  syncOrganizationSubscriptionStatus,
+} from "@/server/services/billing/sync-organization-subscription";
 import { ensureDefaultCurrencies } from "@/server/services/workspace/ensure-default-currencies";
 import { ensureDefaultLanguages } from "@/server/services/workspace/ensure-default-languages";
 import { slugifyOrganizationName } from "@/server/services/workspace/slugify";
@@ -57,14 +60,19 @@ export const workspaceRouter = createTRPCRouter({
       )
       .where(eq(organizationMembers.userId, userId));
 
-    return rows.map((r) => ({
-      id: r.id,
-      name: r.name,
-      slug: r.slug,
-      isOwner: r.isOwner,
-      plan: (r.plan ?? "starter") as WorkspacePlan,
-      subscriptionStatus: r.subscriptionStatus ?? "active",
-    }));
+    return Promise.all(
+      rows.map(async (r) => {
+        const sub = await syncOrganizationSubscriptionStatus(ctx.db, r.id);
+        return {
+          id: r.id,
+          name: r.name,
+          slug: r.slug,
+          isOwner: r.isOwner,
+          plan: (sub?.plan ?? r.plan ?? "starter") as WorkspacePlan,
+          subscriptionStatus: sub?.status ?? r.subscriptionStatus ?? "active",
+        };
+      }),
+    );
   }),
 
   listCurrencies: protectedProcedure.query(async ({ ctx }) => {
@@ -124,7 +132,14 @@ export const workspaceRouter = createTRPCRouter({
         });
       }
 
-      if (!isWorkspaceAccessible(member.subscriptionStatus ?? "active")) {
+      const sub = await syncOrganizationSubscriptionStatus(
+        ctx.db,
+        input.organizationId,
+      );
+      const subscriptionStatus =
+        sub?.status ?? member.subscriptionStatus ?? "active";
+
+      if (!isWorkspaceAccessible(subscriptionStatus)) {
         throw new TRPCError({
           code: "PRECONDITION_FAILED",
           message:
@@ -148,31 +163,7 @@ export const workspaceRouter = createTRPCRouter({
     .input(createOrganizationInputSchema)
     .mutation(async ({ ctx, input }) => {
       const userId = getSessionUserId(ctx);
-      const email = ctx.session.user.email;
-      if (!email) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Your account has no email; cannot continue checkout.",
-        });
-      }
-
-      if (!process.env.STRIPE_SECRET_KEY?.trim()) {
-        throw new TRPCError({
-          code: "PRECONDITION_FAILED",
-          message: "Stripe is not configured for checkout.",
-        });
-      }
-
-      const stripePriceId = getStripePriceIdForPlan(
-        input.plan,
-        input.billingInterval,
-      );
-      if (!stripePriceId) {
-        throw new TRPCError({
-          code: "PRECONDITION_FAILED",
-          message: "Stripe price not configured for this plan.",
-        });
-      }
+      const isStarterPlan = input.plan === "starter";
 
       const normalizedSlug = slugifyOrganizationName();
       if (normalizedSlug.length < 2) {
@@ -183,6 +174,9 @@ export const workspaceRouter = createTRPCRouter({
         });
       }
       const slug = await assertUniqueOrganizationSlug(ctx.db, normalizedSlug);
+
+      const now = new Date();
+      const trialEndsAt = isStarterPlan ? null : getTrialPeriodEnd(now);
 
       const orgId = await ctx.db.transaction(async (tx) => {
         const [currency] = await tx
@@ -253,50 +247,33 @@ export const workspaceRouter = createTRPCRouter({
         await tx.insert(organizationSubscriptions).values({
           organizationId: org.id,
           plan: input.plan,
-          status: "incomplete",
-          stripePriceId,
+          status: isStarterPlan ? "active" : "trialing",
+          stripePriceId: null,
+          currentPeriodStart: isStarterPlan ? null : now,
+          currentPeriodEnd: trialEndsAt,
         });
 
         return org.id;
       });
-      try {
-        const checkout = await createOrganizationSubscriptionCheckout({
-          organizationId: orgId,
-          plan: input.plan,
-          customerEmail: email,
-          successUrl: `${getAppBaseUrl()}/api/workspace/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
-          cancelUrl: `${getAppBaseUrl()}${appPaths.workspace}`,
-          billingInterval: input.billingInterval,
-        });
 
-        if (checkout.kind !== "url") {
-          throw new TRPCError({
-            code: "PRECONDITION_FAILED",
-            message: "Stripe is not fully configured for checkout.",
-          });
-        }
+      const cookieStore = await cookies();
+      cookieStore.set(ACTIVE_ORGANIZATION_COOKIE, orgId, {
+        path: "/",
+        httpOnly: true,
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+        maxAge: 60 * 60 * 24 * 365,
+      });
 
-        return {
-          organizationId: orgId,
-          next: { type: "redirect" as const, url: checkout.url },
-        };
-      } catch (error) {
-        await ctx.db.delete(organizations).where(eq(organizations.id, orgId));
-        throw error;
-      }
+      return {
+        organizationId: orgId,
+        next: { type: "redirect" as const, url: appPaths.home },
+      };
     }),
 
   resumeOrganizationCheckout: protectedProcedure
     .input(z.object({ organizationId: z.string().min(1) }))
     .mutation(async ({ ctx, input }) => {
-      const email = ctx.session.user.email;
-      if (!email) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Your account has no email; cannot continue checkout.",
-        });
-      }
-
       const userId = getSessionUserId(ctx);
       const [org] = await ctx.db
         .select({
@@ -337,17 +314,58 @@ export const workspaceRouter = createTRPCRouter({
         });
       }
 
-      if (isWorkspaceAccessible(org.status ?? "active")) {
+      const syncedSub = await syncOrganizationSubscriptionStatus(
+        ctx.db,
+        input.organizationId,
+      );
+      const syncedStatus = syncedSub?.status ?? org.status ?? "active";
+
+      if (isWorkspaceAccessible(syncedStatus)) {
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: "This organization already has an active subscription.",
         });
       }
 
-      const plan = (org.plan ?? "starter") as WorkspacePlan;
+      const plan = (syncedSub?.plan ?? org.plan ?? "starter") as WorkspacePlan;
+      if (plan === "starter") {
+        await ctx.db
+          .update(organizationSubscriptions)
+          .set({
+            status: "active",
+            stripeCustomerId: null,
+            stripeSubscriptionId: null,
+            stripePriceId: null,
+            updatedAt: new Date(),
+          })
+          .where(
+            eq(organizationSubscriptions.organizationId, input.organizationId),
+          );
+
+        const cookieStore = await cookies();
+        cookieStore.set(ACTIVE_ORGANIZATION_COOKIE, input.organizationId, {
+          path: "/",
+          httpOnly: true,
+          sameSite: "lax",
+          secure: process.env.NODE_ENV === "production",
+          maxAge: 60 * 60 * 24 * 365,
+        });
+
+        return { url: appPaths.home };
+      }
+
       const billingInterval =
-        getStripeBillingIntervalFromPriceId(org.stripePriceId) ??
-        getDefaultStripeBillingInterval();
+        getStripeBillingIntervalFromPriceId(
+          syncedSub?.stripePriceId ?? org.stripePriceId,
+        ) ?? getDefaultStripeBillingInterval();
+
+      const email = ctx.session.user.email;
+      if (!email) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Your account has no email; cannot continue checkout.",
+        });
+      }
 
       const checkout = await createOrganizationSubscriptionCheckout({
         organizationId: input.organizationId,

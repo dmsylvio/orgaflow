@@ -13,8 +13,8 @@ import {
   organizationPreferences,
   paymentModes,
 } from "@/server/db/schemas";
-import { ensureDefaultPaymentModes } from "@/server/services/workspace/ensure-default-payment-modes";
 import { can } from "@/server/iam/ability";
+import { ensureDefaultPaymentModes } from "@/server/services/workspace/ensure-default-payment-modes";
 import {
   createTRPCRouter,
   organizationProcedure,
@@ -118,6 +118,7 @@ export const expensesRouter = createTRPCRouter({
 
   create: organizationProcedure
     .use(requirePermission("expense:create"))
+    .use(requirePermission("customer:view"))
     .input(
       z.object({
         amount: z.string().min(1),
@@ -159,6 +160,7 @@ export const expensesRouter = createTRPCRouter({
 
   update: organizationProcedure
     .use(requirePermission("expense:edit"))
+    .use(requirePermission("customer:view"))
     .input(
       z.object({
         id: z.string().min(1),
@@ -309,6 +311,7 @@ export const expensesRouter = createTRPCRouter({
 
   listCustomers: organizationProcedure
     .use(requirePermission("expense:view"))
+    .use(requirePermission("customer:view"))
     .query(async ({ ctx }) => {
       return ctx.db
         .select({ id: customers.id, displayName: customers.displayName })

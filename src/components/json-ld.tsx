@@ -26,10 +26,10 @@ const jsonLd = {
         },
         {
           "@type": "Question",
-          name: "What happens after the 15-day trial?",
+          name: "Is there a free plan?",
           acceptedAnswer: {
             "@type": "Answer",
-            text: "After your trial you can choose any plan. Your data is never deleted. If you don't upgrade, your account moves to a read-only state.",
+            text: "Yes. Starter is free and gives solo operators the core estimate, invoice, customer, and item workflow with usage limits.",
           },
         },
         {
@@ -93,9 +93,9 @@ const jsonLd = {
 
 export function JsonLd() {
   return (
-    // biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD structured data is safe static content
     <script
       type="application/ld+json"
+      // biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD structured data is safe static content
       dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
     />
   );

@@ -13,7 +13,8 @@ const DEFINITIONS = [
   {
     key: "dashboard:view-prices",
     label: "View prices on dashboard & reports",
-    description: "See revenue, expense, and financial metrics on the dashboard and reports pages.",
+    description:
+      "See revenue, expense, and financial metrics on the dashboard and reports pages.",
     group: "dashboard",
   },
   {
@@ -85,13 +86,25 @@ const DEFINITIONS = [
     key: "estimate:create",
     label: "Create estimates",
     group: "estimates",
-    dependencies: ["estimate:view", "customer:view", "item:view", "estimate:view-prices"] as const,
+    dependencies: [
+      "estimate:view",
+      "estimate:view-prices",
+      "customer:view",
+      "item:view",
+      "item:view-prices",
+    ] as const,
   },
   {
     key: "estimate:edit",
     label: "Edit estimates",
     group: "estimates",
-    dependencies: ["estimate:view", "estimate:view-prices"] as const,
+    dependencies: [
+      "estimate:view",
+      "estimate:view-prices",
+      "customer:view",
+      "item:view",
+      "item:view-prices",
+    ] as const,
   },
   {
     key: "estimate:delete",
@@ -115,13 +128,25 @@ const DEFINITIONS = [
     key: "invoice:create",
     label: "Create invoices",
     group: "invoices",
-    dependencies: ["invoice:view", "customer:view", "item:view", "invoice:view-prices"] as const,
+    dependencies: [
+      "invoice:view",
+      "invoice:view-prices",
+      "customer:view",
+      "item:view",
+      "item:view-prices",
+    ] as const,
   },
   {
     key: "invoice:edit",
     label: "Edit invoices",
     group: "invoices",
-    dependencies: ["invoice:view", "invoice:view-prices"] as const,
+    dependencies: [
+      "invoice:view",
+      "invoice:view-prices",
+      "customer:view",
+      "item:view",
+      "item:view-prices",
+    ] as const,
   },
   {
     key: "invoice:delete",
@@ -168,13 +193,21 @@ const DEFINITIONS = [
     key: "expense:create",
     label: "Create expenses",
     group: "expenses",
-    dependencies: ["expense:view", "expense:view-prices"] as const,
+    dependencies: [
+      "expense:view",
+      "expense:view-prices",
+      "customer:view",
+    ] as const,
   },
   {
     key: "expense:edit",
     label: "Edit expenses",
     group: "expenses",
-    dependencies: ["expense:view", "expense:view-prices"] as const,
+    dependencies: [
+      "expense:view",
+      "expense:view-prices",
+      "customer:view",
+    ] as const,
   },
   {
     key: "expense:delete",
@@ -198,13 +231,25 @@ const DEFINITIONS = [
     key: "payment:create",
     label: "Create payments",
     group: "payments",
-    dependencies: ["payment:view", "payment:view-prices"] as const,
+    dependencies: [
+      "payment:view",
+      "payment:view-prices",
+      "invoice:view",
+      "invoice:view-prices",
+      "customer:view",
+    ] as const,
   },
   {
     key: "payment:edit",
     label: "Edit payments",
     group: "payments",
-    dependencies: ["payment:view", "payment:view-prices"] as const,
+    dependencies: [
+      "payment:view",
+      "payment:view-prices",
+      "invoice:view",
+      "invoice:view-prices",
+      "customer:view",
+    ] as const,
   },
   {
     key: "payment:delete",
@@ -232,6 +277,7 @@ const DEFINITIONS = [
       "recurring-invoice:view-prices",
       "customer:view",
       "item:view",
+      "item:view-prices",
     ] as const,
   },
   {
@@ -243,6 +289,7 @@ const DEFINITIONS = [
       "recurring-invoice:view-prices",
       "customer:view",
       "item:view",
+      "item:view-prices",
     ] as const,
   },
   {

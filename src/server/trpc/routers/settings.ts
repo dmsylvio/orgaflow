@@ -23,6 +23,10 @@ import {
   paymentModes,
   taxTypes,
 } from "@/server/db/schemas";
+import {
+  getTrialPeriodEnd,
+  syncOrganizationSubscriptionStatus,
+} from "@/server/services/billing/sync-organization-subscription";
 import { ensureDefaultPaymentModes } from "@/server/services/workspace/ensure-default-payment-modes";
 import { createOrganizationSubscriptionCheckout } from "@/server/stripe/organization-checkout";
 import {
@@ -491,11 +495,10 @@ export const settingsRouter = createTRPCRouter({
    * Does NOT expose Stripe IDs, pricing, or other billing details.
    */
   getSubscriptionStatus: organizationProcedure.query(async ({ ctx }) => {
-    const [sub] = await ctx.db
-      .select({ status: organizationSubscriptions.status })
-      .from(organizationSubscriptions)
-      .where(eq(organizationSubscriptions.organizationId, ctx.organizationId))
-      .limit(1);
+    const sub = await syncOrganizationSubscriptionStatus(
+      ctx.db,
+      ctx.organizationId,
+    );
 
     return { status: sub?.status ?? null };
   }),
@@ -505,15 +508,10 @@ export const settingsRouter = createTRPCRouter({
    * Does NOT expose Stripe customer IDs or other billing management details.
    */
   getPlanSummary: organizationProcedure.query(async ({ ctx }) => {
-    const [sub] = await ctx.db
-      .select({
-        plan: organizationSubscriptions.plan,
-        status: organizationSubscriptions.status,
-        stripePriceId: organizationSubscriptions.stripePriceId,
-      })
-      .from(organizationSubscriptions)
-      .where(eq(organizationSubscriptions.organizationId, ctx.organizationId))
-      .limit(1);
+    const sub = await syncOrganizationSubscriptionStatus(
+      ctx.db,
+      ctx.organizationId,
+    );
 
     if (!sub) {
       return null;
@@ -528,11 +526,10 @@ export const settingsRouter = createTRPCRouter({
   }),
 
   getBilling: ownerProcedure.query(async ({ ctx }) => {
-    const [sub] = await ctx.db
-      .select()
-      .from(organizationSubscriptions)
-      .where(eq(organizationSubscriptions.organizationId, ctx.organizationId))
-      .limit(1);
+    const sub = await syncOrganizationSubscriptionStatus(
+      ctx.db,
+      ctx.organizationId,
+    );
 
     if (!sub) {
       return null;
@@ -590,12 +587,31 @@ export const settingsRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const stripe = getStripe();
-      if (!stripe) {
-        throw new TRPCError({
-          code: "PRECONDITION_FAILED",
-          message: "Stripe is not configured.",
-        });
+      const sub = await syncOrganizationSubscriptionStatus(
+        ctx.db,
+        ctx.organizationId,
+      );
+
+      if (!sub?.stripeSubscriptionId && sub?.status !== "incomplete_expired") {
+        const now = new Date();
+        await ctx.db
+          .update(organizationSubscriptions)
+          .set({
+            plan: input.targetPlan,
+            status: "trialing",
+            stripeCustomerId: null,
+            stripeSubscriptionId: null,
+            stripePriceId: null,
+            currentPeriodStart: sub?.currentPeriodStart ?? now,
+            currentPeriodEnd: sub?.currentPeriodEnd ?? getTrialPeriodEnd(now),
+            cancelAtPeriodEnd: false,
+            updatedAt: now,
+          })
+          .where(
+            eq(organizationSubscriptions.organizationId, ctx.organizationId),
+          );
+
+        return { type: "updated" as const };
       }
 
       const priceId = getStripePriceIdForPlan(
@@ -609,11 +625,13 @@ export const settingsRouter = createTRPCRouter({
         });
       }
 
-      const [sub] = await ctx.db
-        .select()
-        .from(organizationSubscriptions)
-        .where(eq(organizationSubscriptions.organizationId, ctx.organizationId))
-        .limit(1);
+      const stripe = getStripe();
+      if (!stripe) {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message: "Stripe is not configured.",
+        });
+      }
 
       // --- Upgrading within paid plans (e.g. growth → scale) ---
       if (sub?.stripeSubscriptionId) {

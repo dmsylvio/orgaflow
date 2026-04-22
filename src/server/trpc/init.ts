@@ -2,12 +2,14 @@ import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import { ZodError } from "zod";
 
+import { isWorkspaceAccessible } from "@/lib/subscription-plans";
 import { can, type PermissionKey } from "@/server/iam";
 import {
   getOrganizationPlan,
   planAtLeast,
   type SubscriptionPlan,
 } from "@/server/services/billing/get-organization-plan";
+import { syncOrganizationSubscriptionStatus } from "@/server/services/billing/sync-organization-subscription";
 import { getCurrentAbility } from "@/server/services/iam/get-current-ability";
 import type { TRPCContext } from "@/server/trpc/context";
 import type {
@@ -123,6 +125,15 @@ const organizationMemberMiddleware = t.middleware(async ({ ctx, next }) => {
     throw new TRPCError({
       code: "FORBIDDEN",
       message: "You are not a member of this organization.",
+    });
+  }
+
+  const sub = await syncOrganizationSubscriptionStatus(ctx.db, organizationId);
+  if (!isWorkspaceAccessible(sub?.status ?? "active")) {
+    throw new TRPCError({
+      code: "PRECONDITION_FAILED",
+      message:
+        "Billing must be completed before this organization can be used.",
     });
   }
 

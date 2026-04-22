@@ -10,6 +10,7 @@ import {
   organizationMembers,
   organizationSubscriptions,
 } from "@/server/db/schemas";
+import { syncOrganizationSubscriptionStatus } from "@/server/services/billing/sync-organization-subscription";
 import { ACTIVE_ORGANIZATION_COOKIE } from "@/server/trpc/constants";
 import { AppShell } from "./app-shell";
 
@@ -63,7 +64,11 @@ export default async function AppHomeLayout({
     redirect(appPaths.workspace);
   }
 
-  if (!isWorkspaceAccessible(member.subscriptionStatus ?? "active")) {
+  const sub = await syncOrganizationSubscriptionStatus(db, orgId);
+  const subscriptionStatus =
+    sub?.status ?? member.subscriptionStatus ?? "active";
+
+  if (!isWorkspaceAccessible(subscriptionStatus)) {
     redirect(appPaths.workspace);
   }
 

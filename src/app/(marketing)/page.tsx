@@ -106,8 +106,8 @@ const FAQS = [
     a: "Yes. Every estimate gets a secure shareable link where clients can review and approve with one click — no account required.",
   },
   {
-    q: "What happens after the 15-day trial?",
-    a: "After your trial you can choose any plan. Your data is never deleted. If you don't upgrade, your account moves to a read-only state.",
+    q: "Is there a free plan?",
+    a: "Yes. Starter is free and gives solo operators the core estimate, invoice, customer, and item workflow with usage limits.",
   },
   {
     q: "Does Orgaflow support multiple currencies?",
@@ -439,8 +439,8 @@ export default function LandingPage() {
           </h1>
 
           <p className="mx-auto mb-10 max-w-xl text-lg leading-relaxed text-muted-foreground">
-            Close more deals, collect faster, and stop losing jobs to admin
-            work — all from one platform built for small teams.
+            Close more deals, collect faster, and stop losing jobs to admin work
+            — all from one platform built for small teams.
           </p>
 
           <div className="flex flex-wrap items-center justify-center gap-3">
@@ -450,7 +450,7 @@ export default function LandingPage() {
               className="h-12 gap-2 px-8 shadow-xl shadow-primary/20 text-base"
             >
               <NextLink href="/register">
-                Start 15-day trial
+                Start free
                 <ArrowRight className="h-4 w-4" />
               </NextLink>
             </Button>
@@ -931,8 +931,8 @@ export default function LandingPage() {
                 Join 200+ businesses closing deals faster
               </h2>
               <p className="mx-auto mb-10 max-w-xl text-lg text-white/70">
-                Stop juggling tools. Start your free 15-day trial and see why
-                small teams choose Orgaflow. Set up takes under 5 minutes.
+                Stop juggling tools. Start free and see why small teams choose
+                Orgaflow. Set up takes under 5 minutes.
               </p>
               <div className="flex flex-wrap items-center justify-center gap-4">
                 <Button
@@ -941,7 +941,7 @@ export default function LandingPage() {
                   className="h-12 bg-white px-10 text-base text-primary shadow-2xl hover:bg-white/95"
                 >
                   <NextLink href="/register">
-                    Start 15-day trial
+                    Start free
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </NextLink>
                 </Button>

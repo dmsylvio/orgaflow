@@ -5,7 +5,6 @@ import {
   getStripePriceIdForPlan,
   type StripeBillingInterval,
 } from "@/lib/stripe-subscription-prices";
-import { PLAN_TRIAL_DAYS } from "@/lib/subscription-plans";
 import type { WorkspacePlan } from "@/schemas/workspace";
 
 function getStripe(): Stripe | null {
@@ -68,7 +67,6 @@ export async function createOrganizationSubscriptionCheckout(params: {
       plan: params.plan,
     },
     subscription_data: {
-      trial_period_days: PLAN_TRIAL_DAYS,
       metadata: {
         organizationId: params.organizationId,
         plan: params.plan,

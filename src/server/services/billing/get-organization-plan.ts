@@ -1,6 +1,5 @@
-import { eq } from "drizzle-orm";
 import type { DbClient } from "@/server/db";
-import { organizationSubscriptions } from "@/server/db/schemas";
+import { syncOrganizationSubscriptionStatus } from "@/server/services/billing/sync-organization-subscription";
 
 export type SubscriptionPlan = "starter" | "growth" | "scale";
 
@@ -21,10 +20,14 @@ export async function getOrganizationPlan(
   db: DbClient,
   organizationId: string,
 ): Promise<SubscriptionPlan> {
-  const [sub] = await db
-    .select({ plan: organizationSubscriptions.plan })
-    .from(organizationSubscriptions)
-    .where(eq(organizationSubscriptions.organizationId, organizationId))
-    .limit(1);
+  const sub = await syncOrganizationSubscriptionStatus(db, organizationId);
+  if (
+    sub?.status === "incomplete" ||
+    sub?.status === "incomplete_expired" ||
+    sub?.status === "canceled" ||
+    sub?.status === "paused"
+  ) {
+    return "starter";
+  }
   return (sub?.plan as SubscriptionPlan) ?? "starter";
 }

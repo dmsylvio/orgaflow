@@ -11,7 +11,6 @@ import { LanguagePicker } from "@/components/ui/language-picker";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
 import { appPaths } from "@/lib/app-paths";
-import { PLAN_TRIAL_DAYS } from "@/lib/subscription-plans";
 import { toast } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import {
@@ -464,9 +463,8 @@ export function WorkspaceScreen() {
           Choose a plan
         </h1>
         <p className="mb-8 text-sm text-muted-foreground">
-          Every plan starts with a {PLAN_TRIAL_DAYS}-day free trial, and billing
-          is required to create the organization. Starter keeps the core limits,
-          Growth expands capacity, and Scale unlocks payments and automation.
+          Starter is free and opens immediately. Growth expands capacity, and
+          Scale unlocks payments and automation.
         </p>
         <PlanScroll
           billingInterval={billingInterval}
@@ -507,8 +505,8 @@ export function WorkspaceScreen() {
             No workspaces yet
           </h2>
           <p className="text-sm text-muted-foreground">
-            Create your first workspace below, choose a plan, and complete
-            billing to start your {PLAN_TRIAL_DAYS}-day free trial.
+            Create your first workspace below. Starter is free, and paid plans
+            can be added when you need more capacity.
           </p>
         </div>
       )}

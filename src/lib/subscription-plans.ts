@@ -38,8 +38,8 @@ export const WORKSPACE_PLAN_PRICES: Record<
   Record<WorkspaceBillingInterval, number>
 > = {
   starter: {
-    monthly: 9.99,
-    annual: calculateAnnualPrice(9.99),
+    monthly: 0,
+    annual: 0,
   },
   growth: {
     monthly: 24.99,

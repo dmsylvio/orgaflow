@@ -15,18 +15,18 @@ import {
   invoiceItems,
   invoices,
   items,
-  organizations,
   organizationPreferences,
+  organizations,
   taxTypes,
   units,
 } from "@/server/db/schemas";
+import { can } from "@/server/iam/ability";
 import { runWorkflowAutomations } from "@/server/services/automations/run-workflow-automations";
 import { getOrganizationPlan } from "@/server/services/billing/get-organization-plan";
 import { getUsageLimit } from "@/server/services/billing/plan-limits";
 import { sendTransactionalEmail } from "@/server/services/email/resend";
 import { sendInvoiceOverdueNotification } from "@/server/services/notifications/send-invoice-overdue-notification";
 import { sendViewedNotification } from "@/server/services/notifications/send-viewed-notification";
-import { can } from "@/server/iam/ability";
 import {
   createTRPCRouter,
   organizationProcedure,
@@ -486,7 +486,8 @@ export const invoicesRouter = createTRPCRouter({
           currencyThousandSeparator: currencies.thousandSeparator,
           currencyDecimalSeparator: currencies.decimalSeparator,
           currencySwapSymbol: currencies.swapCurrencySymbol,
-          publicLinksExpireEnabled: organizationPreferences.publicLinksExpireEnabled,
+          publicLinksExpireEnabled:
+            organizationPreferences.publicLinksExpireEnabled,
           publicLinksExpireDays: organizationPreferences.publicLinksExpireDays,
         })
         .from(invoices)
@@ -650,12 +651,19 @@ export const invoicesRouter = createTRPCRouter({
 
   getFormMeta: organizationProcedure
     .use(requirePermission("invoice:view"))
+    .use(requirePermission("invoice:view-prices"))
+    .use(requirePermission("item:view"))
+    .use(requirePermission("item:view-prices"))
     .query(async ({ ctx }) => {
       return getInvoiceFormMeta(ctx.db, ctx.organizationId);
     }),
 
   create: organizationProcedure
     .use(requirePermission("invoice:create"))
+    .use(requirePermission("invoice:view-prices"))
+    .use(requirePermission("customer:view"))
+    .use(requirePermission("item:view"))
+    .use(requirePermission("item:view-prices"))
     .input(invoiceUpsertSchema)
     .mutation(async ({ ctx, input }) => {
       const plan = await getOrganizationPlan(ctx.db, ctx.organizationId);
@@ -852,7 +860,10 @@ export const invoicesRouter = createTRPCRouter({
         .limit(1);
 
       if (!estimate) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Estimate not found." });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Estimate not found.",
+        });
       }
 
       const lineItems = await ctx.db
@@ -962,6 +973,10 @@ export const invoicesRouter = createTRPCRouter({
 
   update: organizationProcedure
     .use(requirePermission("invoice:edit"))
+    .use(requirePermission("invoice:view-prices"))
+    .use(requirePermission("customer:view"))
+    .use(requirePermission("item:view"))
+    .use(requirePermission("item:view-prices"))
     .input(
       invoiceUpsertSchema.extend({
         id: z.string().trim().min(1),
@@ -1118,7 +1133,10 @@ export const invoicesRouter = createTRPCRouter({
         .limit(1);
 
       if (!invoice) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Invoice not found." });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Invoice not found.",
+        });
       }
 
       const [prefs] = await ctx.db
@@ -1264,7 +1282,10 @@ export const invoicesRouter = createTRPCRouter({
         .limit(1);
 
       if (!existing) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Invoice not found." });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Invoice not found.",
+        });
       }
 
       if (existing.status === input.status) {
@@ -1368,7 +1389,10 @@ export const invoicesRouter = createTRPCRouter({
         .limit(1);
 
       if (!invoice) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Invoice not found." });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Invoice not found.",
+        });
       }
 
       const lineItems = await ctx.db
@@ -1553,9 +1577,7 @@ export const invoicesRouter = createTRPCRouter({
       }
 
       await del(file.storageKey);
-      await ctx.db
-        .delete(documentFiles)
-        .where(eq(documentFiles.id, file.id));
+      await ctx.db.delete(documentFiles).where(eq(documentFiles.id, file.id));
 
       return { ok: true as const };
     }),

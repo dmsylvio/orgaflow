@@ -77,11 +77,13 @@ export const roleRouter = createTRPCRouter({
       .from(rolePermissions)
       .where(eq(rolePermissions.roleId, role.id));
 
+    const parsed = perms
+      .map((p) => p.permission)
+      .filter((p): p is PermissionKey => isPermissionKey(p));
+
     return {
       ...role,
-      permissions: perms
-        .map((p) => p.permission)
-        .filter((p): p is PermissionKey => isPermissionKey(p)),
+      permissions: prepareRolePermissionsForSave(parsed),
     };
   }),
 

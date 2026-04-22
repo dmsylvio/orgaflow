@@ -8,6 +8,7 @@ import {
   isPermissionKey,
   type PermissionKey,
 } from "@/server/iam";
+import { normalizeRolePermissions } from "@/server/iam/permission-utils";
 
 export type CurrentMembership = typeof organizationMembers.$inferSelect;
 
@@ -77,9 +78,11 @@ export async function getCurrentAbility(params: {
     .from(rolePermissions)
     .where(eq(rolePermissions.roleId, membership.roleId));
 
-  const permissionKeys = rows
-    .map((r) => r.permission)
-    .filter((p): p is PermissionKey => isPermissionKey(p));
+  const permissionKeys = normalizeRolePermissions(
+    rows
+      .map((r) => r.permission)
+      .filter((p): p is PermissionKey => isPermissionKey(p)),
+  );
 
   return {
     membership,

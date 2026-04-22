@@ -3,6 +3,7 @@ import "server-only";
 import { TRPCError } from "@trpc/server";
 import { and, asc, desc, eq, isNotNull, max, sql } from "drizzle-orm";
 import { z } from "zod";
+import { getAppBaseUrl } from "@/lib/base-url";
 import type { DbClient } from "@/server/db";
 import {
   currencies,
@@ -12,11 +13,10 @@ import {
   paymentModes,
   payments,
 } from "@/server/db/schemas";
-import { getAppBaseUrl } from "@/lib/base-url";
-import { runWorkflowAutomations } from "@/server/services/automations/run-workflow-automations";
-import { ensureDefaultPaymentModes } from "@/server/services/workspace/ensure-default-payment-modes";
-import { sendPaymentReceivedNotification } from "@/server/services/notifications/send-payment-received-notification";
 import { can } from "@/server/iam/ability";
+import { runWorkflowAutomations } from "@/server/services/automations/run-workflow-automations";
+import { sendPaymentReceivedNotification } from "@/server/services/notifications/send-payment-received-notification";
+import { ensureDefaultPaymentModes } from "@/server/services/workspace/ensure-default-payment-modes";
 import {
   createTRPCRouter,
   organizationProcedure,
@@ -83,7 +83,12 @@ async function refreshInvoicePaymentStatus(
       total: invoices.total,
     })
     .from(invoices)
-    .where(and(eq(invoices.id, invoiceId), eq(invoices.organizationId, organizationId)))
+    .where(
+      and(
+        eq(invoices.id, invoiceId),
+        eq(invoices.organizationId, organizationId),
+      ),
+    )
     .limit(1);
 
   if (!invoice) {
@@ -113,7 +118,12 @@ async function refreshInvoicePaymentStatus(
   await db
     .update(invoices)
     .set({ status: nextStatus as never, updatedAt: new Date() })
-    .where(and(eq(invoices.id, invoice.id), eq(invoices.organizationId, organizationId)));
+    .where(
+      and(
+        eq(invoices.id, invoice.id),
+        eq(invoices.organizationId, organizationId),
+      ),
+    );
 
   return { previous: invoice.status, next: nextStatus };
 }
@@ -151,6 +161,9 @@ export const paymentsRouter = createTRPCRouter({
 
   create: organizationProcedure
     .use(requirePermission("payment:create"))
+    .use(requirePermission("invoice:view"))
+    .use(requirePermission("invoice:view-prices"))
+    .use(requirePermission("customer:view"))
     .input(
       z.object({
         paymentDate: z.string().min(1),
@@ -203,11 +216,19 @@ export const paymentsRouter = createTRPCRouter({
               status: invoices.status,
             })
             .from(invoices)
-            .where(and(eq(invoices.id, invoiceId), eq(invoices.organizationId, ctx.organizationId)))
+            .where(
+              and(
+                eq(invoices.id, invoiceId),
+                eq(invoices.organizationId, ctx.organizationId),
+              ),
+            )
             .limit(1);
 
           if (!inv) {
-            throw new TRPCError({ code: "NOT_FOUND", message: "Invoice not found." });
+            throw new TRPCError({
+              code: "NOT_FOUND",
+              message: "Invoice not found.",
+            });
           }
           if (inv.status === "VOID") {
             throw new TRPCError({
@@ -216,7 +237,11 @@ export const paymentsRouter = createTRPCRouter({
             });
           }
 
-          const paid = await getPaidTotalForInvoice(tx, ctx.organizationId, inv.id);
+          const paid = await getPaidTotalForInvoice(
+            tx,
+            ctx.organizationId,
+            inv.id,
+          );
           const remaining = Number((Number(inv.total) - paid).toFixed(3));
 
           if (amountVal > remaining + MONEY_EPSILON) {
@@ -236,19 +261,24 @@ export const paymentsRouter = createTRPCRouter({
           paymentDate: input.paymentDate,
           notes: input.notes ?? null,
           invoiceId: invoiceRow?.id ?? null,
-          invoiceRef: invoiceRow?.invoiceNumber ?? (input.invoiceRef ?? null),
-          customerId: invoiceRow?.customerId ?? (input.customerId ?? null),
+          invoiceRef: invoiceRow?.invoiceNumber ?? input.invoiceRef ?? null,
+          customerId: invoiceRow?.customerId ?? input.customerId ?? null,
           paymentModeId: input.paymentModeId ?? null,
-          currencyId: invoiceRow?.currencyId ?? (prefs?.defaultCurrencyId ?? null),
+          currencyId:
+            invoiceRow?.currencyId ?? prefs?.defaultCurrencyId ?? null,
           createdById: userId,
         });
 
         const statusChange = invoiceRow
-          ? await refreshInvoicePaymentStatus(tx, ctx.organizationId, invoiceRow.id)
+          ? await refreshInvoicePaymentStatus(
+              tx,
+              ctx.organizationId,
+              invoiceRow.id,
+            )
           : null;
 
         // Fetch data needed for notification
-        const customerId = invoiceRow?.customerId ?? (input.customerId ?? null);
+        const customerId = invoiceRow?.customerId ?? input.customerId ?? null;
         let customerName: string | null = null;
         if (customerId) {
           const [c] = await tx
@@ -265,7 +295,7 @@ export const paymentsRouter = createTRPCRouter({
           .where(
             eq(
               currencies.id,
-              invoiceRow?.currencyId ?? (prefs?.defaultCurrencyId ?? ""),
+              invoiceRow?.currencyId ?? prefs?.defaultCurrencyId ?? "",
             ),
           )
           .limit(1);
@@ -307,6 +337,9 @@ export const paymentsRouter = createTRPCRouter({
 
   update: organizationProcedure
     .use(requirePermission("payment:edit"))
+    .use(requirePermission("invoice:view"))
+    .use(requirePermission("invoice:view-prices"))
+    .use(requirePermission("customer:view"))
     .input(
       z.object({
         id: z.string().min(1),
@@ -330,11 +363,19 @@ export const paymentsRouter = createTRPCRouter({
             invoiceId: payments.invoiceId,
           })
           .from(payments)
-          .where(and(eq(payments.id, input.id), eq(payments.organizationId, ctx.organizationId)))
+          .where(
+            and(
+              eq(payments.id, input.id),
+              eq(payments.organizationId, ctx.organizationId),
+            ),
+          )
           .limit(1);
 
         if (!existing) {
-          throw new TRPCError({ code: "NOT_FOUND", message: "Payment not found." });
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Payment not found.",
+          });
         }
 
         const nextInvoiceId = input.invoiceId?.trim() || null;
@@ -358,11 +399,19 @@ export const paymentsRouter = createTRPCRouter({
               status: invoices.status,
             })
             .from(invoices)
-            .where(and(eq(invoices.id, nextInvoiceId), eq(invoices.organizationId, ctx.organizationId)))
+            .where(
+              and(
+                eq(invoices.id, nextInvoiceId),
+                eq(invoices.organizationId, ctx.organizationId),
+              ),
+            )
             .limit(1);
 
           if (!inv) {
-            throw new TRPCError({ code: "NOT_FOUND", message: "Invoice not found." });
+            throw new TRPCError({
+              code: "NOT_FOUND",
+              message: "Invoice not found.",
+            });
           }
           if (inv.status === "VOID") {
             throw new TRPCError({
@@ -377,7 +426,9 @@ export const paymentsRouter = createTRPCRouter({
             inv.id,
             input.id,
           );
-          const remaining = Number((Number(inv.total) - paidExcluding).toFixed(3));
+          const remaining = Number(
+            (Number(inv.total) - paidExcluding).toFixed(3),
+          );
 
           if (amountVal > remaining + MONEY_EPSILON) {
             throw new TRPCError({
@@ -396,24 +447,43 @@ export const paymentsRouter = createTRPCRouter({
             paymentDate: input.paymentDate,
             notes: input.notes ?? null,
             invoiceId: nextInvoiceRow?.id ?? null,
-            invoiceRef: nextInvoiceRow?.invoiceNumber ?? (input.invoiceRef ?? null),
-            customerId: nextInvoiceRow?.customerId ?? (input.customerId ?? null),
+            invoiceRef:
+              nextInvoiceRow?.invoiceNumber ?? input.invoiceRef ?? null,
+            customerId: nextInvoiceRow?.customerId ?? input.customerId ?? null,
             paymentModeId: input.paymentModeId ?? null,
             currencyId: nextInvoiceRow?.currencyId ?? undefined,
             updatedAt: new Date(),
           })
-          .where(and(eq(payments.id, input.id), eq(payments.organizationId, ctx.organizationId)));
+          .where(
+            and(
+              eq(payments.id, input.id),
+              eq(payments.organizationId, ctx.organizationId),
+            ),
+          );
 
-        const statusChanges: Array<{ invoiceId: string; change: { previous: string; next: string } }> = [];
+        const statusChanges: Array<{
+          invoiceId: string;
+          change: { previous: string; next: string };
+        }> = [];
 
         if (existing.invoiceId && existing.invoiceId !== nextInvoiceRow?.id) {
-          const change = await refreshInvoicePaymentStatus(tx, ctx.organizationId, existing.invoiceId);
-          if (change) statusChanges.push({ invoiceId: existing.invoiceId, change });
+          const change = await refreshInvoicePaymentStatus(
+            tx,
+            ctx.organizationId,
+            existing.invoiceId,
+          );
+          if (change)
+            statusChanges.push({ invoiceId: existing.invoiceId, change });
         }
 
         if (nextInvoiceRow?.id) {
-          const change = await refreshInvoicePaymentStatus(tx, ctx.organizationId, nextInvoiceRow.id);
-          if (change) statusChanges.push({ invoiceId: nextInvoiceRow.id, change });
+          const change = await refreshInvoicePaymentStatus(
+            tx,
+            ctx.organizationId,
+            nextInvoiceRow.id,
+          );
+          if (change)
+            statusChanges.push({ invoiceId: nextInvoiceRow.id, change });
         }
 
         return { statusChanges };
@@ -442,12 +512,22 @@ export const paymentsRouter = createTRPCRouter({
         const [existing] = await tx
           .select({ invoiceId: payments.invoiceId })
           .from(payments)
-          .where(and(eq(payments.id, input.id), eq(payments.organizationId, ctx.organizationId)))
+          .where(
+            and(
+              eq(payments.id, input.id),
+              eq(payments.organizationId, ctx.organizationId),
+            ),
+          )
           .limit(1);
 
         await tx
           .delete(payments)
-          .where(and(eq(payments.id, input.id), eq(payments.organizationId, ctx.organizationId)));
+          .where(
+            and(
+              eq(payments.id, input.id),
+              eq(payments.organizationId, ctx.organizationId),
+            ),
+          );
 
         const invoiceId = existing?.invoiceId ?? null;
         const change = invoiceId
@@ -473,6 +553,9 @@ export const paymentsRouter = createTRPCRouter({
 
   listInvoiceOptions: organizationProcedure
     .use(requirePermission("payment:view"))
+    .use(requirePermission("invoice:view"))
+    .use(requirePermission("invoice:view-prices"))
+    .use(requirePermission("customer:view"))
     .input(
       z
         .object({
@@ -535,7 +618,8 @@ export const paymentsRouter = createTRPCRouter({
         })
         .filter(
           (inv) =>
-            inv.id === includeInvoiceId || Number(inv.remaining) > MONEY_EPSILON,
+            inv.id === includeInvoiceId ||
+            Number(inv.remaining) > MONEY_EPSILON,
         );
     }),
 
@@ -576,6 +660,7 @@ export const paymentsRouter = createTRPCRouter({
 
   listCustomers: organizationProcedure
     .use(requirePermission("payment:view"))
+    .use(requirePermission("customer:view"))
     .query(async ({ ctx }) => {
       return ctx.db
         .select({ id: customers.id, displayName: customers.displayName })

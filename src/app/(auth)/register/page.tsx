@@ -4,7 +4,7 @@ import { RegisterForm } from "./register-form";
 
 export const metadata: Metadata = {
   title: "Create account",
-  description: "Create your Orgaflow account and start your 15-day free trial.",
+  description: "Create your Orgaflow account and start free.",
   robots: { index: false, follow: false },
 };
 

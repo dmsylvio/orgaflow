@@ -550,9 +550,12 @@ export default function BillingSettingsPage() {
   const statusCfg = STATUS_CONFIG[status] ?? STATUS_CONFIG.active;
   const StatusIcon = statusCfg.icon;
   const hasStripe = !!sub?.stripeCustomerId;
-  const priceLabel = `${formatWorkspacePlanPrice(plan, billingInterval)}${
-    billingInterval === "monthly" ? "/mo" : "/yr"
-  }`;
+  const priceLabel =
+    plan === "starter"
+      ? "Free"
+      : `${formatWorkspacePlanPrice(plan, billingInterval)}${
+          billingInterval === "monthly" ? "/mo" : "/yr"
+        }`;
 
   return (
     <SettingsPage
@@ -585,7 +588,11 @@ export default function BillingSettingsPage() {
           {sub?.status === "trialing" ? (
             <InfoRow
               label="Trial"
-              value={`${PLAN_TRIAL_DAYS}-day free trial`}
+              value={
+                sub?.currentPeriodEnd
+                  ? `Ends ${formatDate(sub.currentPeriodEnd)}`
+                  : `${PLAN_TRIAL_DAYS}-day free trial`
+              }
             />
           ) : null}
           {sub?.currentPeriodStart || sub?.currentPeriodEnd ? (
@@ -702,7 +709,7 @@ export default function BillingSettingsPage() {
         </Button>
         {!hasStripe ? (
           <p className="mt-2 text-xs text-muted-foreground">
-            Not available — no active subscription found.
+            Not available for the free Starter plan.
           </p>
         ) : null}
       </section>

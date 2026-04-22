@@ -8,7 +8,6 @@ import {
   ANNUAL_DISCOUNT_PERCENT,
   formatWorkspacePlanPrice,
   isWorkspaceAccessible,
-  PLAN_TRIAL_DAYS,
 } from "@/lib/subscription-plans";
 import { cn } from "@/lib/utils";
 import type {
@@ -35,12 +34,12 @@ const WORKSPACE_PLAN_OPTIONS: readonly WorkspacePlanOption[] = [
   {
     id: "starter",
     title: "Starter",
-    badge: `${PLAN_TRIAL_DAYS}-day trial`,
+    badge: "Free",
     badgeVariant: "soft",
     icon: <Layers className="h-5 w-5" />,
     iconColor: "bg-slate-500/10 text-slate-600",
-    priceMonthly: formatWorkspacePlanPrice("starter", "monthly"),
-    priceAnnual: formatWorkspacePlanPrice("starter", "annual"),
+    priceMonthly: "Free",
+    priceAnnual: "Free",
     summary:
       "For solo operators and lean teams that want the full billing flow with lower limits and the core CRM, estimate, and invoice toolkit.",
     limits: [
@@ -118,7 +117,7 @@ export function formatSubscriptionStatusLabel(status: string): string | null {
   if (status === "active") return null;
   const labels: Record<string, string> = {
     incomplete: "Activation pending",
-    incomplete_expired: "Checkout expired",
+    incomplete_expired: "Trial expired",
     trialing: "Trialing",
     past_due: "Past due",
     canceled: "Canceled",
@@ -383,7 +382,12 @@ function PlanOptionCard({
   };
 
   const price = planPriceDisplay(option, billingInterval);
-  const suffix = billingInterval === "monthly" ? "/mo" : "/yr";
+  const suffix =
+    option.id === "starter"
+      ? ""
+      : billingInterval === "monthly"
+        ? "/mo"
+        : "/yr";
 
   return (
     <div
@@ -495,7 +499,9 @@ function PlanOptionCard({
               loading={isCreatePending}
               disabled={isCreatePending}
             >
-              Start {PLAN_TRIAL_DAYS}-day trial
+              {option.id === "starter"
+                ? "Create free workspace"
+                : "Start trial"}
             </Button>
           </div>
         ) : null}

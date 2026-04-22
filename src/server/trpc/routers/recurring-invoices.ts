@@ -1,17 +1,13 @@
 import "server-only";
 
 import { TRPCError } from "@trpc/server";
-import { and, asc, count, desc, eq, inArray, max } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray } from "drizzle-orm";
 import { z } from "zod";
-import {
-  recurringInvoiceUpsertSchema,
-  RECURRING_FREQUENCIES,
-} from "@/schemas/recurring-invoice";
+import { recurringInvoiceUpsertSchema } from "@/schemas/recurring-invoice";
 import type { DbClient } from "@/server/db";
 import {
   currencies,
   customers,
-  invoiceItems,
   invoices,
   items,
   organizationPreferences,
@@ -20,9 +16,7 @@ import {
   taxTypes,
   units,
 } from "@/server/db/schemas";
-import {
-  calculateInitialNextRunAt,
-} from "@/server/services/recurring-invoices/calculate-next-run";
+import { calculateInitialNextRunAt } from "@/server/services/recurring-invoices/calculate-next-run";
 import {
   createTRPCRouter,
   organizationProcedure,
@@ -193,9 +187,7 @@ export const recurringInvoicesRouter = createTRPCRouter({
           currencies,
           eq(recurringInvoiceTemplates.currencyId, currencies.id),
         )
-        .where(
-          eq(recurringInvoiceTemplates.organizationId, ctx.organizationId),
-        )
+        .where(eq(recurringInvoiceTemplates.organizationId, ctx.organizationId))
         .orderBy(desc(recurringInvoiceTemplates.createdAt));
 
       const itemCounts = await ctx.db
@@ -205,10 +197,7 @@ export const recurringInvoicesRouter = createTRPCRouter({
         })
         .from(recurringInvoiceTemplateItems)
         .where(
-          eq(
-            recurringInvoiceTemplateItems.organizationId,
-            ctx.organizationId,
-          ),
+          eq(recurringInvoiceTemplateItems.organizationId, ctx.organizationId),
         )
         .groupBy(recurringInvoiceTemplateItems.templateId);
 
@@ -289,10 +278,7 @@ export const recurringInvoicesRouter = createTRPCRouter({
         .where(
           and(
             eq(recurringInvoiceTemplates.id, input.id),
-            eq(
-              recurringInvoiceTemplates.organizationId,
-              ctx.organizationId,
-            ),
+            eq(recurringInvoiceTemplates.organizationId, ctx.organizationId),
           ),
         )
         .limit(1);
@@ -340,7 +326,10 @@ export const recurringInvoicesRouter = createTRPCRouter({
         tax: template.tax,
         createdAt: template.createdAt,
         updatedAt: template.updatedAt,
-        customer: { id: template.customerId, displayName: template.customerName },
+        customer: {
+          id: template.customerId,
+          displayName: template.customerName,
+        },
         currency: {
           id: template.currencyId,
           code: template.currencyCode,
@@ -356,6 +345,9 @@ export const recurringInvoicesRouter = createTRPCRouter({
 
   getFormMeta: organizationProcedure
     .use(requirePermission("recurring-invoice:view"))
+    .use(requirePermission("recurring-invoice:view-prices"))
+    .use(requirePermission("item:view"))
+    .use(requirePermission("item:view-prices"))
     .query(async ({ ctx }) => {
       const [currency] = await ctx.db
         .select({
@@ -372,9 +364,7 @@ export const recurringInvoicesRouter = createTRPCRouter({
           currencies,
           eq(organizationPreferences.defaultCurrencyId, currencies.id),
         )
-        .where(
-          eq(organizationPreferences.organizationId, ctx.organizationId),
-        )
+        .where(eq(organizationPreferences.organizationId, ctx.organizationId))
         .limit(1);
 
       const itemOptions = await ctx.db
@@ -409,14 +399,18 @@ export const recurringInvoicesRouter = createTRPCRouter({
 
   create: organizationProcedure
     .use(requirePermission("recurring-invoice:create"))
+    .use(requirePermission("recurring-invoice:view-prices"))
+    .use(requirePermission("customer:view"))
+    .use(requirePermission("item:view"))
+    .use(requirePermission("item:view-prices"))
     .input(recurringInvoiceUpsertSchema)
     .mutation(async ({ ctx, input }) => {
       const [prefs] = await ctx.db
-        .select({ defaultCurrencyId: organizationPreferences.defaultCurrencyId })
+        .select({
+          defaultCurrencyId: organizationPreferences.defaultCurrencyId,
+        })
         .from(organizationPreferences)
-        .where(
-          eq(organizationPreferences.organizationId, ctx.organizationId),
-        )
+        .where(eq(organizationPreferences.organizationId, ctx.organizationId))
         .limit(1);
 
       if (!prefs?.defaultCurrencyId) {
@@ -426,6 +420,7 @@ export const recurringInvoicesRouter = createTRPCRouter({
             "Set a default currency in Settings before creating recurring invoices.",
         });
       }
+      const defaultCurrencyId = prefs.defaultCurrencyId;
 
       const [customer] = await ctx.db
         .select({ id: customers.id })
@@ -472,7 +467,7 @@ export const recurringInvoicesRouter = createTRPCRouter({
           .values({
             organizationId: ctx.organizationId,
             customerId: input.customerId,
-            currencyId: prefs.defaultCurrencyId!,
+            currencyId: defaultCurrencyId,
             name: input.name,
             frequency: input.frequency,
             startDate: input.startDate,
@@ -511,11 +506,19 @@ export const recurringInvoicesRouter = createTRPCRouter({
         return [template];
       });
 
-      return created!;
+      if (!created) {
+        throw new Error("Template insert returned no rows");
+      }
+
+      return created;
     }),
 
   update: organizationProcedure
     .use(requirePermission("recurring-invoice:edit"))
+    .use(requirePermission("recurring-invoice:view-prices"))
+    .use(requirePermission("customer:view"))
+    .use(requirePermission("item:view"))
+    .use(requirePermission("item:view-prices"))
     .input(
       recurringInvoiceUpsertSchema.extend({
         id: z.string().trim().min(1),

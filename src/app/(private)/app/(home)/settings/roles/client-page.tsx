@@ -17,8 +17,86 @@ import { useTRPC } from "@/trpc/client";
 type PermissionGroup = {
   groupId: string;
   groupLabel: string;
-  permissions: { key: PermissionKey; label: string }[];
+  permissions: {
+    key: PermissionKey;
+    label: string;
+    dependencies?: PermissionKey[];
+  }[];
 };
+
+function buildPermissionDependencyMap(permissionGroups: PermissionGroup[]) {
+  return new Map(
+    permissionGroups
+      .flatMap((group) => group.permissions)
+      .map(
+        (permission) =>
+          [permission.key, permission.dependencies ?? []] as const,
+      ),
+  );
+}
+
+function expandSelectedPermissions(
+  selected: Set<PermissionKey>,
+  dependencyMap: Map<PermissionKey, PermissionKey[]>,
+) {
+  const next = new Set(selected);
+  const visiting = new Set<PermissionKey>();
+
+  function visit(key: PermissionKey) {
+    if (visiting.has(key)) return;
+
+    visiting.add(key);
+    for (const dependency of dependencyMap.get(key) ?? []) {
+      next.add(dependency);
+      visit(dependency);
+    }
+    visiting.delete(key);
+  }
+
+  for (const key of next) {
+    visit(key);
+  }
+
+  return next;
+}
+
+function shrinkSelectedPermissions(
+  selected: Set<PermissionKey>,
+  removedKey: PermissionKey,
+  dependencyMap: Map<PermissionKey, PermissionKey[]>,
+) {
+  const next = new Set(selected);
+  next.delete(removedKey);
+
+  let changed = true;
+  while (changed) {
+    changed = false;
+
+    for (const key of Array.from(next)) {
+      const dependencies = dependencyMap.get(key) ?? [];
+      if (dependencies.some((dependency) => !next.has(dependency))) {
+        next.delete(key);
+        changed = true;
+      }
+    }
+  }
+
+  return next;
+}
+
+function togglePermissionSelection(
+  selected: Set<PermissionKey>,
+  key: PermissionKey,
+  dependencyMap: Map<PermissionKey, PermissionKey[]>,
+) {
+  if (selected.has(key)) {
+    return shrinkSelectedPermissions(selected, key, dependencyMap);
+  }
+
+  const next = new Set(selected);
+  next.add(key);
+  return expandSelectedPermissions(next, dependencyMap);
+}
 
 // ---------------------------------------------------------------------------
 // Layout primitives (shared across settings pages)
@@ -63,8 +141,9 @@ function CreateRoleForm({
   const trpc = useTRPC();
   const [name, setName] = useState("");
   const [key, setKey] = useState("");
-  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [selected, setSelected] = useState<Set<PermissionKey>>(new Set());
   const [open, setOpen] = useState(false);
+  const dependencyMap = buildPermissionDependencyMap(permissionGroups);
 
   const create = useMutation(
     trpc.role.create.mutationOptions({
@@ -89,12 +168,9 @@ function CreateRoleForm({
       .replace(/[^a-z0-9-]/g, "");
   }
 
-  function togglePermission(k: string) {
+  function togglePermission(k: PermissionKey) {
     setSelected((prev) => {
-      const next = new Set(prev);
-      if (next.has(k)) next.delete(k);
-      else next.add(k);
-      return next;
+      return togglePermissionSelection(prev, k, dependencyMap);
     });
   }
 
@@ -246,11 +322,10 @@ function RoleRow({
   );
 
   const currentPerms = new Set(roleDetail?.permissions ?? []);
+  const dependencyMap = buildPermissionDependencyMap(permissionGroups);
 
   function togglePerm(key: PermissionKey) {
-    const next = new Set(currentPerms);
-    if (next.has(key)) next.delete(key);
-    else next.add(key);
+    const next = togglePermissionSelection(currentPerms, key, dependencyMap);
     updateRole.mutate({
       id: role.id,
       permissions: Array.from(next) as PermissionKey[],

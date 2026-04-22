@@ -29,9 +29,7 @@ export function getStripePriceIdForPlan(
   interval: StripeBillingInterval = getDefaultStripeBillingInterval(),
 ): string | null {
   if (plan === "starter") {
-    return interval === "monthly"
-      ? readEnv("STRIPE_PRICE_STARTER_MONTHLY")
-      : readEnv("STRIPE_PRICE_STARTER_ANNUAL");
+    return null;
   }
 
   if (plan === "growth") {
@@ -56,12 +54,10 @@ export function getStripeBillingIntervalFromPriceId(
   if (!normalized) return null;
 
   const monthlyKeys = [
-    "STRIPE_PRICE_STARTER_MONTHLY",
     "STRIPE_PRICE_GROWTH_MONTHLY",
     "STRIPE_PRICE_SCALE_MONTHLY",
   ];
   const annualKeys = [
-    "STRIPE_PRICE_STARTER_ANNUAL",
     "STRIPE_PRICE_GROWTH_ANNUAL",
     "STRIPE_PRICE_SCALE_ANNUAL",
   ];

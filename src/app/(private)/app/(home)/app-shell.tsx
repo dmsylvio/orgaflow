@@ -36,6 +36,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { appPaths } from "@/lib/app-paths";
 import { cn } from "@/lib/utils";
 import { useTRPC } from "@/trpc/client";
+import MainLogo from "@/components/logo";
 
 const NAV_ICONS: Record<string, ReactNode> = {
   "/app": <LayoutDashboard className="h-4 w-4" />,
@@ -227,12 +228,7 @@ export function AppShell({ children }: AppShellProps) {
       {/* Logo */}
       <div className="flex h-14 shrink-0 items-center justify-between border-b border-sidebar-border px-4">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary shadow-sm shadow-primary/30">
-            <Layers className="h-3.5 w-3.5 text-primary-foreground" />
-          </div>
-          <span className="text-sm font-semibold tracking-tight text-sidebar-foreground">
-            Orgaflow
-          </span>
+          <MainLogo className="w-24 h-auto fill-white"/>
         </div>
         {/* Botão fechar — visível apenas no mobile */}
         <button
@@ -362,12 +358,7 @@ export function AppShell({ children }: AppShellProps) {
 
           {/* Logo centralizado no mobile */}
           <div className="flex items-center gap-2">
-            <div className="flex h-6 w-6 items-center justify-center rounded-md bg-primary shadow-sm shadow-primary/30">
-              <Layers className="h-3 w-3 text-primary-foreground" />
-            </div>
-            <span className="text-sm font-semibold tracking-tight text-sidebar-foreground">
-              Orgaflow
-            </span>
+            <MainLogo className="w-24 h-auto fill-white"/>
           </div>
 
           {/* Avatar do usuário no canto direito do header mobile */}

@@ -11,7 +11,7 @@ import {
 export const metadata: Metadata = {
   title: "Pricing",
   description:
-    "Simple, transparent pricing for every stage of your business. Every plan includes a 15-day free trial.",
+    "Simple, transparent pricing for every stage of your business, including a free Starter plan.",
   keywords: [
     "pricing",
     "invoice software pricing",
@@ -23,25 +23,25 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Pricing — Orgaflow",
     description:
-      "Simple, transparent pricing for every stage of your business. Every plan includes a 15-day free trial.",
+      "Simple, transparent pricing for every stage of your business, including a free Starter plan.",
     url: "/pricing",
     type: "website",
   },
   twitter: {
     title: "Pricing — Orgaflow",
     description:
-      "Simple, transparent pricing for every stage of your business. Every plan includes a 15-day free trial.",
+      "Simple, transparent pricing for every stage of your business, including a free Starter plan.",
   },
 };
 
 const PLANS = [
   {
     name: "Starter",
-    priceLabel: formatWorkspacePlanPrice("starter", "monthly"),
-    annualLabel: formatWorkspacePlanPrice("starter", "annual"),
+    priceLabel: "Free",
+    annualLabel: "Free",
     description:
       "Perfect for freelancers and solo business owners who want the full billing flow with lower usage limits.",
-    cta: "Start 15-day trial",
+    cta: "Start free",
     ctaHref: "/register",
     popular: false,
     features: [
@@ -120,7 +120,7 @@ const FAQS = [
   },
   {
     q: "Is there a free trial?",
-    a: "Yes. Every plan includes a 15-day free trial before billing starts.",
+    a: "Starter is free. Paid plans can start with a 15-day free trial before billing starts.",
   },
   {
     q: "What payment methods do you accept?",
@@ -160,7 +160,7 @@ export default function PricingPage() {
             Simple, transparent pricing
           </h1>
           <p className="text-lg text-muted-foreground">
-            No hidden fees. No surprises. Every plan includes a{" "}
+            No hidden fees. No surprises. Starter is free, paid plans include a{" "}
             {PLAN_TRIAL_DAYS}-day free trial, and annual billing saves{" "}
             {ANNUAL_DISCOUNT_PERCENT}%.
           </p>
@@ -222,12 +222,14 @@ export default function PricingPage() {
                     <span className="text-5xl font-bold text-foreground">
                       {priceLabel}
                     </span>
-                    <span className="mb-2 text-muted-foreground">/mo</span>
+                    {name !== "Starter" ? (
+                      <span className="mb-2 text-muted-foreground">/mo</span>
+                    ) : null}
                   </div>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    {annualLabel}/yr billed annually. Includes a{" "}
-                    {PLAN_TRIAL_DAYS}-day free trial and saves{" "}
-                    {ANNUAL_DISCOUNT_PERCENT}%.
+                    {name === "Starter"
+                      ? "No card required. Upgrade when you need more capacity."
+                      : `${annualLabel}/yr billed annually. Includes a ${PLAN_TRIAL_DAYS}-day free trial and saves ${ANNUAL_DISCOUNT_PERCENT}%.`}
                   </p>
                 </div>
 
@@ -313,8 +315,8 @@ export default function PricingPage() {
             Ready to get started?
           </h2>
           <p className="mb-8 text-muted-foreground">
-            Pick the plan that fits now and start with a {PLAN_TRIAL_DAYS}-day
-            free trial.
+            Pick the plan that fits now. Starter is free, and paid plans include
+            a {PLAN_TRIAL_DAYS}-day free trial.
           </p>
           <Button
             size="lg"
@@ -322,7 +324,7 @@ export default function PricingPage() {
             className="px-10 shadow-lg shadow-primary/25"
           >
             <NextLink href="/register">
-              Start {PLAN_TRIAL_DAYS}-day trial
+              Start free
               <ArrowRight className="ml-2 h-4 w-4" />
             </NextLink>
           </Button>

@@ -18,13 +18,13 @@ import {
   taxTypes,
   units,
 } from "@/server/db/schemas";
+import { can } from "@/server/iam/ability";
 import { runWorkflowAutomations } from "@/server/services/automations/run-workflow-automations";
 import { getOrganizationPlan } from "@/server/services/billing/get-organization-plan";
 import { getUsageLimit } from "@/server/services/billing/plan-limits";
 import { sendTransactionalEmail } from "@/server/services/email/resend";
 import { sendEstimateStatusNotification } from "@/server/services/notifications/send-estimate-status-notification";
 import { sendViewedNotification } from "@/server/services/notifications/send-viewed-notification";
-import { can } from "@/server/iam/ability";
 import {
   createTRPCRouter,
   organizationProcedure,
@@ -683,10 +683,7 @@ export const estimatesRouter = createTRPCRouter({
         throw new TRPCError({ code: "FORBIDDEN", message: "Link expired" });
       }
 
-      if (
-        estimate.status !== "SENT" &&
-        estimate.status !== "VIEWED"
-      ) {
+      if (estimate.status !== "SENT" && estimate.status !== "VIEWED") {
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: "Estimate cannot be approved in its current state.",
@@ -768,10 +765,7 @@ export const estimatesRouter = createTRPCRouter({
         throw new TRPCError({ code: "FORBIDDEN", message: "Link expired" });
       }
 
-      if (
-        estimate.status !== "SENT" &&
-        estimate.status !== "VIEWED"
-      ) {
+      if (estimate.status !== "SENT" && estimate.status !== "VIEWED") {
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: "Estimate cannot be rejected in its current state.",
@@ -834,12 +828,20 @@ export const estimatesRouter = createTRPCRouter({
 
   getFormMeta: organizationProcedure
     .use(requirePermission("estimate:view"))
+    .use(requirePermission("estimate:view-prices"))
+    .use(requirePermission("customer:view"))
+    .use(requirePermission("item:view"))
+    .use(requirePermission("item:view-prices"))
     .query(async ({ ctx }) => {
       return getEstimateFormMeta(ctx.db, ctx.organizationId);
     }),
 
   create: organizationProcedure
     .use(requirePermission("estimate:create"))
+    .use(requirePermission("estimate:view-prices"))
+    .use(requirePermission("customer:view"))
+    .use(requirePermission("item:view"))
+    .use(requirePermission("item:view-prices"))
     .input(estimateUpsertSchema)
     .mutation(async ({ ctx, input }) => {
       const plan = await getOrganizationPlan(ctx.db, ctx.organizationId);
@@ -997,6 +999,10 @@ export const estimatesRouter = createTRPCRouter({
 
   update: organizationProcedure
     .use(requirePermission("estimate:edit"))
+    .use(requirePermission("estimate:view-prices"))
+    .use(requirePermission("customer:view"))
+    .use(requirePermission("item:view"))
+    .use(requirePermission("item:view-prices"))
     .input(
       estimateUpsertSchema.extend({
         id: z.string().trim().min(1),
@@ -1412,9 +1418,7 @@ export const estimatesRouter = createTRPCRouter({
       }
 
       await del(file.storageKey);
-      await ctx.db
-        .delete(documentFiles)
-        .where(eq(documentFiles.id, file.id));
+      await ctx.db.delete(documentFiles).where(eq(documentFiles.id, file.id));
 
       return { ok: true as const };
     }),

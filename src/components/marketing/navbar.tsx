@@ -1,17 +1,11 @@
 "use client";
 
-import {
-  BriefcaseBusiness,
-  ChevronDown,
-  Layers,
-  LogOut,
-  Menu,
-  X,
-} from "lucide-react";
+import { BriefcaseBusiness, ChevronDown, LogOut, Menu, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
+import MainLogo from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -55,7 +49,7 @@ function UserMenu({ mobile = false }: { mobile?: boolean }) {
           asChild
           className={mobile ? "justify-start" : "shadow-sm shadow-primary/20"}
         >
-          <Link href="/register">Start 15-day trial</Link>
+          <Link href="/register">Start free</Link>
         </Button>
       </>
     );
@@ -151,12 +145,7 @@ export function MarketingNavbar() {
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary shadow-md shadow-primary/30">
-            <Layers className="h-4 w-4 text-white" />
-          </div>
-          <span className="text-base font-bold tracking-tight text-foreground">
-            Orgaflow
-          </span>
+          <MainLogo className="w-36 h-auto fill-black" />
         </Link>
 
         {/* Desktop nav */}
