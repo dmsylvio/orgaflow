@@ -131,7 +131,7 @@ const STAR_KEYS = ["1", "2", "3", "4", "5"] as const;
 
 function _InvoiceMockup() {
   return (
-    <div className="w-full overflow-hidden rounded-xl border border-border bg-background shadow-sm">
+    <div className="w-full rounded-xl border border-border bg-background shadow-sm">
       {/* toolbar */}
       <div className="flex items-center justify-between border-b border-border px-4 py-2.5">
         <div className="flex items-center gap-1.5">
@@ -198,7 +198,7 @@ function KanbanMockup() {
     },
   ];
   return (
-    <div className="flex gap-2 overflow-hidden">
+    <div className="flex gap-2 ">
       {cols.map(({ label, color, dot, cards }) => (
         <div key={label} className="flex min-w-0 flex-1 flex-col gap-1.5">
           <div className="flex items-center gap-1.5 px-0.5">
@@ -291,7 +291,7 @@ function CRMMockup() {
     },
   ];
   return (
-    <div className="flex flex-col divide-y divide-border overflow-hidden rounded-xl border border-border bg-background shadow-sm">
+    <div className="flex flex-col divide-y divide-border rounded-xl border border-border bg-background shadow-sm">
       <div className="flex items-center justify-between bg-muted/50 px-3 py-2">
         <span className="text-[11px] font-semibold text-foreground/70">
           Customers
@@ -385,7 +385,7 @@ export default function LandingPage() {
   return (
     <div className="overflow-hidden">
       {/* ── HERO ── */}
-      <section className="relative overflow-hidden pb-0 pt-20">
+      <section className="relative  pb-0 pt-20">
         {/* background blobs */}
         <div aria-hidden className="pointer-events-none absolute inset-0">
           <div className="absolute left-1/2 top-0 h-[600px] w-[1000px] -translate-x-1/2 rounded-full bg-gradient-to-b from-primary/8 to-transparent blur-[80px]" />
@@ -472,7 +472,7 @@ export default function LandingPage() {
             className="pointer-events-none absolute inset-x-0 top-8 mx-auto h-40 max-w-3xl rounded-full bg-primary/10 blur-3xl"
           />
 
-          <div className="relative overflow-hidden rounded-2xl border border-border shadow-2xl shadow-black/10 ring-1 ring-border">
+          <div className="relative rounded-2xl border border-border shadow-2xl shadow-black/10 ring-1 ring-border">
             {/* Browser bar */}
             <div className="flex items-center gap-3 border-b border-border bg-muted/60 px-4 py-3">
               <div className="flex gap-1.5">
@@ -509,7 +509,7 @@ export default function LandingPage() {
 
         {/* stats strip — overlaps image */}
         <div className="relative mx-auto -mt-8 max-w-6xl px-6">
-          <div className="flex divide-x divide-border overflow-hidden rounded-2xl border border-border bg-background/80 shadow-lg backdrop-blur-sm">
+          <div className="flex divide-x divide-border  rounded-2xl border border-border bg-background/80 shadow-lg backdrop-blur-sm">
             {STATS.map(({ value, label, Icon }) => (
               <div
                 key={label}
@@ -615,7 +615,7 @@ export default function LandingPage() {
             </div>
 
             {/* ── LARGE SPOTLIGHT: Automations + Tasks ── */}
-            <div className="col-span-12 rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/5 via-violet-50/60 to-amber-50/40 p-8 shadow-sm overflow-hidden relative">
+            <div className="col-span-12 rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/5 via-violet-50/60 to-amber-50/40 p-8 shadow-sm  relative">
               {/* decorative blob */}
               <div
                 aria-hidden
@@ -914,12 +914,12 @@ export default function LandingPage() {
       </section>
 
       {/* ── CTA ── */}
-      <section className="pb-28">
+      <section className="py-12">
         <div className="mx-auto max-w-5xl px-6">
-          <div className="relative overflow-hidden rounded-3xl bg-primary px-8 py-24 text-center">
+          <div className="relative rounded-3xl bg-primary px-8 py-24 text-center">
             <div
               aria-hidden
-              className="pointer-events-none absolute inset-0 overflow-hidden"
+              className="pointer-events-none absolute inset-0"
             >
               <div className="absolute -right-24 -top-24 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
               <div className="absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-white/10 blur-3xl" />

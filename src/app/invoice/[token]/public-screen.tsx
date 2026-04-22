@@ -1,7 +1,14 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { CalendarClock, Download, FileText, ImageIcon, Receipt, TriangleAlert } from "lucide-react";
+import {
+  CalendarClock,
+  Download,
+  FileText,
+  ImageIcon,
+  Receipt,
+  TriangleAlert,
+} from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,6 +19,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { RichTextContent } from "@/components/ui/rich-text-editor";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
 import { formatCurrencyDisplay } from "@/lib/currency-format";
@@ -170,11 +178,9 @@ export function InvoicePublicScreen({ token }: { token: string }) {
 
               <div className="flex items-center gap-3">
                 <div className="text-xs text-muted-foreground">
-                  {expiresAt ? (
-                    <>Link expires {formatDateTime(expiresAt)}</>
-                  ) : (
-                    <>No link expiration</>
-                  )}
+                  {expiresAt
+                    ? `Link expires ${formatDateTime(expiresAt)}`
+                    : "No link expiration"}
                 </div>
                 <Button asChild size="sm" variant="outline" className="gap-1.5">
                   <a
@@ -337,9 +343,10 @@ export function InvoicePublicScreen({ token }: { token: string }) {
             {invoice.notes ? (
               <div className="rounded-2xl border border-border bg-card p-5">
                 <h2 className="text-lg font-semibold text-foreground">Notes</h2>
-                <p className="mt-3 whitespace-pre-wrap text-sm text-muted-foreground">
-                  {invoice.notes}
-                </p>
+                <RichTextContent
+                  html={invoice.notes}
+                  className="mt-3 text-sm text-muted-foreground"
+                />
               </div>
             ) : null}
           </CardContent>

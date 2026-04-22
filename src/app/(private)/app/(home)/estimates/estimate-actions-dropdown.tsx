@@ -4,6 +4,7 @@ import * as PopoverPrimitive from "@radix-ui/react-popover";
 import {
   ArrowRightLeft,
   CheckCircle2,
+  Eye,
   FileText,
   Mail,
   MoreHorizontal,
@@ -26,8 +27,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import type { EstimateStatus } from "./estimate-ui";
 import { EstimateSendDialog } from "./estimate-send-dialog";
+import type { EstimateStatus } from "./estimate-ui";
 
 type EstimateActionsDropdownProps = {
   estimateId: string;
@@ -131,6 +132,17 @@ export function EstimateActionsDropdown({
               <FileText className={menuIconClassName} />
               View
             </NextLink>
+
+            <a
+              href={`/api/pdf/estimate/${estimateId}?inline=1`}
+              target="_blank"
+              rel="noreferrer"
+              className={menuItemClassName}
+              onClick={() => setOpen(false)}
+            >
+              <Eye className={menuIconClassName} />
+              View Public PDF
+            </a>
 
             <button
               type="button"

@@ -4,17 +4,19 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { FileText, Plus } from "lucide-react";
 import NextLink from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
+import { TablePagination } from "@/components/ui/table-pagination";
+import { useCanViewPrices } from "@/hooks/use-can-view-prices";
 import {
   type CurrencyFormat,
   formatCurrencyDisplay,
 } from "@/lib/currency-format";
+import { richTextToPlainText } from "@/lib/rich-text";
 import { toast } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { useTRPC } from "@/trpc/client";
-import { useCanViewPrices } from "@/hooks/use-can-view-prices";
 import { InvoiceActionsDropdown } from "./invoice-actions-dropdown";
 import {
   formatInvoiceDate,
@@ -45,6 +47,8 @@ type InvoiceRecord = {
 
 type InvoiceFilter = "ALL" | "DRAFT" | "SENT" | "DUE";
 
+const PAGE_SIZE = 20;
+
 function InvoiceRow({
   invoice,
   canViewPrices,
@@ -64,16 +68,18 @@ function InvoiceRow({
   onSetStatus: (status: InvoiceStatus, successMessage: string) => void;
   onDelete: () => void;
 }) {
+  const notesPreview = richTextToPlainText(invoice.notes);
+
   return (
     <tr className="border-b border-border last:border-0">
       <td className="py-3 pl-4 pr-2 align-top">
-        <div className="space-y-1">
-          <p className="text-sm font-medium text-foreground">
+        <div className="min-w-0 space-y-1">
+          <p className="truncate text-sm font-medium text-foreground">
             {invoice.invoiceNumber}
           </p>
-          {invoice.notes ? (
-            <p className="line-clamp-1 max-w-[24ch] text-xs text-muted-foreground">
-              {invoice.notes}
+          {notesPreview ? (
+            <p className="line-clamp-1 text-xs text-muted-foreground">
+              {notesPreview}
             </p>
           ) : null}
         </div>
@@ -82,8 +88,8 @@ function InvoiceRow({
         <InvoiceStatusBadge status={invoice.status} />
       </td>
       <td className="px-2 py-3 align-top">
-        <div className="space-y-1">
-          <p className="text-sm text-foreground">
+        <div className="min-w-0 space-y-1">
+          <p className="truncate text-sm text-foreground">
             {invoice.customer.displayName}
           </p>
           <p className="text-xs text-muted-foreground">
@@ -91,14 +97,14 @@ function InvoiceRow({
           </p>
         </div>
       </td>
-      <td className="px-2 py-3 align-top text-sm text-foreground">
+      <td className="px-2 py-3 align-top text-sm whitespace-nowrap text-foreground">
         {formatInvoiceDate(invoice.invoiceDate) ?? "Not set"}
       </td>
-      <td className="px-2 py-3 align-top text-sm text-foreground">
+      <td className="px-2 py-3 align-top text-sm whitespace-nowrap text-foreground">
         {formatInvoiceDate(invoice.dueDate) ?? "No due date"}
       </td>
       {canViewPrices ? (
-        <td className="px-2 py-3 align-top text-sm font-medium text-foreground">
+        <td className="px-2 py-3 align-top text-sm font-medium whitespace-nowrap text-foreground">
           {formatCurrencyDisplay(invoice.total ?? "", invoice.currency)}
         </td>
       ) : null}
@@ -127,6 +133,7 @@ export default function InvoicesPage() {
   const queryClient = useQueryClient();
   const { invoice: canViewPrices } = useCanViewPrices();
   const [activeFilter, setActiveFilter] = useState<InvoiceFilter>("ALL");
+  const [page, setPage] = useState(1);
 
   const { data: invoices = [], isPending: invoicesPending } = useQuery(
     trpc.invoices.list.queryOptions(),
@@ -191,14 +198,6 @@ export default function InvoicesPage() {
     }),
   );
 
-  if (invoicesPending || usagePending || metaPending) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <Spinner className="size-5 text-primary" label="Loading" />
-      </div>
-    );
-  }
-
   const totalInvoiceValue = canViewPrices
     ? invoices.reduce((sum, invoice) => sum + Number(invoice.total ?? 0), 0)
     : null;
@@ -228,6 +227,15 @@ export default function InvoicesPage() {
 
     return invoices;
   })();
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredInvoices.length / PAGE_SIZE),
+  );
+  const safePage = Math.min(page, totalPages);
+  const paginatedInvoices = filteredInvoices.slice(
+    (safePage - 1) * PAGE_SIZE,
+    safePage * PAGE_SIZE,
+  );
   const filterTabs: Array<{
     value: InvoiceFilter;
     label: string;
@@ -238,6 +246,18 @@ export default function InvoicesPage() {
     { value: "SENT", label: "Sent", count: sentCount },
     { value: "DUE", label: "Due", count: dueCount },
   ];
+
+  useEffect(() => {
+    setPage((current) => Math.min(current, totalPages));
+  }, [totalPages]);
+
+  if (invoicesPending || usagePending || metaPending) {
+    return (
+      <div className="flex min-h-0 flex-1 flex-col items-center justify-center">
+        <Spinner className="size-5 text-primary" label="Loading" />
+      </div>
+    );
+  }
 
   return (
     <PageShell
@@ -312,7 +332,7 @@ export default function InvoicesPage() {
           <div
             role="tablist"
             aria-label="Invoice status filters"
-            className="flex w-full gap-2 overflow-x-auto rounded-2xl border border-border bg-muted/20 p-2"
+            className="flex w-full flex-wrap gap-2 rounded-2xl border border-border bg-muted/20 p-2"
           >
             {filterTabs.map((tab) => (
               <button
@@ -320,7 +340,10 @@ export default function InvoicesPage() {
                 type="button"
                 role="tab"
                 aria-selected={activeFilter === tab.value}
-                onClick={() => setActiveFilter(tab.value)}
+                onClick={() => {
+                  setActiveFilter(tab.value);
+                  setPage(1);
+                }}
                 className={cn(
                   "inline-flex min-w-fit items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition-colors",
                   activeFilter === tab.value
@@ -362,37 +385,37 @@ export default function InvoicesPage() {
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto rounded-2xl border border-border bg-card">
-            <table className="w-full min-w-[860px]">
+          <div className="overflow-hidden rounded-2xl border border-border bg-card">
+            <table className="w-full table-fixed">
               <thead>
                 <tr className="border-b border-border">
-                  <th className="py-3 pl-4 pr-2 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
+                  <th className="w-[18%] py-3 pl-4 pr-2 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
                     Invoice
                   </th>
-                  <th className="px-2 py-3 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
+                  <th className="w-[12%] px-2 py-3 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
                     Status
                   </th>
-                  <th className="px-2 py-3 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
+                  <th className="w-[22%] px-2 py-3 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
                     Customer
                   </th>
-                  <th className="px-2 py-3 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
+                  <th className="w-[14%] px-2 py-3 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
                     Invoice date
                   </th>
-                  <th className="px-2 py-3 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
+                  <th className="w-[14%] px-2 py-3 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
                     Due date
                   </th>
                   {canViewPrices ? (
-                    <th className="px-2 py-3 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
+                    <th className="w-[12%] px-2 py-3 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
                       Total
                     </th>
                   ) : null}
-                  <th className="py-3 pl-2 pr-4 text-right text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
+                  <th className="w-16 py-3 pl-2 pr-4 text-right text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
                     Actions
                   </th>
                 </tr>
               </thead>
               <tbody>
-                {filteredInvoices.map((invoice) => (
+                {paginatedInvoices.map((invoice) => (
                   <InvoiceRow
                     key={invoice.id}
                     invoice={invoice}
@@ -423,6 +446,13 @@ export default function InvoicesPage() {
                 ))}
               </tbody>
             </table>
+            <TablePagination
+              totalCount={filteredInvoices.length}
+              page={safePage}
+              pageSize={PAGE_SIZE}
+              onPageChange={setPage}
+              itemLabel="invoices"
+            />
           </div>
         )}
       </div>

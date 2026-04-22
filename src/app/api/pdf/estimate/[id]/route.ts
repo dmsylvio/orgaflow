@@ -1,6 +1,6 @@
 import { type DocumentProps, renderToBuffer } from "@react-pdf/renderer";
 import { and, asc, eq } from "drizzle-orm";
-import { type ReactElement, createElement } from "react";
+import { createElement, type ReactElement } from "react";
 import { formatOrgAddress, getPdfComponent } from "@/lib/pdf/get-pdf-component";
 import { getCurrentSession } from "@/server/auth/session";
 import { db } from "@/server/db";
@@ -20,6 +20,10 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const disposition =
+      new URL(request.url).searchParams.get("inline") === "1"
+        ? "inline"
+        : "attachment";
     const session = await getCurrentSession();
     const userId =
       session?.user && "id" in session.user
@@ -147,7 +151,7 @@ export async function GET(
     return new Response(new Uint8Array(buffer), {
       headers: {
         "Content-Type": "application/pdf",
-        "Content-Disposition": `attachment; filename="${estimate.estimateNumber}.pdf"`,
+        "Content-Disposition": `${disposition}; filename="${estimate.estimateNumber}.pdf"`,
         "Cache-Control": "private, no-cache",
       },
     });

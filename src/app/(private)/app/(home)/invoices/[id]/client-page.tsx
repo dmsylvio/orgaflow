@@ -1,17 +1,26 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Download, FileText, Paperclip, Pencil, Trash2, Upload } from "lucide-react";
+import {
+  ArrowLeft,
+  Download,
+  FileText,
+  Paperclip,
+  Pencil,
+  Trash2,
+  Upload,
+} from "lucide-react";
 import NextLink from "next/link";
 import { useParams } from "next/navigation";
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { RichTextContent } from "@/components/ui/rich-text-editor";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
+import { useCanViewPrices } from "@/hooks/use-can-view-prices";
 import { formatCurrencyDisplay } from "@/lib/currency-format";
 import { toast } from "@/lib/toast";
 import { useTRPC } from "@/trpc/client";
-import { useCanViewPrices } from "@/hooks/use-can-view-prices";
 import { formatBytes, uploadFile } from "../../expenses/edit-dialog";
 import {
   formatInvoiceDate,
@@ -229,7 +238,10 @@ export default function InvoiceDetailPage() {
                 Subtotal
               </p>
               <p className="mt-1 text-sm font-semibold text-foreground">
-                {formatCurrencyDisplay(invoice.subTotal ?? "", invoice.currency)}
+                {formatCurrencyDisplay(
+                  invoice.subTotal ?? "",
+                  invoice.currency,
+                )}
               </p>
             </div>
           ) : null}
@@ -271,7 +283,10 @@ export default function InvoiceDetailPage() {
                   </div>
                   {canViewPrices ? (
                     <p className="text-sm font-semibold text-foreground">
-                      {formatCurrencyDisplay(item.total ?? "", invoice.currency)}
+                      {formatCurrencyDisplay(
+                        item.total ?? "",
+                        invoice.currency,
+                      )}
                     </p>
                   ) : null}
                 </div>
@@ -285,7 +300,10 @@ export default function InvoiceDetailPage() {
                     <div>
                       Unit price:{" "}
                       <span className="text-foreground">
-                        {formatCurrencyDisplay(item.price ?? "", invoice.currency)}
+                        {formatCurrencyDisplay(
+                          item.price ?? "",
+                          invoice.currency,
+                        )}
                       </span>
                     </div>
                   ) : null}
@@ -313,7 +331,10 @@ export default function InvoiceDetailPage() {
               <div className="flex items-center justify-between text-muted-foreground">
                 <span>Subtotal</span>
                 <span className="font-medium text-foreground">
-                  {formatCurrencyDisplay(invoice.subTotal ?? "", invoice.currency)}
+                  {formatCurrencyDisplay(
+                    invoice.subTotal ?? "",
+                    invoice.currency,
+                  )}
                 </span>
               </div>
               <div className="flex items-center justify-between text-muted-foreground">
@@ -336,9 +357,10 @@ export default function InvoiceDetailPage() {
         {invoice.notes ? (
           <div className="rounded-2xl border border-border bg-card p-5">
             <h2 className="text-lg font-semibold text-foreground">Notes</h2>
-            <p className="mt-3 whitespace-pre-wrap text-sm text-muted-foreground">
-              {invoice.notes}
-            </p>
+            <RichTextContent
+              html={invoice.notes}
+              className="mt-3 text-sm text-muted-foreground"
+            />
           </div>
         ) : null}
 

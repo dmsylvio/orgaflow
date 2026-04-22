@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
+import { useCanViewPrices } from "@/hooks/use-can-view-prices";
 import {
   type CurrencyFormat,
   formatCurrencyDisplay,
@@ -14,7 +15,6 @@ import {
 import { toast } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { useTRPC } from "@/trpc/client";
-import { useCanViewPrices } from "@/hooks/use-can-view-prices";
 import { EstimateActionsDropdown } from "./estimate-actions-dropdown";
 import {
   type EstimateStatus,
@@ -67,12 +67,12 @@ function EstimateRow({
   return (
     <tr className="border-b border-border last:border-0">
       <td className="py-3 pl-4 pr-2 align-top">
-        <div className="space-y-1">
-          <p className="text-sm font-medium text-foreground">
+        <div className="min-w-0 space-y-1">
+          <p className="truncate text-sm font-medium text-foreground">
             {estimate.estimateNumber}
           </p>
           {estimate.notes ? (
-            <p className="line-clamp-1 max-w-[24ch] text-xs text-muted-foreground">
+            <p className="line-clamp-1 text-xs text-muted-foreground">
               {estimate.notes}
             </p>
           ) : null}
@@ -82,8 +82,8 @@ function EstimateRow({
         <EstimateStatusBadge status={estimate.status} />
       </td>
       <td className="px-2 py-3 align-top">
-        <div className="space-y-1">
-          <p className="text-sm text-foreground">
+        <div className="min-w-0 space-y-1">
+          <p className="truncate text-sm text-foreground">
             {estimate.customer.displayName}
           </p>
           <p className="text-xs text-muted-foreground">
@@ -91,14 +91,14 @@ function EstimateRow({
           </p>
         </div>
       </td>
-      <td className="px-2 py-3 align-top text-sm text-foreground">
+      <td className="px-2 py-3 align-top text-sm whitespace-nowrap text-foreground">
         {formatEstimateDate(estimate.estimateDate) ?? "Not set"}
       </td>
-      <td className="px-2 py-3 align-top text-sm text-foreground">
+      <td className="px-2 py-3 align-top text-sm whitespace-nowrap text-foreground">
         {formatEstimateDate(estimate.expiryDate) ?? "No expiry"}
       </td>
       {canViewPrices ? (
-        <td className="px-2 py-3 align-top text-sm font-medium text-foreground">
+        <td className="px-2 py-3 align-top text-sm font-medium whitespace-nowrap text-foreground">
           {formatCurrencyDisplay(estimate.total ?? "", estimate.currency)}
         </td>
       ) : null}
@@ -195,7 +195,7 @@ export default function EstimatesPage() {
 
   if (estimatesPending || usagePending || metaPending) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex min-h-0 flex-1 flex-col items-center justify-center">
         <Spinner className="size-5 text-primary" label="Loading" />
       </div>
     );
@@ -306,7 +306,7 @@ export default function EstimatesPage() {
           <div
             role="tablist"
             aria-label="Estimate status filters"
-            className="flex w-full gap-2 overflow-x-auto rounded-2xl border border-border bg-muted/20 p-2"
+            className="flex w-full flex-wrap gap-2 rounded-2xl border border-border bg-muted/20 p-2"
           >
             {filterTabs.map((tab) => (
               <button
@@ -356,31 +356,31 @@ export default function EstimatesPage() {
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto rounded-2xl border border-border bg-card">
-            <table className="w-full min-w-[860px]">
+          <div className="overflow-hidden rounded-2xl border border-border bg-card">
+            <table className="w-full table-fixed">
               <thead>
                 <tr className="border-b border-border">
-                  <th className="py-3 pl-4 pr-2 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
+                  <th className="w-[18%] py-3 pl-4 pr-2 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
                     Estimate
                   </th>
-                  <th className="px-2 py-3 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
+                  <th className="w-[12%] px-2 py-3 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
                     Status
                   </th>
-                  <th className="px-2 py-3 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
+                  <th className="w-[22%] px-2 py-3 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
                     Customer
                   </th>
-                  <th className="px-2 py-3 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
+                  <th className="w-[14%] px-2 py-3 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
                     Estimate date
                   </th>
-                  <th className="px-2 py-3 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
+                  <th className="w-[14%] px-2 py-3 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
                     Expiry
                   </th>
                   {canViewPrices ? (
-                    <th className="px-2 py-3 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
+                    <th className="w-[12%] px-2 py-3 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
                       Total
                     </th>
                   ) : null}
-                  <th className="py-3 pl-2 pr-4 text-right text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
+                  <th className="w-16 py-3 pl-2 pr-4 text-right text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
                     Actions
                   </th>
                 </tr>

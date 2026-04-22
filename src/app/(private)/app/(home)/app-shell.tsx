@@ -7,7 +7,6 @@ import {
   BookOpen,
   Building2,
   FileText,
-  Layers,
   LayoutDashboard,
   ListTodo,
   LogOut,
@@ -24,6 +23,7 @@ import NextLink from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 import { type ReactNode, useEffect, useState } from "react";
+import MainLogo from "@/components/logo";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,7 +36,6 @@ import { Spinner } from "@/components/ui/spinner";
 import { appPaths } from "@/lib/app-paths";
 import { cn } from "@/lib/utils";
 import { useTRPC } from "@/trpc/client";
-import MainLogo from "@/components/logo";
 
 const NAV_ICONS: Record<string, ReactNode> = {
   "/app": <LayoutDashboard className="h-4 w-4" />,
@@ -158,9 +157,7 @@ const PAYMENT_ALERT_STATUSES = new Set(["past_due", "unpaid"]);
 
 function PaymentAlertBanner() {
   const trpc = useTRPC();
-  const { data } = useQuery(
-    trpc.settings.getSubscriptionStatus.queryOptions(),
-  );
+  const { data } = useQuery(trpc.settings.getSubscriptionStatus.queryOptions());
   if (!data?.status || !PAYMENT_ALERT_STATUSES.has(data.status)) return null;
 
   const isPastDue = data.status === "past_due";
@@ -196,17 +193,18 @@ export function AppShell({ children }: AppShellProps) {
     setSidebarOpen(false);
   }, [pathname]);
 
-  // Impede scroll do body quando o drawer mobile está aberto
+  // Evita scroll duplo: o shell é h-screen e o scroll fica no <main>.
   useEffect(() => {
-    if (sidebarOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
+    const html = document.documentElement;
+    const prevHtml = html.style.overflow;
+    const prevBody = document.body.style.overflow;
+    html.style.overflow = "hidden";
+    document.body.style.overflow = "hidden";
     return () => {
-      document.body.style.overflow = "";
+      html.style.overflow = prevHtml;
+      document.body.style.overflow = prevBody;
     };
-  }, [sidebarOpen]);
+  }, []);
 
   const {
     data: items,
@@ -228,7 +226,7 @@ export function AppShell({ children }: AppShellProps) {
       {/* Logo */}
       <div className="flex h-14 shrink-0 items-center justify-between border-b border-sidebar-border px-4">
         <div className="flex items-center gap-2.5">
-          <MainLogo className="w-24 h-auto fill-white"/>
+          <MainLogo className="w-24 h-auto fill-white" />
         </div>
         {/* Botão fechar — visível apenas no mobile */}
         <button
@@ -244,14 +242,12 @@ export function AppShell({ children }: AppShellProps) {
       {/* Nav */}
       <nav
         aria-label="Main"
-        className="flex flex-1 flex-col gap-0.5 overflow-y-auto p-3"
+        className="flex flex-1 flex-col gap-0.5 overflow-y-auto p-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {isPending ? (
           <div className="flex items-center gap-2 px-2 py-4">
             <Spinner className="size-3.5 text-sidebar-primary" />
-            <span className="text-xs text-sidebar-foreground/40">
-              Loading…
-            </span>
+            <span className="text-xs text-sidebar-foreground/40">Loading…</span>
           </div>
         ) : null}
         {isError ? (
@@ -265,10 +261,7 @@ export function AppShell({ children }: AppShellProps) {
           const icon = NAV_ICONS[item.href];
 
           return (
-            <div
-              key={item.key}
-              className={startsNewGroup ? "mt-6" : undefined}
-            >
+            <div key={item.key} className={startsNewGroup ? "mt-6" : undefined}>
               <NextLink
                 href={item.href}
                 className={cn(
@@ -358,7 +351,7 @@ export function AppShell({ children }: AppShellProps) {
 
           {/* Logo centralizado no mobile */}
           <div className="flex items-center gap-2">
-            <MainLogo className="w-24 h-auto fill-white"/>
+            <MainLogo className="w-24 h-auto fill-white" />
           </div>
 
           {/* Avatar do usuário no canto direito do header mobile */}
@@ -424,7 +417,7 @@ export function AppShell({ children }: AppShellProps) {
               </div>
               <nav
                 aria-label="Settings sections"
-                className="flex flex-1 flex-col gap-0.5 overflow-y-auto p-3"
+                className="flex flex-1 flex-col gap-0.5 overflow-y-auto p-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
               >
                 {settingsPending ? (
                   <div className="flex items-center gap-2 px-2 py-3">
@@ -458,7 +451,7 @@ export function AppShell({ children }: AppShellProps) {
           ) : null}
 
           {/* ── CONTEÚDO PRINCIPAL ── */}
-          <main className="flex min-w-0 flex-1 flex-col overflow-y-auto">
+          <main className="flex min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-auto">
             <PaymentAlertBanner />
 
             {/* ── SETTINGS NAV MOBILE — abas horizontais com scroll ── */}

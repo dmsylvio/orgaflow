@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import NextLink from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { CurrencyInput } from "@/components/ui/currency-input";
 import {
@@ -18,6 +18,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { Spinner } from "@/components/ui/spinner";
+import { TablePagination } from "@/components/ui/table-pagination";
+import { useCanViewPrices } from "@/hooks/use-can-view-prices";
 import {
   type CurrencyFormat,
   formatCurrencyDisplay,
@@ -25,7 +27,6 @@ import {
 import { toast } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { useTRPC } from "@/trpc/client";
-import { useCanViewPrices } from "@/hooks/use-can-view-prices";
 import {
   EditExpenseDialog,
   type ExpenseRecord,
@@ -38,6 +39,8 @@ import {
 // ---------------------------------------------------------------------------
 
 type OrgCurrency = CurrencyFormat;
+
+const PAGE_SIZE = 25;
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -436,6 +439,7 @@ export default function ExpensesPage() {
 
   const [createOpen, setCreateOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<ExpenseRecord | null>(null);
+  const [page, setPage] = useState(1);
 
   const categoryMap = new Map(categories.map((c) => [c.id, c.name]));
   const customerMap = new Map(customers.map((c) => [c.id, c.displayName]));
@@ -456,6 +460,20 @@ export default function ExpensesPage() {
     }),
   );
 
+  const totalAmount = canViewPrices
+    ? expenseList.reduce((sum, e) => sum + parseFloat(e.amount ?? "0"), 0)
+    : null;
+  const totalPages = Math.max(1, Math.ceil(expenseList.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const paginatedExpenses = expenseList.slice(
+    (safePage - 1) * PAGE_SIZE,
+    safePage * PAGE_SIZE,
+  );
+
+  useEffect(() => {
+    setPage((current) => Math.min(current, totalPages));
+  }, [totalPages]);
+
   if (isLoading) {
     return (
       <div className="flex min-h-64 items-center justify-center">
@@ -463,10 +481,6 @@ export default function ExpensesPage() {
       </div>
     );
   }
-
-  const totalAmount = canViewPrices
-    ? expenseList.reduce((sum, e) => sum + parseFloat(e.amount ?? "0"), 0)
-    : null;
 
   return (
     <div className="w-full p-6 md:p-8">
@@ -531,60 +545,70 @@ export default function ExpensesPage() {
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-border">
-                  <th className="py-2 pl-4 pr-2 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/50">
-                    Date
-                  </th>
-                  {canViewPrices ? (
-                    <th className="py-2 px-2 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/50">
-                      Amount
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-border">
+                    <th className="py-2 pl-4 pr-2 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/50">
+                      Date
                     </th>
-                  ) : null}
-                  <th className="py-2 px-2 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/50">
-                    Category
-                  </th>
-                  <th className="py-2 px-2 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/50">
-                    Customer
-                  </th>
-                  <th className="py-2 px-2 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/50">
-                    Payment Mode
-                  </th>
-                  <th className="py-2 pl-2 pr-4 w-20" />
-                </tr>
-              </thead>
-              <tbody>
-                {expenseList.map((expense) => (
-                  <ExpenseRow
-                    key={expense.id}
-                    expense={expense}
-                    canViewPrices={canViewPrices}
-                    categoryName={
-                      expense.categoryId
-                        ? categoryMap.get(expense.categoryId)
-                        : undefined
-                    }
-                    customerName={
-                      expense.customerId
-                        ? customerMap.get(expense.customerId)
-                        : undefined
-                    }
-                    paymentModeName={
-                      expense.paymentModeId
-                        ? modeMap.get(expense.paymentModeId)
-                        : undefined
-                    }
-                    currency={orgCurrency}
-                    onEdit={setEditTarget}
-                    onDelete={(id) => remove.mutate({ id })}
-                    isDeletePending={remove.isPending}
-                  />
-                ))}
-              </tbody>
-            </table>
-          </div>
+                    {canViewPrices ? (
+                      <th className="py-2 px-2 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/50">
+                        Amount
+                      </th>
+                    ) : null}
+                    <th className="py-2 px-2 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/50">
+                      Category
+                    </th>
+                    <th className="py-2 px-2 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/50">
+                      Customer
+                    </th>
+                    <th className="py-2 px-2 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/50">
+                      Payment Mode
+                    </th>
+                    <th className="py-2 pl-2 pr-4 w-20" />
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedExpenses.map((expense) => (
+                    <ExpenseRow
+                      key={expense.id}
+                      expense={expense}
+                      canViewPrices={canViewPrices}
+                      categoryName={
+                        expense.categoryId
+                          ? categoryMap.get(expense.categoryId)
+                          : undefined
+                      }
+                      customerName={
+                        expense.customerId
+                          ? customerMap.get(expense.customerId)
+                          : undefined
+                      }
+                      paymentModeName={
+                        expense.paymentModeId
+                          ? modeMap.get(expense.paymentModeId)
+                          : undefined
+                      }
+                      currency={orgCurrency}
+                      onEdit={setEditTarget}
+                      onDelete={(id) => remove.mutate({ id })}
+                      isDeletePending={remove.isPending}
+                    />
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <TablePagination
+              totalCount={expenseList.length}
+              page={safePage}
+              pageSize={PAGE_SIZE}
+              onPageChange={setPage}
+              itemLabel="expenses"
+            />
+          </>
         )}
       </div>
 

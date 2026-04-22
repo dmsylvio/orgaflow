@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { MoreHorizontal, Plus, RefreshCw } from "lucide-react";
 import NextLink from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -13,16 +13,17 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Spinner } from "@/components/ui/spinner";
+import { TablePagination } from "@/components/ui/table-pagination";
 import {
   type CurrencyFormat,
   formatCurrencyDisplay,
 } from "@/lib/currency-format";
 import { toast } from "@/lib/toast";
-import { useTRPC } from "@/trpc/client";
 import type { RecurringFrequency } from "@/schemas/recurring-invoice";
+import { useTRPC } from "@/trpc/client";
 import {
-  formatNextRun,
   FrequencyLabel,
+  formatNextRun,
   PageShell,
   type RecurringStatus,
   RecurringStatusBadge,
@@ -43,6 +44,8 @@ type TemplateRecord = {
   currency: NonNullable<CurrencyFormat>;
   itemCount: number;
 };
+
+const PAGE_SIZE = 25;
 
 function ActionsDropdown({
   template,
@@ -78,25 +81,22 @@ function ActionsDropdown({
             Edit
           </NextLink>
         </DropdownMenuItem>
-        {!isCompleted && (
-          <>
-            {template.status === "active" ? (
-              <DropdownMenuItem
-                onSelect={() => onSetStatus("on_hold")}
-                disabled={isUpdatingStatus}
-              >
-                Pause
-              </DropdownMenuItem>
-            ) : (
-              <DropdownMenuItem
-                onSelect={() => onSetStatus("active")}
-                disabled={isUpdatingStatus}
-              >
-                Resume
-              </DropdownMenuItem>
-            )}
-          </>
-        )}
+        {!isCompleted &&
+          (template.status === "active" ? (
+            <DropdownMenuItem
+              onSelect={() => onSetStatus("on_hold")}
+              disabled={isUpdatingStatus}
+            >
+              Pause
+            </DropdownMenuItem>
+          ) : (
+            <DropdownMenuItem
+              onSelect={() => onSetStatus("active")}
+              disabled={isUpdatingStatus}
+            >
+              Resume
+            </DropdownMenuItem>
+          ))}
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onSelect={onDelete}
@@ -123,6 +123,7 @@ export default function RecurringInvoicesClientPage() {
 
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [updatingStatusId, setUpdatingStatusId] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
 
   const deleteTemplate = useMutation(
     trpc.recurringInvoices.delete.mutationOptions({
@@ -157,6 +158,23 @@ export default function RecurringInvoicesClientPage() {
     }),
   );
 
+  const hasDependencies = Boolean(meta?.defaultCurrency);
+  const activeCount = templates.filter((t) => t.status === "active").length;
+  const pausedCount = templates.filter((t) => t.status === "on_hold").length;
+  const completedCount = templates.filter(
+    (t) => t.status === "completed",
+  ).length;
+  const totalPages = Math.max(1, Math.ceil(templates.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const paginatedTemplates = templates.slice(
+    (safePage - 1) * PAGE_SIZE,
+    safePage * PAGE_SIZE,
+  );
+
+  useEffect(() => {
+    setPage((current) => Math.min(current, totalPages));
+  }, [totalPages]);
+
   if (isPending) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -164,11 +182,6 @@ export default function RecurringInvoicesClientPage() {
       </div>
     );
   }
-
-  const hasDependencies = Boolean(meta?.defaultCurrency);
-  const activeCount = templates.filter((t) => t.status === "active").length;
-  const pausedCount = templates.filter((t) => t.status === "on_hold").length;
-  const completedCount = templates.filter((t) => t.status === "completed").length;
 
   return (
     <PageShell
@@ -221,7 +234,8 @@ export default function RecurringInvoicesClientPage() {
 
         {!hasDependencies ? (
           <div className="rounded-2xl border border-border bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
-            Set a default currency in Settings before creating recurring invoices.
+            Set a default currency in Settings before creating recurring
+            invoices.
           </div>
         ) : null}
 
@@ -267,7 +281,7 @@ export default function RecurringInvoicesClientPage() {
                 </tr>
               </thead>
               <tbody>
-                {templates.map((template) => (
+                {paginatedTemplates.map((template) => (
                   <tr
                     key={template.id}
                     className="border-b border-border last:border-0"
@@ -329,6 +343,13 @@ export default function RecurringInvoicesClientPage() {
                 ))}
               </tbody>
             </table>
+            <TablePagination
+              totalCount={templates.length}
+              page={safePage}
+              pageSize={PAGE_SIZE}
+              onPageChange={setPage}
+              itemLabel="recurring invoices"
+            />
           </div>
         )}
       </div>

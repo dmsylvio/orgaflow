@@ -32,7 +32,7 @@ export function PageShell({
   children: React.ReactNode;
 }) {
   return (
-    <div className="w-full p-6 md:p-8">
+    <div className="min-w-0 w-full p-6 md:p-8">
       <div className="mb-6">
         <h1 className="text-2xl font-semibold tracking-tight text-foreground">
           {title}

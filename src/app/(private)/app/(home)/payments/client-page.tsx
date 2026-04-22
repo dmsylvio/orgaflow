@@ -17,6 +17,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { Spinner } from "@/components/ui/spinner";
+import { TablePagination } from "@/components/ui/table-pagination";
+import { useCanViewPrices } from "@/hooks/use-can-view-prices";
 import {
   type CurrencyFormat,
   formatCurrencyDisplay,
@@ -24,7 +26,6 @@ import {
 import { toast } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { useTRPC } from "@/trpc/client";
-import { useCanViewPrices } from "@/hooks/use-can-view-prices";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -53,6 +54,8 @@ type InvoiceOption = {
   customerId: string;
   customerName: string;
 };
+
+const PAGE_SIZE = 25;
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -192,9 +195,14 @@ function PaymentFormFields({
               if (!invoice) return;
 
               let nextAmount = invoice.remaining;
-              if (editingPaymentInvoiceId && editingPaymentInvoiceId === invoice.id) {
+              if (
+                editingPaymentInvoiceId &&
+                editingPaymentInvoiceId === invoice.id
+              ) {
                 const current = Number(editingPaymentAmount ?? 0);
-                nextAmount = Number(Number(invoice.remaining) + current).toFixed(3);
+                nextAmount = Number(
+                  Number(invoice.remaining) + current,
+                ).toFixed(3);
               }
 
               setAmount(nextAmount);
@@ -617,6 +625,7 @@ export default function PaymentsPage() {
 
   const [createOpen, setCreateOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Payment | null>(null);
+  const [page, setPage] = useState(1);
 
   const invoicesQuery = useQuery({
     ...trpc.payments.listInvoiceOptions.queryOptions({
@@ -655,6 +664,20 @@ export default function PaymentsPage() {
     }),
   );
 
+  const totalAmount = canViewPrices
+    ? paymentList.reduce((sum, p) => sum + parseFloat(p.amount ?? "0"), 0)
+    : null;
+  const totalPages = Math.max(1, Math.ceil(paymentList.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const paginatedPayments = paymentList.slice(
+    (safePage - 1) * PAGE_SIZE,
+    safePage * PAGE_SIZE,
+  );
+
+  useEffect(() => {
+    setPage((current) => Math.min(current, totalPages));
+  }, [totalPages]);
+
   if (isLoading) {
     return (
       <div className="flex min-h-64 items-center justify-center">
@@ -662,10 +685,6 @@ export default function PaymentsPage() {
       </div>
     );
   }
-
-  const totalAmount = canViewPrices
-    ? paymentList.reduce((sum, p) => sum + parseFloat(p.amount ?? "0"), 0)
-    : null;
 
   return (
     <div className="w-full p-6 md:p-8">
@@ -730,58 +749,68 @@ export default function PaymentsPage() {
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-border">
-                  <th className="py-2 pl-4 pr-2 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/50">
-                    Date
-                  </th>
-                  <th className="py-2 px-2 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/50">
-                    Number
-                  </th>
-                  <th className="py-2 px-2 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/50">
-                    Customer
-                  </th>
-                  <th className="py-2 px-2 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/50">
-                    Invoice
-                  </th>
-                  {canViewPrices ? (
-                    <th className="py-2 px-2 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/50">
-                      Amount
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-border">
+                    <th className="py-2 pl-4 pr-2 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/50">
+                      Date
                     </th>
-                  ) : null}
-                  <th className="py-2 px-2 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/50">
-                    Mode
-                  </th>
-                  <th className="py-2 pl-2 pr-4 w-20" />
-                </tr>
-              </thead>
-              <tbody>
-                {paymentList.map((payment) => (
-                  <PaymentRow
-                    key={payment.id}
-                    payment={payment}
-                    canViewPrices={canViewPrices}
-                    customerName={
-                      payment.customerId
-                        ? customerMap.get(payment.customerId)
-                        : undefined
-                    }
-                    paymentModeName={
-                      payment.paymentModeId
-                        ? modeMap.get(payment.paymentModeId)
-                        : undefined
-                    }
-                    currency={orgCurrency}
-                    onEdit={setEditTarget}
-                    onDelete={(id) => remove.mutate({ id })}
-                    isDeletePending={remove.isPending}
-                  />
-                ))}
-              </tbody>
-            </table>
-          </div>
+                    <th className="py-2 px-2 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/50">
+                      Number
+                    </th>
+                    <th className="py-2 px-2 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/50">
+                      Customer
+                    </th>
+                    <th className="py-2 px-2 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/50">
+                      Invoice
+                    </th>
+                    {canViewPrices ? (
+                      <th className="py-2 px-2 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/50">
+                        Amount
+                      </th>
+                    ) : null}
+                    <th className="py-2 px-2 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/50">
+                      Mode
+                    </th>
+                    <th className="py-2 pl-2 pr-4 w-20" />
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedPayments.map((payment) => (
+                    <PaymentRow
+                      key={payment.id}
+                      payment={payment}
+                      canViewPrices={canViewPrices}
+                      customerName={
+                        payment.customerId
+                          ? customerMap.get(payment.customerId)
+                          : undefined
+                      }
+                      paymentModeName={
+                        payment.paymentModeId
+                          ? modeMap.get(payment.paymentModeId)
+                          : undefined
+                      }
+                      currency={orgCurrency}
+                      onEdit={setEditTarget}
+                      onDelete={(id) => remove.mutate({ id })}
+                      isDeletePending={remove.isPending}
+                    />
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <TablePagination
+              totalCount={paymentList.length}
+              page={safePage}
+              pageSize={PAGE_SIZE}
+              onPageChange={setPage}
+              itemLabel="payments"
+            />
+          </>
         )}
       </div>
 

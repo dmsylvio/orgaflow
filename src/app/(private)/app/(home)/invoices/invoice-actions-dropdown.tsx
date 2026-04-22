@@ -3,6 +3,7 @@
 import * as PopoverPrimitive from "@radix-ui/react-popover";
 import {
   Copy,
+  Eye,
   FileText,
   Mail,
   MoreHorizontal,
@@ -24,8 +25,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import type { InvoiceStatus } from "./invoice-ui";
 import { InvoiceSendDialog } from "./invoice-send-dialog";
+import type { InvoiceStatus } from "./invoice-ui";
 
 type InvoiceActionsDropdownProps = {
   invoiceId: string;
@@ -111,6 +112,17 @@ export function InvoiceActionsDropdown({
               <FileText className={menuIconClassName} />
               View
             </NextLink>
+
+            <a
+              href={`/api/pdf/invoice/${invoiceId}?inline=1`}
+              target="_blank"
+              rel="noreferrer"
+              className={menuItemClassName}
+              onClick={() => setOpen(false)}
+            >
+              <Eye className={menuIconClassName} />
+              View Public PDF
+            </a>
 
             <MenuSeparator />
 

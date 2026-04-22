@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Toaster } from "sonner";
-import { AuthSessionProvider } from "@/components/providers/auth-session-provider";
 import { JsonLd } from "@/components/json-ld";
+import { AuthSessionProvider } from "@/components/providers/auth-session-provider";
 import { getAppBaseUrl } from "@/lib/base-url";
 import { poppins } from "@/lib/fonts";
 import { TRPCReactProvider } from "@/trpc/client";
@@ -44,11 +44,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={poppins.variable} suppressHydrationWarning>
+    <html
+      lang="en"
+      className={`${poppins.variable} h-full`}
+      suppressHydrationWarning
+    >
       <head>
         <JsonLd />
       </head>
-      <body>
+      <body className="h-full">
         <AuthSessionProvider>
           <TRPCReactProvider>{children}</TRPCReactProvider>
           <Toaster />

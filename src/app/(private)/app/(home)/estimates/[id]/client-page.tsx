@@ -1,17 +1,28 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Download, Eye, EyeOff, FileText, Paperclip, Pencil, Trash2, Upload } from "lucide-react";
+import {
+  ArrowLeft,
+  Download,
+  Eye,
+  EyeOff,
+  FileText,
+  Paperclip,
+  Pencil,
+  Trash2,
+  Upload,
+} from "lucide-react";
 import NextLink from "next/link";
 import { useParams } from "next/navigation";
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { RichTextContent } from "@/components/ui/rich-text-editor";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
+import { useCanViewPrices } from "@/hooks/use-can-view-prices";
 import { formatCurrencyDisplay } from "@/lib/currency-format";
 import { toast } from "@/lib/toast";
 import { useTRPC } from "@/trpc/client";
-import { useCanViewPrices } from "@/hooks/use-can-view-prices";
 import { formatBytes, uploadFile } from "../../expenses/edit-dialog";
 import {
   EstimateStatusBadge,
@@ -78,9 +89,7 @@ function EstimateFilesSection({ estimateId }: { estimateId: string }) {
     <div className="rounded-2xl border border-border bg-card p-5">
       <div className="flex items-center gap-2">
         <Paperclip className="h-4 w-4 text-muted-foreground" />
-        <h2 className="text-sm font-semibold text-foreground">
-          Attachments
-        </h2>
+        <h2 className="text-sm font-semibold text-foreground">Attachments</h2>
         <span className="ml-auto text-xs text-muted-foreground">
           {files.length} file{files.length !== 1 ? "s" : ""}
         </span>
@@ -209,7 +218,7 @@ export default function EstimateDetailPage() {
 
   if (isPending || !estimate) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex min-h-0 flex-1 flex-col items-center justify-center">
         <Spinner className="size-5 text-primary" label="Loading" />
       </div>
     );
@@ -274,7 +283,10 @@ export default function EstimateDetailPage() {
                 Subtotal
               </p>
               <p className="mt-1 text-sm font-semibold text-foreground">
-                {formatCurrencyDisplay(estimate.subTotal ?? "", estimate.currency)}
+                {formatCurrencyDisplay(
+                  estimate.subTotal ?? "",
+                  estimate.currency,
+                )}
               </p>
             </div>
           ) : null}
@@ -317,7 +329,10 @@ export default function EstimateDetailPage() {
                   </div>
                   {canViewPrices ? (
                     <p className="text-sm font-semibold text-foreground">
-                      {formatCurrencyDisplay(item.total ?? "", estimate.currency)}
+                      {formatCurrencyDisplay(
+                        item.total ?? "",
+                        estimate.currency,
+                      )}
                     </p>
                   ) : null}
                 </div>
@@ -331,7 +346,10 @@ export default function EstimateDetailPage() {
                     <div>
                       Unit price:{" "}
                       <span className="text-foreground">
-                        {formatCurrencyDisplay(item.price ?? "", estimate.currency)}
+                        {formatCurrencyDisplay(
+                          item.price ?? "",
+                          estimate.currency,
+                        )}
                       </span>
                     </div>
                   ) : null}
@@ -359,7 +377,10 @@ export default function EstimateDetailPage() {
               <div className="flex items-center justify-between text-muted-foreground">
                 <span>Subtotal</span>
                 <span className="font-medium text-foreground">
-                  {formatCurrencyDisplay(estimate.subTotal ?? "", estimate.currency)}
+                  {formatCurrencyDisplay(
+                    estimate.subTotal ?? "",
+                    estimate.currency,
+                  )}
                 </span>
               </div>
               <div className="flex items-center justify-between text-muted-foreground">
@@ -372,7 +393,10 @@ export default function EstimateDetailPage() {
               <div className="flex items-center justify-between">
                 <span className="font-semibold text-foreground">Total</span>
                 <span className="text-lg font-semibold text-foreground">
-                  {formatCurrencyDisplay(estimate.total ?? "", estimate.currency)}
+                  {formatCurrencyDisplay(
+                    estimate.total ?? "",
+                    estimate.currency,
+                  )}
                 </span>
               </div>
             </div>
@@ -382,9 +406,10 @@ export default function EstimateDetailPage() {
         {estimate.notes ? (
           <div className="rounded-2xl border border-border bg-card p-5">
             <h2 className="text-lg font-semibold text-foreground">Notes</h2>
-            <p className="mt-3 whitespace-pre-wrap text-sm text-muted-foreground">
-              {estimate.notes}
-            </p>
+            <RichTextContent
+              html={estimate.notes}
+              className="mt-3 text-sm text-muted-foreground"
+            />
           </div>
         ) : null}
 

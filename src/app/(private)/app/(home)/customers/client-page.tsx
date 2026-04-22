@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
+import { TablePagination } from "@/components/ui/table-pagination";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/lib/toast";
 import { cn } from "@/lib/utils";
@@ -68,6 +69,7 @@ const EMPTY_FORM: CustomerFormState = {
   zipCode: "",
   addressPhone: "",
 };
+const PAGE_SIZE = 25;
 
 function PageShell({
   title,
@@ -461,6 +463,7 @@ export default function CustomersPage() {
   const [editingCustomer, setEditingCustomer] = useState<CustomerRecord | null>(
     null,
   );
+  const [page, setPage] = useState(1);
 
   const { data: customers = [], isPending } = useQuery(
     trpc.customers.list.queryOptions(),
@@ -491,6 +494,16 @@ export default function CustomersPage() {
     usage?.limit === null
       ? `Unlimited customers on the ${usage?.plan ?? "current"} plan.`
       : `${usage?.total ?? customers.length} of ${usage?.limit ?? 50} customers used on Starter.`;
+  const totalPages = Math.max(1, Math.ceil(customers.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const paginatedCustomers = customers.slice(
+    (safePage - 1) * PAGE_SIZE,
+    safePage * PAGE_SIZE,
+  );
+
+  useEffect(() => {
+    setPage((current) => Math.min(current, totalPages));
+  }, [totalPages]);
 
   if (isPending) {
     return (
@@ -568,43 +581,53 @@ export default function CustomersPage() {
                 </Button>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-border">
-                      <th className="py-3 pl-4 pr-2 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
-                        Customer
-                      </th>
-                      <th className="px-2 py-3 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
-                        Contact
-                      </th>
-                      <th className="px-2 py-3 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
-                        Location
-                      </th>
-                      <th className="px-2 py-3 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
-                        Address
-                      </th>
-                      <th className="py-3 pl-2 pr-4 text-right text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {customers.map((customer) => (
-                      <CustomerRow
-                        key={customer.id}
-                        customer={customer}
-                        isDeletePending={deleteCustomer.isPending}
-                        onEdit={(nextCustomer) => {
-                          setEditingCustomer(nextCustomer);
-                          setIsDialogOpen(true);
-                        }}
-                        onDelete={(id) => deleteCustomer.mutate({ id })}
-                      />
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-border">
+                        <th className="py-3 pl-4 pr-2 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
+                          Customer
+                        </th>
+                        <th className="px-2 py-3 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
+                          Contact
+                        </th>
+                        <th className="px-2 py-3 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
+                          Location
+                        </th>
+                        <th className="px-2 py-3 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
+                          Address
+                        </th>
+                        <th className="py-3 pl-2 pr-4 text-right text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {paginatedCustomers.map((customer) => (
+                        <CustomerRow
+                          key={customer.id}
+                          customer={customer}
+                          isDeletePending={deleteCustomer.isPending}
+                          onEdit={(nextCustomer) => {
+                            setEditingCustomer(nextCustomer);
+                            setIsDialogOpen(true);
+                          }}
+                          onDelete={(id) => deleteCustomer.mutate({ id })}
+                        />
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                <TablePagination
+                  totalCount={customers.length}
+                  page={safePage}
+                  pageSize={PAGE_SIZE}
+                  onPageChange={setPage}
+                  itemLabel="customers"
+                />
+              </>
             )}
           </div>
         </div>
