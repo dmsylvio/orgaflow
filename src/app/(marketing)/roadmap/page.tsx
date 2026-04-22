@@ -192,7 +192,27 @@ const ITEMS: RoadmapItem[] = [
     category: "Billing",
   },
   {
-    id: 6,
+    id: 23,
+    Icon: CreditCard,
+    title: "Free Starter & Internal Trial Lifecycle",
+    description:
+      "Starter is now fully free without Stripe checkout. Paid plans start with a 15-day Orgaflow-managed trial, then require payment after the trial expires.",
+    status: "shipped",
+    effort: "Medium",
+    category: "Billing",
+  },
+  {
+    id: 24,
+    Icon: ShieldCheck,
+    title: "Permission Dependency Mapping",
+    description:
+      "Role permissions now map and enforce their required dependencies automatically. The role editor expands required permissions and shrinks dependent permissions in cascade.",
+    status: "shipped",
+    effort: "Medium",
+    category: "RBAC",
+  },
+  {
+    id: 27,
     Icon: Settings,
     title: "Expanded Settings",
     description:
@@ -202,7 +222,7 @@ const ITEMS: RoadmapItem[] = [
     category: "Platform",
   },
   {
-    id: 6,
+    id: 28,
     Icon: CreditCard,
     title: "Online Payments via Stripe",
     description:
@@ -212,7 +232,7 @@ const ITEMS: RoadmapItem[] = [
     category: "Payments",
   },
   {
-    id: 7,
+    id: 29,
     Icon: Layers,
     title: "Multi-Currency with Live Rates",
     description:
@@ -222,7 +242,7 @@ const ITEMS: RoadmapItem[] = [
     category: "Core",
   },
   {
-    id: 8,
+    id: 30,
     Icon: FileSearch,
     title: "Advanced Search & Filters",
     description:
@@ -232,7 +252,7 @@ const ITEMS: RoadmapItem[] = [
     category: "UX",
   },
   {
-    id: 23,
+    id: 31,
     Icon: Smartphone,
     title: "SMS Notifications",
     description:
@@ -242,7 +262,7 @@ const ITEMS: RoadmapItem[] = [
     category: "Communication",
   },
   {
-    id: 9,
+    id: 32,
     Icon: History,
     title: "Activity Log & Audit Trail",
     description:
@@ -252,7 +272,7 @@ const ITEMS: RoadmapItem[] = [
     category: "Platform",
   },
   {
-    id: 10,
+    id: 33,
     Icon: CheckCircle2,
     title: "Bulk Actions",
     description:
@@ -262,7 +282,7 @@ const ITEMS: RoadmapItem[] = [
     category: "UX",
   },
   {
-    id: 11,
+    id: 34,
     Icon: Zap,
     title: "Advanced Custom Branding",
     description:
@@ -272,7 +292,7 @@ const ITEMS: RoadmapItem[] = [
     category: "Customization",
   },
   {
-    id: 12,
+    id: 35,
     Icon: RefreshCw,
     title: "Recurring Invoices",
     description:
@@ -282,7 +302,7 @@ const ITEMS: RoadmapItem[] = [
     category: "Automation",
   },
   {
-    id: 26,
+    id: 36,
     Icon: FileText,
     title: "PDF Templates",
     description:
@@ -292,7 +312,7 @@ const ITEMS: RoadmapItem[] = [
     category: "Customization",
   },
   {
-    id: 25,
+    id: 37,
     Icon: Paperclip,
     title: "Company Logo & File Visibility",
     description:
@@ -302,7 +322,7 @@ const ITEMS: RoadmapItem[] = [
     category: "Core",
   },
   {
-    id: 24,
+    id: 38,
     Icon: Smartphone,
     title: "Mobile-Responsive App Shell",
     description:
@@ -447,7 +467,14 @@ export default function RoadmapPage() {
                 {/* Cards */}
                 <div className="roadmap-cards-container flex flex-col gap-2 max-h-[520px] overflow-y-auto pr-1">
                   {items.map(
-                    ({ id, Icon, title: itemTitle, description, effort, category }) => {
+                    ({
+                      id,
+                      Icon,
+                      title: itemTitle,
+                      description,
+                      effort,
+                      category,
+                    }) => {
                       const effortCfg = EFFORT_CONFIG[effort];
 
                       return (
@@ -482,7 +509,9 @@ export default function RoadmapPage() {
                             <span className="rounded-full bg-muted px-2 py-px text-[10px] text-muted-foreground">
                               {category}
                             </span>
-                            <span className={`text-[10px] font-medium ${effortCfg.color}`}>
+                            <span
+                              className={`text-[10px] font-medium ${effortCfg.color}`}
+                            >
                               {effortCfg.label}
                             </span>
                           </div>

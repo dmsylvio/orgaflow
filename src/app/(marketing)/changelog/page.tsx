@@ -34,6 +34,43 @@ interface ChangelogEntry {
 
 const ENTRIES: ChangelogEntry[] = [
   {
+    version: "1.10.0",
+    date: "April 22, 2026",
+    badge: "minor",
+    summary:
+      "Starter is now a fully free plan, paid-plan trials run inside Orgaflow before Stripe checkout, and role permissions now resolve dependencies automatically.",
+    changes: [
+      {
+        type: "improved",
+        text: "Starter no longer requires Stripe. New Starter organizations are created as active workspaces immediately and remain free.",
+      },
+      {
+        type: "improved",
+        text: "Growth and Scale organizations now start with an internal 15-day trial in Orgaflow. Stripe checkout is only required after the trial expires.",
+      },
+      {
+        type: "fixed",
+        text: "Trial access is synchronized whenever workspaces, billing status, plan summaries, and protected app routes are checked, so expired trials are blocked consistently.",
+      },
+      {
+        type: "removed",
+        text: "Stripe checkout sessions no longer include Stripe-managed trial days because Orgaflow now owns the trial lifecycle.",
+      },
+      {
+        type: "improved",
+        text: "Role permissions now expand dependencies at runtime, so older roles automatically receive the required companion permissions without a manual database update.",
+      },
+      {
+        type: "improved",
+        text: "The role editor now auto-selects required dependencies and removes dependent permissions in cascade when a base permission is removed.",
+      },
+      {
+        type: "fixed",
+        text: "Payment creation and editing now require invoice viewing, invoice price visibility, and customer viewing permissions. Expense creation and editing now require customer viewing.",
+      },
+    ],
+  },
+  {
     version: "1.9.0",
     date: "April 11, 2026",
     badge: "minor",
