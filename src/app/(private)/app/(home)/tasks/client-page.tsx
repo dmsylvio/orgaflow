@@ -1213,7 +1213,7 @@ function StageColumn({
 
   return (
     <div
-      className="flex w-72 shrink-0 flex-col rounded-xl border border-border bg-muted/40 overflow-hidden"
+      className="flex flex-col rounded-xl border border-border bg-muted/40 overflow-hidden"
       style={{ borderTopColor: color, borderTopWidth: 3 }}
     >
       <div className="flex items-center justify-between px-3 py-2.5">
