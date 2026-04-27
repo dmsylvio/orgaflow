@@ -32,5 +32,6 @@ export * from "./task-stages";
 export * from "./tasks";
 export * from "./tax-types";
 export * from "./units";
+export * from "./user-email-preferences";
 export * from "./users";
 export * from "./verification-tokens";

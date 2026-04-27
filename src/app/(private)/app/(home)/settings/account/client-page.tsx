@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { useTRPC } from "@/trpc/client";
@@ -85,6 +86,34 @@ function Field({
   );
 }
 
+function SwitchRow({
+  id,
+  label,
+  description,
+  checked,
+  onCheckedChange,
+}: {
+  id: string;
+  label: string;
+  description?: string;
+  checked: boolean;
+  onCheckedChange: (v: boolean) => void;
+}) {
+  return (
+    <div className="flex items-start justify-between gap-4">
+      <div className="space-y-0.5">
+        <Label htmlFor={id} className="text-sm font-medium">
+          {label}
+        </Label>
+        {description ? (
+          <p className="text-xs text-muted-foreground">{description}</p>
+        ) : null}
+      </div>
+      <Switch id={id} checked={checked} onCheckedChange={onCheckedChange} />
+    </div>
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Page
 // ---------------------------------------------------------------------------
@@ -94,6 +123,9 @@ export default function AccountSettingsPage() {
   const queryClient = useQueryClient();
 
   const { data: me, isPending } = useQuery(trpc.account.me.queryOptions());
+  const { data: emailPrefs } = useQuery(
+    trpc.account.getEmailPreferences.queryOptions(),
+  );
 
   // Profile form state
   const [name, setName] = useState("");
@@ -106,6 +138,15 @@ export default function AccountSettingsPage() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [pwError, setPwError] = useState<string | null>(null);
+
+  // Email preferences state
+  const [emailProductUpdates, setEmailProductUpdates] = useState(true);
+  const [emailTips, setEmailTips] = useState(true);
+  useEffect(() => {
+    if (!emailPrefs) return;
+    setEmailProductUpdates(emailPrefs.emailProductUpdates);
+    setEmailTips(emailPrefs.emailTips);
+  }, [emailPrefs]);
 
   const updateProfile = useMutation(
     trpc.account.updateProfile.mutationOptions({
@@ -133,6 +174,21 @@ export default function AccountSettingsPage() {
     }),
   );
 
+  const updateEmailPreferences = useMutation(
+    trpc.account.updateEmailPreferences.mutationOptions({
+      onSuccess: () => {
+        queryClient.invalidateQueries(
+          trpc.account.getEmailPreferences.queryOptions(),
+        );
+        toast.success("Email preferences saved.");
+      },
+      onError: (e) =>
+        toast.error("Couldn't save email preferences", {
+          description: e.message,
+        }),
+    }),
+  );
+
   function handleSaveProfile(e: React.FormEvent) {
     e.preventDefault();
     updateProfile.mutate({ name: name.trim() });
@@ -142,6 +198,11 @@ export default function AccountSettingsPage() {
     e.preventDefault();
     setPwError(null);
     updatePassword.mutate({ currentPassword, newPassword, confirmPassword });
+  }
+
+  function handleSaveEmailPreferences(e: React.FormEvent) {
+    e.preventDefault();
+    updateEmailPreferences.mutate({ emailProductUpdates, emailTips });
   }
 
   if (isPending) {
@@ -275,6 +336,40 @@ export default function AccountSettingsPage() {
             <p className="text-xs text-muted-foreground">{me?.email}</p>
           </div>
         </div>
+      </Section>
+
+      {/* Email preferences */}
+      <Section
+        title="Email preferences"
+        description="Choose which emails you'd like to receive from Orgaflow. Transactional emails (invoices, payments, invitations) are always sent."
+      >
+        <form onSubmit={handleSaveEmailPreferences} className="space-y-4">
+          <SwitchRow
+            id="email-product-updates"
+            label="Product updates & changelog"
+            description="New features, improvements, and what's coming next."
+            checked={emailProductUpdates}
+            onCheckedChange={setEmailProductUpdates}
+          />
+          <Separator />
+          <SwitchRow
+            id="email-tips"
+            label="Tips & onboarding"
+            description="Helpful emails during your first days to get you up to speed."
+            checked={emailTips}
+            onCheckedChange={setEmailTips}
+          />
+          <div className="flex justify-end">
+            <Button
+              type="submit"
+              size="sm"
+              loading={updateEmailPreferences.isPending}
+              disabled={updateEmailPreferences.isPending}
+            >
+              Save preferences
+            </Button>
+          </div>
+        </form>
       </Section>
     </SettingsPage>
   );
