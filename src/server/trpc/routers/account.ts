@@ -2,7 +2,8 @@ import { compare, hash } from "bcryptjs";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 
-import { users } from "@/server/db/schemas";
+import { userEmailPreferences, users } from "@/server/db/schemas";
+import { syncContactToAllUsersAudience } from "@/server/services/email/audiences";
 import { createTRPCRouter, protectedProcedure } from "@/server/trpc/init";
 import { getSessionUserId } from "@/server/trpc/utils";
 
@@ -91,6 +92,61 @@ export const accountRouter = createTRPCRouter({
         .update(users)
         .set({ password: hashed, updatedAt: new Date() })
         .where(eq(users.id, userId));
+
+      return { ok: true as const };
+    }),
+
+  getEmailPreferences: protectedProcedure.query(async ({ ctx }) => {
+    const userId = getSessionUserId(ctx);
+    const row = await ctx.db.query.userEmailPreferences.findFirst({
+      where: eq(userEmailPreferences.userId, userId),
+    });
+    return {
+      emailProductUpdates: row?.emailProductUpdates ?? true,
+      emailTips: row?.emailTips ?? true,
+    };
+  }),
+
+  updateEmailPreferences: protectedProcedure
+    .input(
+      z.object({
+        emailProductUpdates: z.boolean(),
+        emailTips: z.boolean(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const userId = getSessionUserId(ctx);
+
+      const existing = await ctx.db.query.userEmailPreferences.findFirst({
+        where: eq(userEmailPreferences.userId, userId),
+        columns: { id: true },
+      });
+
+      const now = new Date();
+      if (existing) {
+        await ctx.db
+          .update(userEmailPreferences)
+          .set({ ...input, updatedAt: now })
+          .where(eq(userEmailPreferences.userId, userId));
+      } else {
+        await ctx.db
+          .insert(userEmailPreferences)
+          .values({ userId, ...input });
+      }
+
+      // Sync unsubscribed status to Resend audience.
+      const user = await ctx.db.query.users.findFirst({
+        where: eq(users.id, userId),
+        columns: { email: true, name: true },
+      });
+      if (user) {
+        const unsubscribed = !input.emailProductUpdates && !input.emailTips;
+        syncContactToAllUsersAudience({
+          email: user.email,
+          firstName: user.name.split(" ")[0] ?? user.name,
+          unsubscribed,
+        }).catch(() => {});
+      }
 
       return { ok: true as const };
     }),

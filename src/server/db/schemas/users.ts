@@ -5,6 +5,7 @@ import { accounts } from "./accounts";
 import { authenticators } from "./authenticators";
 import { organizationMembers } from "./organization-members";
 import { sessions } from "./sessions";
+import { userEmailPreferences } from "./user-email-preferences";
 
 export const users = pgTable(
   "users",
@@ -33,9 +34,13 @@ export const users = pgTable(
   (table) => [uniqueIndex("user_email_unique").on(table.email)],
 );
 
-export const usersRelations = relations(users, ({ many }) => ({
+export const usersRelations = relations(users, ({ many, one }) => ({
   accounts: many(accounts),
   sessions: many(sessions),
   authenticators: many(authenticators),
   organizationMembers: many(organizationMembers),
+  emailPreferences: one(userEmailPreferences, {
+    fields: [users.id],
+    references: [userEmailPreferences.userId],
+  }),
 }));

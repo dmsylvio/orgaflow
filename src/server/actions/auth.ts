@@ -8,7 +8,9 @@ import { forgotPasswordSchema } from "@/schemas/forgot-password";
 import { registerSchema } from "@/schemas/register";
 import { resetPasswordSchema } from "@/schemas/reset-password";
 import { db } from "@/server/db";
-import { users, verificationTokens } from "@/server/db/schemas";
+import { userEmailPreferences, users, verificationTokens } from "@/server/db/schemas";
+import { syncContactToAllUsersAudience } from "@/server/services/email/audiences";
+import { sendWelcomeEmail } from "@/server/services/email/welcome";
 import type { AuthActionResult } from "@/types/auth-actions";
 
 const BCRYPT_ROUNDS = 12;
@@ -67,6 +69,19 @@ export async function registerAction(
         message: "Could not create account",
       };
     }
+
+    const userName = parsed.data.name.trim();
+
+    // Bootstrap email preferences row for the new user.
+    await db.insert(userEmailPreferences).values({ userId: created.id });
+
+    // Fire-and-forget: welcome email + audience sync.
+    Promise.all([
+      sendWelcomeEmail({ email, name: userName }),
+      syncContactToAllUsersAudience({ email, firstName: userName.split(" ")[0] ?? userName }),
+    ]).catch((err) =>
+      console.error("[auth/register] Post-registration email failed", { err }),
+    );
 
     return { success: true, data: { userId: created.id } };
   } catch (error) {
