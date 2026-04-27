@@ -19,12 +19,11 @@
 
 ## Audiences
 
-Three audiences managed in Resend:
+Two audiences managed in Resend:
 
 | Audience | Who | When synced |
 |----------|-----|-------------|
 | `all-users` | Every user who creates an account | On registration |
-| `active-orgs` | Org owners with activity in the last 60 days | Daily cron |
 | `beta-testers` | Users who opt into early access | Manual / in-app toggle |
 
 ---
@@ -85,7 +84,7 @@ The D+3 email highlights less obvious features (recurring invoices, estimates, e
 ## 2. Product Email (Changelog & Roadmap)
 
 **Type:** Resend Broadcast  
-**Audience:** `active-orgs`  
+**Audience:** `all-users`  
 **Cadence:** When there's enough content — no fixed schedule  
 **Opt-out:** Yes
 
