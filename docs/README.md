@@ -6,6 +6,7 @@ All documents in this folder are **English**. They describe product architecture
 
 | Document | Topic |
 | -------- | ----- |
+| [`orgaflow-system-overview.md`](./orgaflow-system-overview.md) | **Start here** — whole-system reference: stack, data model, IAM, billing, gotchas, known gaps |
 | [`iam-architecture-technical.md`](./iam-architecture-technical.md) | **Canonical IAM** — owner, roles, permissions, menus, tRPC |
 | [`orgaflow-implementation-strategy.md`](./orgaflow-implementation-strategy.md) | Master implementation strategy vs repo reality |
 | [`orgaflow-server-architecture.md`](./orgaflow-server-architecture.md) | `src/server` layout, DB imports, IAM, features, Kanban, payments |
@@ -33,6 +34,7 @@ All documents in this folder are **English**. They describe product architecture
 | [`settings-module-architecture.md`](./settings-module-architecture.md) | Settings module — preferences, danger zone |
 | [`notification-settings-architecture.md`](./notification-settings-architecture.md) | Notification settings — table, procedures, UI |
 | [`tasks-kanban-module.md`](./tasks-kanban-module.md) | Tasks / Kanban |
+| [`schedule-module.md`](./schedule-module.md) | Schedule — calendar, recurrence, automatic invoicing |
 | [`workflow-automations-orgaflow.md`](./workflow-automations-orgaflow.md) | Workflow automations |
 
 ## Documents & lifecycle
@@ -58,6 +60,6 @@ All documents in this folder are **English**. They describe product architecture
 
 ---
 
-Start with **`orgaflow-implementation-strategy.md`** and **`iam-architecture-technical.md`**, then dive into domain docs as needed.
+Start with **`orgaflow-system-overview.md`** for the full picture, then **`iam-architecture-technical.md`**, then dive into domain docs as needed.
 
 **UI stack:** **Tailwind CSS** + componentes em `src/components/ui/` (`docs/orgaflow-ui-architecture.md`).

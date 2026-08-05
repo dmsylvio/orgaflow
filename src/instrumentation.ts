@@ -8,6 +8,9 @@ export async function register() {
     const { processOnboardingEmails } = await import(
       "@/server/services/onboarding/process-onboarding-emails"
     );
+    const { processSchedule } = await import(
+      "@/server/services/schedule/process-schedule"
+    );
 
     // Fire every hour at minute 0.
     schedule("0 * * * *", async () => {
@@ -27,7 +30,17 @@ export async function register() {
       }
     });
 
+    // Materialize upcoming appointments and bill delivered ones, every half hour.
+    schedule("30 * * * *", async () => {
+      try {
+        await processSchedule();
+      } catch (err) {
+        console.error("[cron] processSchedule failed:", err);
+      }
+    });
+
     console.log("[cron] Recurring invoices scheduler registered (0 * * * *)");
     console.log("[cron] Onboarding emails scheduler registered (0 10 * * *)");
+    console.log("[cron] Schedule processor registered (30 * * * *)");
   }
 }

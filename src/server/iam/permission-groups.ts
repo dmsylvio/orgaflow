@@ -8,6 +8,11 @@ export const PERMISSION_GROUP_ORDER = [
   "items",
   "estimates",
   "invoices",
+  "recurring-invoices",
+  "payments",
+  "expenses",
+  "tasks",
+  "schedule",
 ] as const;
 
 export type PermissionGroupId = (typeof PERMISSION_GROUP_ORDER)[number];
@@ -18,6 +23,11 @@ export const PERMISSION_GROUP_LABELS: Record<PermissionGroupId, string> = {
   items: "Items",
   estimates: "Estimates",
   invoices: "Invoices",
+  "recurring-invoices": "Recurring invoices",
+  payments: "Payments",
+  expenses: "Expenses",
+  tasks: "Tasks",
+  schedule: "Schedule",
 };
 
 export function sortGroupKeys(groups: string[]): string[] {

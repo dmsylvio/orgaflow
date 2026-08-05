@@ -1,0 +1,2 @@
+ALTER TABLE "organization_preferences" ADD COLUMN "schedule_payment_term_days" integer DEFAULT 7 NOT NULL;--> statement-breakpoint
+ALTER TABLE "organization_preferences" ADD COLUMN "schedule_auto_send_invoices" boolean DEFAULT true NOT NULL;

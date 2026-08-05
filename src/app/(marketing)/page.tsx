@@ -4,6 +4,7 @@ import {
   Check,
   CheckCircle2,
   ChevronRight,
+  Clock,
   CreditCard,
   FileText,
   Layers,
@@ -18,23 +19,25 @@ import NextLink from "next/link";
 import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = {
-  title: "Estimates & invoices for small businesses",
+  title: {
+    absolute: "Orgaflow — Estimates, Invoices & Payments for Small Businesses",
+  },
   description:
-    "Orgaflow is an all-in-one CRM to create estimates and invoices, accept payments, manage tasks, and automate workflows for small businesses.",
+    "Send estimates clients approve in one click, collect payment online, and automate the work that follows. The all-in-one quote-to-cash platform for small teams. Start free.",
   keywords: [
     "estimate software",
-    "invoice software",
     "quoting software",
+    "invoice software",
     "small business CRM",
+    "quote to cash",
     "payments",
-    "tasks",
     "workflow automation",
   ],
   alternates: { canonical: "/" },
   openGraph: {
-    title: "Estimates & invoices for small businesses",
+    title: "From quote to cash to done — without the chaos",
     description:
-      "Create estimates and invoices, accept payments, manage tasks, and automate workflows in one place.",
+      "Send estimates clients approve in one click, collect payment online, and automate the work that follows. The all-in-one quote-to-cash platform for small teams.",
     url: "/",
     type: "website",
     images: [
@@ -48,9 +51,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Estimates & invoices for small businesses",
+    title: "From quote to cash to done — without the chaos",
     description:
-      "Create estimates and invoices, accept payments, manage tasks, and automate workflows in one place.",
+      "Send estimates clients approve in one click, collect payment online, and automate the work that follows. The all-in-one quote-to-cash platform for small teams.",
     images: ["/opengraph-image"],
   },
 };
@@ -60,10 +63,10 @@ export const metadata: Metadata = {
 ───────────────────────────────────────────── */
 
 const STATS = [
-  { value: "200+", label: "Businesses", Icon: Users },
-  { value: "98.9%", label: "Uptime", Icon: Zap },
-  { value: "120k", label: "Invoices", Icon: FileText },
-  { value: "4.9★", label: "Rating", Icon: Star },
+  { value: "200+", label: "Businesses on Orgaflow", Icon: Users },
+  { value: "120k", label: "Invoices sent", Icon: FileText },
+  { value: "3 days", label: "Avg. quote-to-payment", Icon: Clock },
+  { value: "4.9★", label: "Average rating", Icon: Star },
 ];
 
 const TESTIMONIALS = [
@@ -99,27 +102,31 @@ const TESTIMONIALS = [
 const FAQS = [
   {
     q: "How is Orgaflow different from FreshBooks or QuickBooks?",
-    a: "Orgaflow is built around the estimate-to-payment workflow. It combines quoting, invoicing, task management, and automations in one place — without the accounting complexity.",
+    a: "Those are accounting tools. Orgaflow is built around the estimate-to-payment-to-delivery workflow — quoting, invoicing, payments, and the tasks that follow, in one place, without the accounting overhead.",
   },
   {
-    q: "Can clients sign estimates electronically?",
-    a: "Yes. Every estimate gets a secure shareable link where clients can review and approve with one click — no account required.",
+    q: "Can clients approve estimates without an account?",
+    a: "Yes. Every estimate gets a secure shareable link where clients review and approve in one click — no signup required.",
   },
   {
     q: "Is there a free plan?",
-    a: "Yes. Starter is free and gives solo operators the core estimate, invoice, customer, and item workflow with usage limits.",
+    a: "Yes. Starter is free and gives solo operators the core estimate, invoice, customer, and item workflow, with usage limits.",
   },
   {
-    q: "Does Orgaflow support multiple currencies?",
-    a: "Yes. You can configure your organization's default currency and set per-client currencies for international work.",
+    q: "Do you support multiple currencies?",
+    a: "Yes. Set a default currency for your workspace and per-client currencies for international work.",
   },
   {
-    q: "Is Orgaflow good for solo freelancers?",
-    a: "Absolutely. The Starter plan is built for one-person operations, and many features scale with you as your team grows.",
+    q: "Is this good for solo freelancers?",
+    a: "Absolutely. Starter is built for one-person operations, and Orgaflow scales as your team grows.",
   },
   {
     q: "Can I import my existing clients and invoices?",
-    a: "Yes. You can add clients individually or in bulk, and the platform is designed to get you running in under 5 minutes.",
+    a: "Yes — add clients individually or in bulk. Most teams are fully set up in under five minutes.",
+  },
+  {
+    q: "How do online payments work?",
+    a: "Connect Stripe (Scale plan) and clients pay invoices online. Status updates automatically when an invoice is fully paid.",
   },
 ];
 
@@ -400,14 +407,14 @@ export default function LandingPage() {
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-60" />
               <span className="relative h-2 w-2 rounded-full bg-primary" />
             </span>
-            Trusted by 200+ small businesses
+            Quote → Paid → Done. One platform.
           </div>
 
-          <h1 className="mx-auto mb-6 max-w-4xl text-[clamp(2.5rem,6vw,4.5rem)] font-bold leading-[1.1] tracking-tight text-foreground">
-            From quote to payment,{" "}
+          <h1 className="mx-auto mb-6 max-w-4xl text-balance text-[clamp(2.5rem,6vw,4.5rem)] font-bold leading-[1.1] tracking-tight text-foreground">
+            From quote to cash to done{" "}
             <span className="relative inline-block">
               <span className="bg-gradient-to-r from-primary via-violet-500 to-cyan-500 bg-clip-text text-transparent">
-                without the chaos
+                — without the chaos
               </span>
               <svg
                 aria-hidden
@@ -439,8 +446,9 @@ export default function LandingPage() {
           </h1>
 
           <p className="mx-auto mb-10 max-w-xl text-lg leading-relaxed text-muted-foreground">
-            Close more deals, collect faster, and stop losing jobs to admin work
-            — all from one platform built for small teams.
+            Send estimates your clients approve in one click, collect payment
+            online, and let automations start the work the moment you're paid.
+            Built for small teams who'd rather do the job than chase the admin.
           </p>
 
           <div className="flex flex-wrap items-center justify-center gap-3">
@@ -460,9 +468,13 @@ export default function LandingPage() {
               asChild
               className="h-12 px-8 text-base"
             >
-              <NextLink href="/pricing">See pricing</NextLink>
+              <NextLink href="#how-it-works">See how it works</NextLink>
             </Button>
           </div>
+
+          <p className="mt-5 text-sm text-muted-foreground">
+            No credit card required · Set up in under 5 minutes
+          </p>
         </div>
 
         {/* Dashboard image */}
@@ -528,6 +540,26 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ── PROBLEM → PROMISE ── */}
+      <section className="py-28">
+        <div className="mx-auto max-w-3xl px-6 text-center">
+          <h2 className="mx-auto max-w-2xl text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+            Stop running your business across five disconnected tabs
+          </h2>
+          <p className="mt-6 text-lg leading-relaxed text-muted-foreground">
+            You quote in Google Docs, invoice in another tool, chase payments by
+            email, and track the actual work on sticky notes. Things slip.
+            Clients wait. You lose hours every week to handoffs that should be
+            automatic.
+          </p>
+          <p className="mt-4 text-lg leading-relaxed text-foreground/80">
+            Orgaflow puts the whole cycle — estimate, approval, invoice,
+            payment, and the work that follows — in one place, so nothing falls
+            through the cracks.
+          </p>
+        </div>
+      </section>
+
       {/* ── FEATURES BENTO ── */}
       <section id="features" className="py-28">
         <div className="mx-auto max-w-7xl px-6">
@@ -554,14 +586,16 @@ export default function LandingPage() {
                 Estimates & Invoices
               </h3>
               <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
-                Create professional quotes, get client approval via a secure
-                link, and convert to invoice in one click. PDF export included.
+                Build professional quotes with line items, send a secure link,
+                and get a one-click approval — no client login required. Convert
+                any approved estimate to an invoice instantly, branded PDF
+                included.
               </p>
               <div className="mt-6 flex flex-col gap-2">
                 {[
-                  "Client approves via shareable link",
-                  "Convert estimate → invoice instantly",
-                  "PDF export with your branding",
+                  "Client approves from a shareable link",
+                  "Estimate → invoice in one click",
+                  "PDF export with your logo and colors",
                 ].map((f) => (
                   <div
                     key={f}
@@ -606,8 +640,9 @@ export default function LandingPage() {
                 Customer CRM
               </h3>
               <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
-                All your clients in one place. Track history, activity, linked
-                estimates and invoices — scoped per workspace.
+                Every client in one place: history, activity, and every linked
+                estimate and invoice — scoped to your workspace. Know exactly
+                where each relationship stands before you pick up the phone.
               </p>
               <div className="mt-5">
                 <CRMMockup />
@@ -642,17 +677,17 @@ export default function LandingPage() {
                     <span className="text-primary">your team on autopilot</span>
                   </h3>
                   <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-                    When a client pays an invoice or approves an estimate,
-                    Orgaflow automatically creates tasks and assigns them to the
-                    right team members. No manual handoffs, no sticky notes, no
+                    Here's where Orgaflow pulls ahead: the moment a client pays
+                    an invoice or approves an estimate, Orgaflow creates the task
+                    and assigns it to the right person. No manual handoffs, no
                     dropped balls.
                   </p>
                   <div className="mt-5 flex flex-col gap-2.5">
                     {[
-                      "Set triggers: invoice paid, estimate approved, and more",
+                      "Triggers like invoice paid and estimate approved",
                       "Auto-create tasks with title, assignee, and due date",
                       "Track everything on a visual Kanban board",
-                      "Customize stages to match your exact workflow",
+                      "Customize stages to match how your team actually works",
                     ].map((f) => (
                       <div
                         key={f}
@@ -709,8 +744,9 @@ export default function LandingPage() {
                 Reports & Analytics
               </h3>
               <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
-                Revenue by period, outstanding invoices, conversion rates —
-                every number that matters to your business.
+                Revenue by period, outstanding balances, quote-to-win conversion
+                — the numbers that actually run a small business, no accounting
+                degree required.
               </p>
               <div className="mt-5">
                 <ReportMockup />
@@ -726,9 +762,9 @@ export default function LandingPage() {
                 Payments & Collections
               </h3>
               <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
-                Record payments manually or let clients pay online via Stripe.
-                Track what's been collected and what's outstanding — per
-                invoice, per client, per period.
+                Log payments manually or let clients pay online via Stripe. See
+                what's collected, outstanding, and overdue — per invoice, per
+                client, per period — at a glance.
               </p>
               <div className="mt-5 grid grid-cols-3 gap-3">
                 {[
@@ -761,9 +797,9 @@ export default function LandingPage() {
               </div>
               <div className="mt-4 flex flex-col gap-1.5">
                 {[
-                  "Log payments against invoices",
-                  "Stripe Connect for online payments (Scale plan)",
-                  "Status auto-updates when fully paid",
+                  "Online payments with Stripe Connect (Scale plan)",
+                  "Invoice status updates itself when fully paid",
+                  "Know your real cash position without a spreadsheet",
                 ].map((f) => (
                   <div
                     key={f}
@@ -780,7 +816,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── HOW IT WORKS ── */}
-      <section className="bg-muted/40 py-28">
+      <section id="how-it-works" className="scroll-mt-20 bg-muted/40 py-28">
         <div className="mx-auto max-w-6xl px-6">
           <div className="mb-14 text-center">
             <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-primary">
@@ -797,21 +833,21 @@ export default function LandingPage() {
                 step: "01",
                 title: "Set up in 2 minutes",
                 description:
-                  "Sign up, name your organization, and invite your team. Configure currencies, taxes, and preferences.",
+                  "Sign up, name your workspace, invite your team. Set your currency, taxes, and branding once.",
                 accent: "bg-primary/8 border-primary/20 text-primary",
               },
               {
                 step: "02",
                 title: "Win clients with shareable quotes",
                 description:
-                  "Import or add clients, build estimates with line items, and share a secure link for client approval.",
+                  "Add clients, build an estimate with line items, and send a secure link. They approve in one click — no account, no friction.",
                 accent: "bg-violet-50 border-violet-200 text-violet-700",
               },
               {
                 step: "03",
-                title: "Get paid and automate the rest",
+                title: "Get paid, then let it run",
                 description:
-                  "Convert approved quotes to invoices, collect payments, and let automations handle task creation.",
+                  "Convert the approved quote to an invoice, collect payment online, and let automations spin up the work automatically.",
                 accent: "bg-emerald-50 border-emerald-200 text-emerald-700",
               },
             ].map(({ step, title, description, accent }) => (
@@ -832,6 +868,35 @@ export default function LandingPage() {
                 </p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── DIFFERENTIATOR ── */}
+      <section className="py-28">
+        <div className="mx-auto max-w-5xl px-6">
+          <div className="relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-violet-50 via-background to-cyan-50/60 px-8 py-16 text-center shadow-sm sm:px-16">
+            <div
+              aria-hidden
+              className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-primary/8 blur-3xl"
+            />
+            <div className="relative">
+              <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-primary">
+                Why Orgaflow
+              </p>
+              <h2 className="mx-auto max-w-2xl text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+                Not another accounting app
+              </h2>
+              <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-muted-foreground">
+                FreshBooks and QuickBooks are built for your bookkeeper. Orgaflow
+                is built for{" "}
+                <span className="font-semibold text-foreground">you</span> — the
+                person winning the work and getting it done. We start where the
+                money starts (the quote) and don't stop until the job's
+                delivered. Keep your accountant; we'll handle everything before
+                the books.
+              </p>
+            </div>
           </div>
         </div>
       </section>
@@ -928,11 +993,12 @@ export default function LandingPage() {
             <div className="relative">
               <Layers className="mx-auto mb-6 h-14 w-14 text-white/70" />
               <h2 className="mb-4 text-4xl font-bold text-white sm:text-5xl lg:text-6xl">
-                Join 200+ businesses closing deals faster
+                Stop juggling tools. Start closing the loop.
               </h2>
               <p className="mx-auto mb-10 max-w-xl text-lg text-white/70">
-                Stop juggling tools. Start free and see why small teams choose
-                Orgaflow. Set up takes under 5 minutes.
+                Join the small teams that quote faster, get paid sooner, and
+                never lose a job to admin work. Free to start, set up in under
+                five minutes.
               </p>
               <div className="flex flex-wrap items-center justify-center gap-4">
                 <Button

@@ -178,6 +178,51 @@ const DEFINITIONS = [
     dependencies: ["task:view"] as const,
   },
   {
+    key: "schedule:view",
+    label: "View schedule",
+    description: "Open the calendar and see appointments.",
+    group: "schedule",
+  },
+  {
+    key: "schedule:view-prices",
+    label: "View schedule prices",
+    description: "See the billable amount attached to appointments.",
+    group: "schedule",
+    dependencies: ["schedule:view"] as const,
+  },
+  {
+    key: "schedule:create",
+    label: "Create appointments",
+    group: "schedule",
+    dependencies: ["schedule:view", "customer:view"] as const,
+  },
+  {
+    key: "schedule:edit",
+    label: "Edit appointments",
+    group: "schedule",
+    dependencies: ["schedule:view", "customer:view"] as const,
+  },
+  {
+    key: "schedule:delete",
+    label: "Delete appointments",
+    group: "schedule",
+    dependencies: ["schedule:view"] as const,
+  },
+  {
+    key: "schedule:bill",
+    label: "Generate invoices from appointments",
+    description:
+      "Manually turn appointments into invoices and configure automatic billing.",
+    group: "schedule",
+    dependencies: [
+      "schedule:view",
+      "schedule:view-prices",
+      "invoice:view",
+      "invoice:view-prices",
+      "invoice:create",
+    ] as const,
+  },
+  {
     key: "expense:view",
     label: "View expenses",
     group: "expenses",

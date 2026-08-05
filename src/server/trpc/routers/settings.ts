@@ -350,6 +350,8 @@ export const settingsRouter = createTRPCRouter({
         discountPerItem: z.boolean().optional(),
         invoiceTemplate: z.number().int().min(1).max(3).optional(),
         estimateTemplate: z.number().int().min(1).max(3).optional(),
+        schedulePaymentTermDays: z.number().int().min(0).max(365).optional(),
+        scheduleAutoSendInvoices: z.boolean().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -383,6 +385,12 @@ export const settingsRouter = createTRPCRouter({
         }),
         ...(input.estimateTemplate !== undefined && {
           estimateTemplate: input.estimateTemplate,
+        }),
+        ...(input.schedulePaymentTermDays !== undefined && {
+          schedulePaymentTermDays: input.schedulePaymentTermDays,
+        }),
+        ...(input.scheduleAutoSendInvoices !== undefined && {
+          scheduleAutoSendInvoices: input.scheduleAutoSendInvoices,
         }),
         updatedAt: new Date(),
       };

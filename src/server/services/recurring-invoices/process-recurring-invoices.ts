@@ -1,8 +1,6 @@
 import "server-only";
 
-import { randomBytes } from "node:crypto";
 import { and, eq, lte, max } from "drizzle-orm";
-import { getAppBaseUrl } from "@/lib/base-url";
 import { db } from "@/server/db";
 import {
   currencies,
@@ -14,7 +12,7 @@ import {
   recurringInvoiceTemplates,
 } from "@/server/db/schemas";
 import { runWorkflowAutomations } from "@/server/services/automations/run-workflow-automations";
-import { sendTransactionalEmail } from "@/server/services/email/resend";
+import { sendInvoiceEmail } from "@/server/services/invoices/send-invoice-email";
 import { calculateNextRunAt } from "./calculate-next-run";
 
 function formatInvoiceNumber(seq: number): string {
@@ -269,60 +267,17 @@ async function processSingleTemplate(
     let finalStatus = createdInvoice.status;
 
     // Send automatically if enabled
-    if (template.sendAutomatically && template.customerEmail) {
-      const publicToken = randomBytes(32).toString("hex");
-      const publicLinkCreatedAt = now;
-      const viewUrl = `${getAppBaseUrl()}/invoice/${publicToken}`;
-
-      const html = `
-        <div style="background:#f6f6f1;padding:32px 16px;font-family:Arial,Helvetica,sans-serif;color:#101828;">
-          <div style="max-width:620px;margin:0 auto;background:#ffffff;border:1px solid #e5e7eb;border-radius:20px;overflow:hidden;">
-            <div style="padding:32px 32px 20px;background:linear-gradient(135deg,#163329 0%,#274d3f 100%);color:#ffffff;">
-              <div style="font-size:12px;letter-spacing:0.14em;text-transform:uppercase;opacity:0.78;">Orgaflow Invoice</div>
-              <h1 style="margin:14px 0 0;font-size:28px;line-height:1.2;">Invoice ${escapeHtml(invoiceNumber)}</h1>
-            </div>
-            <div style="padding:32px;">
-              <div style="margin:0 0 18px;padding:16px 18px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;">
-                <p style="margin:0 0 8px;font-size:14px;line-height:1.6;"><strong>Customer:</strong> ${escapeHtml(template.customerDisplayName)}</p>
-                <p style="margin:0;font-size:14px;line-height:1.6;"><strong>To:</strong> ${escapeHtml(template.customerEmail)}</p>
-              </div>
-              <div style="margin:0 0 22px;font-size:15px;line-height:1.8;color:#101828;">
-                Please find your invoice attached.
-              </div>
-              <a href="${escapeHtml(viewUrl)}" style="display:inline-block;background:#163329;color:#ffffff;text-decoration:none;font-weight:600;padding:13px 20px;border-radius:12px;">
-                View invoice
-              </a>
-              <p style="margin:24px 0 0;font-size:13px;line-height:1.7;color:#475467;">
-                If the button does not work, open this link:
-              </p>
-              <p style="margin:8px 0 0;font-size:13px;line-height:1.7;word-break:break-all;color:#163329;">
-                ${escapeHtml(viewUrl)}
-              </p>
-            </div>
-          </div>
-        </div>
-      `.trim();
-
-      const text = `Invoice ${invoiceNumber}\n\nPlease find your invoice at: ${viewUrl}`;
-
-      await sendTransactionalEmail({
-        to: template.customerEmail,
-        subject: `Invoice ${invoiceNumber}`,
-        html,
-        text,
+    if (template.sendAutomatically) {
+      const sent = await sendInvoiceEmail(tx, {
+        invoiceId: createdInvoice.id,
+        invoiceNumber,
+        customerDisplayName: template.customerDisplayName,
+        customerEmail: template.customerEmail,
+        dueDate,
+        sentAt: now,
       });
 
-      await tx
-        .update(invoices)
-        .set({
-          status: "SENT",
-          publicLinkToken: publicToken,
-          publicLinkCreatedAt,
-          updatedAt: now,
-        })
-        .where(eq(invoices.id, createdInvoice.id));
-
-      finalStatus = "SENT";
+      if (sent) finalStatus = "SENT";
     }
 
     // Update template

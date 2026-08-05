@@ -53,6 +53,49 @@ export const recurringStatusEnum = pgEnum("recurring_status", [
   "completed",
 ]);
 
+export const scheduleFrequencyEnum = pgEnum("schedule_frequency", [
+  "daily",
+  "weekly",
+  "biweekly",
+  "monthly",
+]);
+
+export const scheduleSeriesStatusEnum = pgEnum("schedule_series_status", [
+  "active",
+  "paused",
+  "completed",
+]);
+
+export const appointmentStatusEnum = pgEnum("appointment_status", [
+  "scheduled",
+  "completed",
+  "cancelled",
+  "no_show",
+]);
+
+/**
+ * `per_appointment` bills each occurrence on its own invoice.
+ * `consolidated` groups every billable occurrence of a period onto one invoice.
+ */
+export const scheduleBillingModeEnum = pgEnum("schedule_billing_mode", [
+  "none",
+  "per_appointment",
+  "consolidated",
+]);
+
+export const scheduleBillingTriggerEnum = pgEnum("schedule_billing_trigger", [
+  "manual",
+  "on_schedule",
+  "on_completion",
+  "period_end",
+]);
+
+export const scheduleBillingPeriodEnum = pgEnum("schedule_billing_period", [
+  "weekly",
+  "biweekly",
+  "monthly",
+]);
+
 export const subscriptionPlanEnum = pgEnum("subscription_plan", [
   "starter",
   "growth",

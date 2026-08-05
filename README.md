@@ -217,6 +217,7 @@ Start here: `docs/README.md`.
 
 Key docs:
 
+- `docs/orgaflow-system-overview.md` (whole-system reference: stack, data model, subsystems, gotchas, known gaps)
 - `docs/iam-architecture-technical.md` (IAM / RBAC, menus, owner policy)
 - `docs/orgaflow-server-architecture.md` (server layout + domain structure)
 - `docs/orgaflow-ui-architecture.md` (UI layers + shared components approach)

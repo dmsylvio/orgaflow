@@ -1,5 +1,6 @@
 import { Instagram, Layers } from "lucide-react";
 import Link from "next/link";
+import MainLogo from "../logo";
 
 const FOOTER_LINKS = {
   Product: [
@@ -27,12 +28,7 @@ export function MarketingFooter() {
           {/* Brand */}
           <div className="col-span-2">
             <Link href="/" className="mb-4 flex items-center gap-2.5">
-              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary shadow-md shadow-primary/30">
-                <Layers className="h-4 w-4 text-white" />
-              </div>
-              <span className="text-base font-bold text-foreground">
-                Orgaflow
-              </span>
+              <MainLogo className="w-36 h-auto fill-black" />
             </Link>
             <p className="max-w-xs text-sm leading-relaxed text-muted-foreground">
               The complete client workflow platform for modern small businesses.

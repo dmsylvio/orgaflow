@@ -95,6 +95,13 @@ export const appMenu: MainMenuItem[] = [
     feature: "kanban",
   },
   {
+    key: "schedule",
+    label: "Schedule",
+    href: "/app/schedule",
+    group: 1,
+    permissions: ["schedule:view"],
+  },
+  {
     key: "reports",
     label: "Reports",
     href: "/app/reports",

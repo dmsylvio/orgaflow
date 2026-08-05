@@ -346,6 +346,9 @@ export default function PreferencesPage() {
   const [discountPerItem, setDiscountPerItem] = useState(false);
   const [invoiceTemplate, setInvoiceTemplate] = useState<1 | 2 | 3>(1);
   const [estimateTemplate, setEstimateTemplate] = useState<1 | 2 | 3>(1);
+  const [schedulePaymentTermDays, setSchedulePaymentTermDays] = useState(7);
+  const [scheduleAutoSendInvoices, setScheduleAutoSendInvoices] =
+    useState(true);
 
   // ---- Hydrate from server --------------------------------------------------
   useEffect(() => {
@@ -367,6 +370,8 @@ export default function PreferencesPage() {
     setPublicLinksExpireEnabled(p?.publicLinksExpireEnabled ?? true);
     setPublicLinksExpireDays(p?.publicLinksExpireDays ?? 7);
     setDiscountPerItem(p?.discountPerItem ?? false);
+    setSchedulePaymentTermDays(p?.schedulePaymentTermDays ?? 7);
+    setScheduleAutoSendInvoices(p?.scheduleAutoSendInvoices ?? true);
     const inv = p?.invoiceTemplate ?? 1;
     const est = p?.estimateTemplate ?? 1;
     setInvoiceTemplate((inv >= 1 && inv <= 3 ? inv : 1) as 1 | 2 | 3);
@@ -400,6 +405,8 @@ export default function PreferencesPage() {
       discountPerItem,
       invoiceTemplate,
       estimateTemplate,
+      schedulePaymentTermDays,
+      scheduleAutoSendInvoices,
     });
   }
 
@@ -539,6 +546,39 @@ export default function PreferencesPage() {
             checked={discountPerItem}
             onCheckedChange={setDiscountPerItem}
           />
+        </Section>
+
+        {/* Schedule billing */}
+        <Section title="Schedule billing">
+          <div className="space-y-4">
+            <Field
+              label="Payment term (days)"
+              htmlFor="pref-schedule-term"
+              hint="Due date for invoices the schedule generates, counted from the day the invoice is issued. Use 0 to make them due on issue."
+            >
+              <Input
+                id="pref-schedule-term"
+                type="number"
+                min={0}
+                max={365}
+                value={schedulePaymentTermDays}
+                onChange={(e) =>
+                  setSchedulePaymentTermDays(Number(e.target.value) || 0)
+                }
+                className="w-full"
+              />
+            </Field>
+
+            <Separator />
+
+            <SwitchRow
+              id="pref-schedule-send"
+              label="Send schedule invoices automatically"
+              description="Email the invoice to the customer as soon as the schedule generates it. Customers without an email on file keep the invoice as a draft."
+              checked={scheduleAutoSendInvoices}
+              onCheckedChange={setScheduleAutoSendInvoices}
+            />
+          </div>
         </Section>
 
         {/* PDF Templates */}

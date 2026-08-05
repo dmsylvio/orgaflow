@@ -5,17 +5,18 @@ import {
 } from "@/server/trpc/init";
 import { accountRouter } from "@/server/trpc/routers/account";
 import { automationsRouter } from "@/server/trpc/routers/automations";
-import { dashboardRouter } from "@/server/trpc/routers/dashboard";
 import { customersRouter } from "@/server/trpc/routers/customers";
+import { dashboardRouter } from "@/server/trpc/routers/dashboard";
 import { estimatesRouter } from "@/server/trpc/routers/estimates";
 import { expensesRouter } from "@/server/trpc/routers/expenses";
 import { iamRouter } from "@/server/trpc/routers/iam";
 import { invoicesRouter } from "@/server/trpc/routers/invoices";
-import { recurringInvoicesRouter } from "@/server/trpc/routers/recurring-invoices";
 import { itemsRouter } from "@/server/trpc/routers/items";
 import { paymentsRouter } from "@/server/trpc/routers/payments";
+import { recurringInvoicesRouter } from "@/server/trpc/routers/recurring-invoices";
 import { reportsRouter } from "@/server/trpc/routers/reports";
 import { roleRouter } from "@/server/trpc/routers/role";
+import { scheduleRouter } from "@/server/trpc/routers/schedule";
 import { settingsRouter } from "@/server/trpc/routers/settings";
 import { tasksRouter } from "@/server/trpc/routers/tasks";
 import { teamRouter } from "@/server/trpc/routers/team";
@@ -41,6 +42,7 @@ export const appRouter = createTRPCRouter({
   payments: paymentsRouter,
   reports: reportsRouter,
   role: roleRouter,
+  schedule: scheduleRouter,
   settings: settingsRouter,
   tasks: tasksRouter,
   team: teamRouter,

@@ -82,6 +82,16 @@ export const organizationPreferences = pgTable(
       .notNull(),
     discountPerItem: boolean("discount_per_item").default(false).notNull(),
     taxPerItem: boolean("tax_per_item").default(false).notNull(),
+
+    /** Days added to the invoice date when the schedule bills an appointment. */
+    schedulePaymentTermDays: integer("schedule_payment_term_days")
+      .default(7)
+      .notNull(),
+    /** Emails schedule invoices on creation instead of leaving them as drafts. */
+    scheduleAutoSendInvoices: boolean("schedule_auto_send_invoices")
+      .default(true)
+      .notNull(),
+
     invoiceTemplate: integer("invoice_template").default(1).notNull(),
     estimateTemplate: integer("estimate_template").default(1).notNull(),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })

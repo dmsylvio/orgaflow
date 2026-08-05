@@ -120,6 +120,20 @@
       "when": 1777301121131,
       "tag": "0016_natural_lizard",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1785949034878,
+      "tag": "0017_confused_killmonger",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1785955901119,
+      "tag": "0018_watery_the_santerians",
+      "breakpoints": true
     }
   ]
 }
