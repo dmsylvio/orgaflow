@@ -1,5 +1,6 @@
 import {
   BarChart3,
+  CalendarDays,
   CheckCircle2,
   CreditCard,
   Eye,
@@ -13,6 +14,7 @@ import {
   Settings,
   ShieldCheck,
   Smartphone,
+  Users,
   Zap,
 } from "lucide-react";
 import type { Metadata } from "next";
@@ -212,6 +214,26 @@ const ITEMS: RoadmapItem[] = [
     category: "RBAC",
   },
   {
+    id: 39,
+    Icon: CalendarDays,
+    title: "Schedule Calendar & Visit Billing",
+    description:
+      "Month calendar for one-off and recurring service visits (daily, weekly, bi-weekly, monthly). Bill per visit or consolidate by period, with on-completion / period-end / manual triggers, conflict warnings, edit/delete scopes, 7-day payment terms, and optional auto-send. Available on every plan including Starter.",
+    status: "shipped",
+    effort: "High",
+    category: "Core",
+  },
+  {
+    id: 40,
+    Icon: Users,
+    title: "Schedule Staff Assignment",
+    description:
+      "Assign team members to appointments and filter the calendar by assignee — useful for crews and multi-technician schedules.",
+    status: "considering",
+    effort: "Medium",
+    category: "Core",
+  },
+  {
     id: 27,
     Icon: Settings,
     title: "Expanded Settings",
@@ -396,7 +418,7 @@ const COLUMNS: { status: Status; title: string; description: string }[] = [
 ];
 
 export default function RoadmapPage() {
-  const lastUpdated = "April 11, 2026 (v1.9.0)";
+  const lastUpdated = "August 5, 2026 (v1.11.0)";
 
   return (
     <div className="overflow-hidden">

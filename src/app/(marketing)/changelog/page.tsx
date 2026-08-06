@@ -34,6 +34,47 @@ interface ChangelogEntry {
 
 const ENTRIES: ChangelogEntry[] = [
   {
+    version: "1.11.0",
+    date: "August 5, 2026",
+    badge: "minor",
+    summary:
+      "Schedule — a month calendar for planning service visits, with recurring patterns and invoices generated from completed work. Available on every plan, including Starter.",
+    changes: [
+      {
+        type: "new",
+        text: "Schedule module: month calendar after Tasks for one-off and repeating appointments (day/time or all-day). Built for service businesses that plan work on a calendar and bill from what was delivered.",
+      },
+      {
+        type: "new",
+        text: "Recurrence: daily, weekly (pick weekdays), bi-weekly, and monthly series. Occurrences are materialized so each visit can be completed, cancelled, edited, or invoiced on its own.",
+      },
+      {
+        type: "new",
+        text: "Billing from the calendar: per-appointment or consolidated invoices (weekly / bi-weekly / monthly). Triggers include on completion, period end, and manual Generate invoice.",
+      },
+      {
+        type: "new",
+        text: "Schedule invoices use a configurable payment term (default 7 days) and can auto-send by email when the customer has an address on file. Configure both in Settings → Preferences → Schedule billing.",
+      },
+      {
+        type: "new",
+        text: "Edit and delete scopes for recurring visits: this occurrence only, or this and future. Existing invoices are never deleted with the appointment.",
+      },
+      {
+        type: "new",
+        text: "Non-blocking conflict warnings when a new or edited visit overlaps another appointment for the same organization.",
+      },
+      {
+        type: "improved",
+        text: "Selecting a catalog service in the appointment form autofills the unit price; you can still override it for that visit.",
+      },
+      {
+        type: "improved",
+        text: "Plan limits are handled gracefully: if Starter hits the invoice cap, blocked appointments keep a billing reason instead of failing the whole billing run.",
+      },
+    ],
+  },
+  {
     version: "1.10.0",
     date: "April 22, 2026",
     badge: "minor",
