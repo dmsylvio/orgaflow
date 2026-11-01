@@ -1,10 +1,10 @@
-import { Instagram, Layers } from "lucide-react";
+import { Instagram } from "lucide-react";
 import Link from "next/link";
 import MainLogo from "../logo";
 
 const FOOTER_LINKS = {
   Product: [
-    { label: "Features", href: "/#features" },
+    { label: "How it works", href: "/#how-it-works" },
     { label: "Pricing", href: "/pricing" },
     { label: "Changelog", href: "/changelog" },
     { label: "Roadmap", href: "/roadmap" },
@@ -22,8 +22,8 @@ const FOOTER_LINKS = {
 
 export function MarketingFooter() {
   return (
-    <footer className="border-t border-border bg-muted/40">
-      <div className="mx-auto max-w-7xl px-6 py-16">
+    <footer className="border-t-2 border-foreground bg-background">
+      <div className="mx-auto max-w-6xl px-6 py-16">
         <div className="grid grid-cols-2 gap-10 md:grid-cols-5">
           {/* Brand */}
           <div className="col-span-2">
@@ -31,12 +31,13 @@ export function MarketingFooter() {
               <MainLogo className="w-36 h-auto fill-black" />
             </Link>
             <p className="max-w-xs text-sm leading-relaxed text-muted-foreground">
-              The complete client workflow platform for modern small businesses.
-              From quote to payment, all in one place.
+              Estimate and invoice software for small businesses, from the first
+              quote to the finished job.
             </p>
             <div className="mt-6 flex gap-3">
               <Link
                 href="https://x.com/orgaflowapp"
+                aria-label="Orgaflow on X"
                 className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground transition-colors hover:border-primary/30 hover:text-primary"
               >
                 <svg
@@ -61,7 +62,7 @@ export function MarketingFooter() {
           {/* Links */}
           {Object.entries(FOOTER_LINKS).map(([group, links]) => (
             <div key={group}>
-              <h3 className="mb-4 text-xs font-semibold uppercase tracking-widest text-foreground/50">
+              <h3 className="mb-4 text-sm font-bold text-foreground">
                 {group}
               </h3>
               <ul className="flex flex-col gap-2.5">
@@ -82,10 +83,7 @@ export function MarketingFooter() {
 
         <div className="mt-12 flex flex-col gap-3 border-t border-border pt-8 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-center text-xs text-muted-foreground sm:text-left">
-            Copyright 2026 Orgaflow LLC. All rights reserved.
-          </p>
-          <p className="text-center text-xs text-muted-foreground/60 sm:text-right">
-            Built for small businesses that mean business.
+            © 2026 Orgaflow LLC. All rights reserved.
           </p>
         </div>
       </div>

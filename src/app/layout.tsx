@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Toaster } from "sonner";
-import { JsonLd } from "@/components/json-ld";
 import { AuthSessionProvider } from "@/components/providers/auth-session-provider";
 import { getAppBaseUrl } from "@/lib/base-url";
 import { poppins } from "@/lib/fonts";
@@ -14,7 +13,7 @@ export const metadata: Metadata = {
     template: "%s | Orgaflow",
   },
   description:
-    "CRM, estimates, invoices, payments, tasks, and workflow automations for small businesses.",
+    "Estimate and invoice software for small businesses. Send estimates clients approve from a link, then invoice, record payment, and start the work.",
   applicationName: "Orgaflow",
   referrer: "origin-when-cross-origin",
   formatDetection: {
@@ -25,7 +24,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Orgaflow",
     description:
-      "CRM, estimates, invoices, payments, tasks, and workflow automations for small businesses.",
+      "Estimate and invoice software for small businesses. Send estimates clients approve from a link, then invoice, record payment, and start the work.",
     siteName: "Orgaflow",
     locale: "en_US",
     type: "website",
@@ -34,7 +33,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Orgaflow",
     description:
-      "CRM, estimates, invoices, payments, tasks, and workflow automations for small businesses.",
+      "Estimate and invoice software for small businesses. Send estimates clients approve from a link, then invoice, record payment, and start the work.",
   },
 };
 
@@ -49,9 +48,6 @@ export default function RootLayout({
       className={`${poppins.variable} h-full`}
       suppressHydrationWarning
     >
-      <head>
-        <JsonLd />
-      </head>
       <body className="h-full">
         <AuthSessionProvider>
           <TRPCReactProvider>{children}</TRPCReactProvider>

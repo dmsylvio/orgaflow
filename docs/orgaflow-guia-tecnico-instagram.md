@@ -43,7 +43,6 @@ Ideal users:
 | Email | Resend and Nodemailer |
 | Internal jobs | `node-cron` |
 | Tooling | TypeScript 5, pnpm 10, Biome |
-| Chat | Optional Tawk.to integration |
 
 Next.js 16 note: the project uses `proxy.ts`, the current convention that replaces the old middleware naming. HTTP endpoints are implemented as `route.ts` files inside `src/app`. Route groups such as `(marketing)` and `(private)` are organizational folders and do not appear in the URL.
 
@@ -870,9 +869,7 @@ Main variables:
 - `STRIPE_PRICE_GROWTH_MONTHLY`;
 - `STRIPE_PRICE_GROWTH_ANNUAL`;
 - `STRIPE_PRICE_SCALE_MONTHLY`;
-- `STRIPE_PRICE_SCALE_ANNUAL`;
-- `NEXT_PUBLIC_TAWK_PROPERTY_ID`;
-- `NEXT_PUBLIC_TAWK_WIDGET_ID`.
+- `STRIPE_PRICE_SCALE_ANNUAL`.
 
 ## 19. Instagram Post Ideas
 

@@ -19,26 +19,16 @@ import {
 } from "lucide-react";
 import type { Metadata } from "next";
 import NextLink from "next/link";
+import { PageHero } from "@/components/marketing/page-hero";
 import { Button } from "@/components/ui/button";
+import { marketingMetadata } from "@/lib/marketing-metadata";
 
-export const metadata: Metadata = {
-  title: "Roadmap",
+export const metadata: Metadata = marketingMetadata({
+  title: "Product Roadmap",
   description:
-    "See what we're building next. Our public roadmap shows upcoming features and their priorities.",
-  alternates: { canonical: "/roadmap" },
-  openGraph: {
-    title: "Roadmap — Orgaflow",
-    description:
-      "See what we're building next. Our public roadmap shows upcoming features and their priorities.",
-    url: "/roadmap",
-    type: "website",
-  },
-  twitter: {
-    title: "Roadmap — Orgaflow",
-    description:
-      "See what we're building next. Our public roadmap shows upcoming features and their priorities.",
-  },
-};
+    "See what Orgaflow has shipped, what's in progress, and what's planned next for its estimate, invoice, and workflow software.",
+  path: "/roadmap",
+});
 
 type Status = "shipped" | "in-progress" | "planned" | "considering";
 
@@ -422,34 +412,16 @@ export default function RoadmapPage() {
 
   return (
     <div className="overflow-hidden">
-      {/* Hero */}
-      <section className="relative pb-8 pt-12 text-center">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 overflow-hidden"
-        >
-          <div className="absolute left-1/2 top-0 h-80 w-[700px] -translate-x-1/2 rounded-full bg-primary/5 blur-[80px]" />
-        </div>
-
-        <div className="relative mx-auto max-w-3xl px-6">
-          <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-primary">
-            Roadmap
-          </p>
-          <h1 className="mb-4 text-5xl font-bold tracking-tight text-foreground sm:text-6xl">
-            What we're building next
-          </h1>
-          <p className="text-lg text-muted-foreground">
-            Our roadmap is public. We believe you deserve to know what's coming
-            and when. Updated regularly as priorities shift.
-          </p>
-          <p className="mt-4 text-xs text-muted-foreground/60">
-            Last updated: {lastUpdated}
-          </p>
-        </div>
-      </section>
+      <PageHero
+        title="What's shipped and what's next."
+        note={`Last updated: ${lastUpdated}`}
+      >
+        The roadmap is public, so you can see what's being built before you rely
+        on it. Priorities can change as we hear from customers.
+      </PageHero>
 
       {/* Legend */}
-      <section className="mx-auto max-w-7xl px-6 pb-4">
+      <section className="mx-auto max-w-7xl px-6 pb-6 pt-8">
         <div className="flex flex-wrap items-center justify-center gap-5">
           {COLUMNS.map(({ status, title, description }) => {
             const cfg = STATUS_CONFIG[status];

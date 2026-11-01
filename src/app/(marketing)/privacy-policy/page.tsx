@@ -26,11 +26,8 @@ export default function PrivacyPolicyPage() {
   return (
     <div className="overflow-hidden">
       {/* Hero */}
-      <section className="border-b border-border bg-muted/40 py-16 text-center">
+      <section className="border-b-2 border-foreground py-16">
         <div className="mx-auto max-w-3xl px-6">
-          <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-primary">
-            Legal
-          </p>
           <h1 className="mb-3 text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
             Privacy Policy
           </h1>
@@ -86,8 +83,7 @@ export default function PrivacyPolicyPage() {
                     </li>
                     <li>
                       <strong>Communications:</strong> messages you send to our
-                      support team, including via the live chat widget (if
-                      enabled).
+                      support team.
                     </li>
                   </ul>
                 </>
@@ -137,10 +133,6 @@ export default function PrivacyPolicyPage() {
                     <li>
                       <strong>Stripe</strong> — payment processing and
                       subscription management.
-                    </li>
-                    <li>
-                      <strong>Tawk.to</strong> — customer support chat widget
-                      (if enabled).
                     </li>
                     <li>
                       <strong>Google Analytics</strong> — website traffic

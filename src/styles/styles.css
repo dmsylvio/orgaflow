@@ -58,6 +58,61 @@
   }
 }
 
+/* Marketing site: carbon-copy pad palette. Scoped so the app is unaffected. */
+.marketing {
+  --font-sans: var(--font-marketing);
+  --background: 240 40% 99%;
+  --foreground: 237 37% 12%;
+  --card: 0 0% 100%;
+  --card-foreground: 237 37% 12%;
+  --border: 238 30% 86%;
+  --input: 238 30% 80%;
+  --ring: 240 63% 44%;
+  --primary: 240 63% 44%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 240 30% 95%;
+  --secondary-foreground: 237 37% 12%;
+  --muted: 240 30% 96%;
+  --muted-foreground: 238 14% 36%;
+  --accent: 240 30% 95%;
+  --accent-foreground: 237 37% 12%;
+  --radius: 0.25rem;
+  font-family: var(--font-marketing), system-ui, sans-serif;
+  color: hsl(var(--foreground));
+}
+
+.marketing :focus-visible {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 2px;
+}
+
+.marketing .on-dark :focus-visible {
+  outline-color: #ffd84d;
+}
+
+/* Tear-off perforations along the top of a pad sheet. */
+.pad-sheet {
+  --hole: radial-gradient(circle at 10px 0, transparent 4px, #000 4.5px);
+  -webkit-mask: var(--hole) 0 0 / 20px 100% repeat-x;
+  mask: var(--hole) 0 0 / 20px 100% repeat-x;
+}
+
+@keyframes stamp-down {
+  0% {
+    opacity: 0;
+    transform: rotate(-9deg) scale(1.7);
+  }
+  100% {
+    opacity: 1;
+    transform: rotate(-9deg) scale(1);
+  }
+}
+
+.stamp {
+  transform: rotate(-9deg);
+  animation: stamp-down 220ms cubic-bezier(0.2, 0.9, 0.3, 1.1) both;
+}
+
 .roadmap-cards-container {
   scrollbar-width: thin;
   scrollbar-color: #e5e7eb transparent;

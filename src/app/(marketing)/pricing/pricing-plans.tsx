@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Check, X } from "lucide-react";
+import { Check, X } from "lucide-react";
 import NextLink from "next/link";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -20,15 +20,15 @@ export function PricingPlans() {
   return (
     <>
       <div className="flex justify-center">
-        <div className="inline-flex items-center gap-1 rounded-full border border-border bg-muted/60 p-1">
+        <div className="inline-flex items-center gap-1 rounded border-2 border-foreground/15 bg-white p-1">
           <button
             type="button"
             aria-pressed={!isAnnual}
             onClick={() => setBillingInterval("monthly")}
-            className={`rounded-full px-5 py-1.5 text-sm font-medium transition-colors ${
+            className={`rounded px-5 py-1.5 text-sm font-medium transition-colors ${
               isAnnual
                 ? "text-muted-foreground hover:text-foreground"
-                : "bg-primary text-primary-foreground shadow-sm"
+                : "bg-primary text-primary-foreground "
             }`}
           >
             Monthly
@@ -37,9 +37,9 @@ export function PricingPlans() {
             type="button"
             aria-pressed={isAnnual}
             onClick={() => setBillingInterval("annual")}
-            className={`flex items-center gap-1.5 rounded-full px-5 py-1.5 text-sm font-medium transition-colors ${
+            className={`flex items-center gap-1.5 rounded px-5 py-1.5 text-sm font-medium transition-colors ${
               isAnnual
-                ? "bg-primary text-primary-foreground shadow-sm"
+                ? "bg-primary text-primary-foreground "
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
@@ -48,7 +48,7 @@ export function PricingPlans() {
               className={`rounded-full px-1.5 py-0.5 text-xs font-semibold ${
                 isAnnual
                   ? "bg-primary-foreground/20 text-primary-foreground"
-                  : "bg-emerald-100 text-emerald-700"
+                  : "bg-canary text-foreground"
               }`}
             >
               Save {ANNUAL_DISCOUNT_PERCENT}%
@@ -73,16 +73,16 @@ export function PricingPlans() {
             return (
               <div
                 key={name}
-                className={`relative flex flex-col overflow-hidden rounded-2xl border ${
+                className={`relative flex flex-col overflow-hidden rounded ${
                   popular
-                    ? "border-primary bg-primary/[0.03] shadow-xl shadow-primary/10"
-                    : "border-border bg-background shadow-sm"
+                    ? "border-2 border-primary bg-white"
+                    : "border-2 border-foreground/15 bg-white"
                 } p-8`}
               >
                 {popular && (
                   <div className="absolute right-0 top-0">
-                    <div className="rounded-bl-2xl bg-primary px-4 py-1.5 text-xs font-semibold text-white">
-                      Most popular
+                    <div className="bg-canary px-3 py-1.5 text-xs font-bold text-foreground">
+                      Recommended
                     </div>
                   </div>
                 )}
@@ -96,7 +96,7 @@ export function PricingPlans() {
 
                 <div className="mb-8">
                   <div className="flex items-end gap-1">
-                    <span className="text-5xl font-bold text-foreground">
+                    <span className="text-5xl font-extrabold tracking-[-0.03em] text-foreground">
                       {displayPrice}
                     </span>
                     {isPaid ? (
@@ -116,12 +116,11 @@ export function PricingPlans() {
 
                 <Button
                   asChild
-                  className={popular ? "mb-8 shadow-md shadow-primary/20" : "mb-8"}
+                  className="mb-8"
                   variant={popular ? "default" : "outline"}
                 >
                   <NextLink href={ctaHref}>
                     {cta}
-                    <ArrowRight className="ml-2 h-4 w-4" />
                   </NextLink>
                 </Button>
 
@@ -145,16 +144,20 @@ export function PricingPlans() {
         )}
       </div>
 
-      <div className="mt-8 rounded-2xl border border-border bg-muted/40 px-8 py-6 text-center">
+      <div className="mt-8 border-t-2 border-foreground pt-6">
+        <p className="mb-2 text-sm text-muted-foreground">
+          Online card payments through Stripe are in development for the Scale
+          plan.
+        </p>
         <p className="text-sm text-muted-foreground">
-          Need a custom plan for your enterprise?{" "}
+          Need more than 10 team members?{" "}
           <NextLink
             href="/contact"
             className="font-medium text-primary hover:underline"
           >
-            Talk to our sales team
+            Contact us
           </NextLink>{" "}
-          — we'll build something that fits.
+          and we'll work out an arrangement.
         </p>
       </div>
     </>
@@ -166,7 +169,7 @@ const PLANS: Plan[] = [
     name: "Starter",
     plan: null,
     description:
-      "Perfect for freelancers and solo business owners who want the full billing flow with lower usage limits.",
+      "For freelancers and very small teams getting started.",
     cta: "Start free",
     ctaHref: "/register",
     popular: false,
@@ -182,7 +185,6 @@ const PLANS: Plan[] = [
       "Task board (Kanban)",
       "File attachments",
       "Custom branding on exports",
-      "Stripe online payments",
       "Workflow automations",
       "Advanced reports",
     ],
@@ -190,7 +192,7 @@ const PLANS: Plan[] = [
   {
     name: "Growth",
     plan: "growth",
-    description: "For growing teams that need unlimited capacity and branding.",
+    description: "For teams that need unlimited documents, a task board, and their own branding.",
     cta: `Start ${PLAN_TRIAL_DAYS}-day trial`,
     ctaHref: "/register",
     popular: true,
@@ -206,7 +208,6 @@ const PLANS: Plan[] = [
       "Priority email support",
     ],
     missing: [
-      "Stripe online payments",
       "Workflow automations",
       "Advanced reports",
     ],
@@ -215,7 +216,7 @@ const PLANS: Plan[] = [
     name: "Scale",
     plan: "scale",
     description:
-      "For established businesses that want full automation and payments.",
+      "For teams that want the work to start automatically, with deeper reports.",
     cta: `Start ${PLAN_TRIAL_DAYS}-day trial`,
     ctaHref: "/register",
     popular: false,
@@ -228,7 +229,6 @@ const PLANS: Plan[] = [
       "Public estimate & invoice links",
       "10 GB file attachment storage",
       "Custom branding on exports",
-      "Stripe online payments",
       "Workflow automations",
       "Advanced reports & analytics",
       "Priority support",

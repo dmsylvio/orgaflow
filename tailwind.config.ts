@@ -6,6 +6,8 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        canary: "#FFD84D",
+        "copy-pink": "#FFC7D1",
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
@@ -52,6 +54,7 @@ const config: Config = {
       },
       fontFamily: {
         sans: ["var(--font-sans)", "system-ui", "sans-serif"],
+        hand: ["var(--font-hand)", "cursive"],
       },
     },
   },

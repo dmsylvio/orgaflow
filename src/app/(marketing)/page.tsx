@@ -1,1029 +1,324 @@
-import {
-  ArrowRight,
-  BarChart3,
-  Check,
-  CheckCircle2,
-  ChevronRight,
-  Clock,
-  CreditCard,
-  FileText,
-  Layers,
-  Star,
-  TrendingUp,
-  Users,
-  Zap,
-} from "lucide-react";
 import type { Metadata } from "next";
 import Image from "next/image";
 import NextLink from "next/link";
+import { HomeFaqJsonLd } from "@/components/json-ld";
+import { JobTicket } from "@/components/marketing/job-ticket";
 import { Button } from "@/components/ui/button";
+import { HOME_FAQS } from "@/lib/marketing-faq";
+import { marketingMetadata } from "@/lib/marketing-metadata";
 
-export const metadata: Metadata = {
-  title: {
-    absolute: "Orgaflow — Estimates, Invoices & Payments for Small Businesses",
-  },
+export const metadata: Metadata = marketingMetadata({
+  title: "Estimate & Invoice Software for Small Businesses | Orgaflow",
+  absolute: true,
   description:
-    "Send estimates clients approve in one click, collect payment online, and automate the work that follows. The all-in-one quote-to-cash platform for small teams. Start free.",
-  keywords: [
-    "estimate software",
-    "quoting software",
-    "invoice software",
-    "small business CRM",
-    "quote to cash",
-    "payments",
-    "workflow automation",
-  ],
-  alternates: { canonical: "/" },
-  openGraph: {
-    title: "From quote to cash to done — without the chaos",
-    description:
-      "Send estimates clients approve in one click, collect payment online, and automate the work that follows. The all-in-one quote-to-cash platform for small teams.",
-    url: "/",
-    type: "website",
-    images: [
-      {
-        url: "/opengraph-image",
-        width: 1200,
-        height: 630,
-        alt: "Orgaflow — estimates, invoices, and payments for small businesses",
-      },
+    "Send estimates clients approve from a link, turn them into invoices, track payments, and start the work. Free plan, no credit card needed.",
+  path: "/",
+});
+
+const STEPS = [
+  {
+    title: "Send the estimate",
+    body: "Add line items, taxes, and your logo, then send a secure link. Orgaflow tells you when your client has viewed it.",
+    plan: "Every plan",
+    slip: [
+      ["Maple Street Bakery", "$860.00"],
+      ["Status", "Viewed today"],
     ],
   },
-  twitter: {
-    card: "summary_large_image",
-    title: "From quote to cash to done — without the chaos",
-    description:
-      "Send estimates clients approve in one click, collect payment online, and automate the work that follows. The all-in-one quote-to-cash platform for small teams.",
-    images: ["/opengraph-image"],
-  },
-};
-
-/* ─────────────────────────────────────────────
-   Data
-───────────────────────────────────────────── */
-
-const STATS = [
-  { value: "200+", label: "Businesses on Orgaflow", Icon: Users },
-  { value: "120k", label: "Invoices sent", Icon: FileText },
-  { value: "3 days", label: "Avg. quote-to-payment", Icon: Clock },
-  { value: "4.9★", label: "Average rating", Icon: Star },
-];
-
-const TESTIMONIALS = [
   {
-    name: "Sarah Mitchell",
-    role: "Founder, Pixel & Co.",
-    avatar: "SM",
-    avatarColor: "bg-violet-100 text-violet-700",
-    content:
-      "Our quoting-to-payment cycle went from 2 weeks to 3 days. Orgaflow replaced three separate tools overnight.",
-    stars: 5,
+    title: "Get it approved",
+    body: "Your client reviews the details and any attached files, then approves or rejects from the same page. No account, no password.",
+    plan: "Every plan",
+    slip: [
+      ["EST-0142", "Approved"],
+      ["Client account needed", "No"],
+    ],
   },
   {
-    name: "Marcos Oliveira",
-    role: "CEO, BuildRight",
-    avatar: "MO",
-    avatarColor: "bg-blue-100 text-blue-700",
-    content:
-      "The automation features alone save us 5+ hours a week. Tasks are created the moment a client pays.",
-    stars: 5,
+    title: "Turn it into an invoice",
+    body: "Convert the approved estimate in one click, with nothing to retype. Choose from three PDF templates, or set up recurring invoices for ongoing work.",
+    plan: "Every plan. Custom branding on Growth and Scale",
+    slip: [
+      ["EST-0142", "INV-0142"],
+      ["PDF template", "Branded"],
+    ],
   },
   {
-    name: "Julia Chen",
-    role: "Operations Lead, Craft Studio",
-    avatar: "JC",
-    avatarColor: "bg-emerald-100 text-emerald-700",
-    content:
-      "Finally a platform that actually understands how small businesses work. The Kanban linked to invoices is a game-changer.",
-    stars: 5,
+    title: "Track the payment",
+    body: "Record each payment by method, such as cash or bank transfer. Orgaflow marks the invoice paid once the balance reaches zero. Online card payments through Stripe are in development.",
+    plan: "Every plan",
+    slip: [
+      ["Bank transfer", "$860.00"],
+      ["Balance", "$0.00"],
+    ],
+  },
+  {
+    title: "Start the work",
+    body: "When an estimate is approved or an invoice is paid, an automation creates the task with an assignee and a due date. Your team picks it up on the board.",
+    plan: "Task board on Growth and Scale. Automations on Scale",
+    slip: [
+      ["Clean exhaust hood", "Dana"],
+      ["Due", "In 3 days"],
+    ],
   },
 ];
 
-const FAQS = [
+const ALSO_INCLUDED = [
   {
-    q: "How is Orgaflow different from FreshBooks or QuickBooks?",
-    a: "Those are accounting tools. Orgaflow is built around the estimate-to-payment-to-delivery workflow — quoting, invoicing, payments, and the tasks that follow, in one place, without the accounting overhead.",
+    term: "Customers",
+    body: "Each client's details, estimates, and invoices in one record.",
   },
   {
-    q: "Can clients approve estimates without an account?",
-    a: "Yes. Every estimate gets a secure shareable link where clients review and approve in one click — no signup required.",
+    term: "Schedule",
+    body: "Plan service visits on a calendar, repeat them, and bill for completed work. Included on every plan.",
   },
   {
-    q: "Is there a free plan?",
-    a: "Yes. Starter is free and gives solo operators the core estimate, invoice, customer, and item workflow, with usage limits.",
+    term: "Dashboard and reports",
+    body: "See revenue and pending documents at a glance. Advanced reports come with Scale.",
   },
   {
-    q: "Do you support multiple currencies?",
-    a: "Yes. Set a default currency for your workspace and per-client currencies for international work.",
+    term: "Team permissions",
+    body: "Choose what each role can do, and hide prices from people who don't need them.",
   },
   {
-    q: "Is this good for solo freelancers?",
-    a: "Absolutely. Starter is built for one-person operations, and Orgaflow scales as your team grows.",
-  },
-  {
-    q: "Can I import my existing clients and invoices?",
-    a: "Yes — add clients individually or in bulk. Most teams are fully set up in under five minutes.",
-  },
-  {
-    q: "How do online payments work?",
-    a: "Connect Stripe (Scale plan) and clients pay invoices online. Status updates automatically when an invoice is fully paid.",
+    term: "File attachments",
+    body: "Add photos and documents to estimates and invoices, with 1 GB on Growth and 10 GB on Scale.",
   },
 ];
-
-const STAR_KEYS = ["1", "2", "3", "4", "5"] as const;
-
-/* ─────────────────────────────────────────────
-   Mini UI mockups (pure CSS / Tailwind)
-───────────────────────────────────────────── */
-
-function _InvoiceMockup() {
-  return (
-    <div className="w-full rounded-xl border border-border bg-background shadow-sm">
-      {/* toolbar */}
-      <div className="flex items-center justify-between border-b border-border px-4 py-2.5">
-        <div className="flex items-center gap-1.5">
-          <div className="h-2.5 w-2.5 rounded-full bg-rose-400" />
-          <div className="h-2.5 w-2.5 rounded-full bg-amber-400" />
-          <div className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
-        </div>
-        <div className="h-2 w-24 rounded-full bg-muted" />
-        <div className="h-2 w-8 rounded-full bg-muted" />
-      </div>
-      {/* content */}
-      <div className="p-4">
-        <div className="mb-3 flex items-start justify-between">
-          <div>
-            <div className="mb-1 h-2.5 w-20 rounded-full bg-foreground/80" />
-            <div className="h-2 w-32 rounded-full bg-muted" />
-          </div>
-          <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
-            PAID
-          </span>
-        </div>
-        <div className="mb-3 space-y-1.5">
-          {[80, 60, 70].map((w) => (
-            <div key={w} className="flex items-center justify-between">
-              <div
-                className={`h-2 rounded-full bg-muted`}
-                style={{ width: `${w}%` }}
-              />
-              <div className="h-2 w-10 rounded-full bg-muted" />
-            </div>
-          ))}
-        </div>
-        <div className="flex items-center justify-between border-t border-border pt-2.5">
-          <div className="h-2 w-12 rounded-full bg-muted" />
-          <div className="h-3 w-16 rounded-full bg-primary/20" />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function KanbanMockup() {
-  const cols = [
-    {
-      label: "To Do",
-      color: "bg-slate-100",
-      dot: "bg-slate-400",
-      cards: ["Design mockup", "Client call"],
-      count: 2,
-    },
-    {
-      label: "In Progress",
-      color: "bg-primary/8",
-      dot: "bg-primary",
-      cards: ["Invoice #034", "Setup meeting"],
-      count: 2,
-    },
-    {
-      label: "Done",
-      color: "bg-emerald-50",
-      dot: "bg-emerald-500",
-      cards: ["Estimate sent", "Contract signed"],
-      count: 2,
-    },
-  ];
-  return (
-    <div className="flex gap-2 ">
-      {cols.map(({ label, color, dot, cards }) => (
-        <div key={label} className="flex min-w-0 flex-1 flex-col gap-1.5">
-          <div className="flex items-center gap-1.5 px-0.5">
-            <span className={`h-1.5 w-1.5 rounded-full ${dot}`} />
-            <span className="text-[10px] font-semibold text-foreground/70">
-              {label}
-            </span>
-          </div>
-          {cards.map((card) => (
-            <div
-              key={card}
-              className={`rounded-lg border border-border ${color} px-2.5 py-2`}
-            >
-              <div className="mb-1 h-1.5 w-full rounded-full bg-foreground/10" />
-              <p className="text-[9px] font-medium text-foreground/60 leading-tight">
-                {card}
-              </p>
-            </div>
-          ))}
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function AutomationFlowMockup() {
-  const steps = [
-    {
-      icon: CreditCard,
-      label: "Invoice paid",
-      color: "text-emerald-600",
-      bg: "bg-emerald-50",
-      border: "border-emerald-200",
-    },
-    {
-      icon: Zap,
-      label: "Trigger fires",
-      color: "text-amber-600",
-      bg: "bg-amber-50",
-      border: "border-amber-200",
-    },
-    {
-      icon: CheckCircle2,
-      label: "Task created",
-      color: "text-primary",
-      bg: "bg-primary/8",
-      border: "border-primary/20",
-    },
-  ];
-  return (
-    <div className="flex items-center gap-2">
-      {steps.map(({ icon: Icon, label, color, bg, border }, i) => (
-        <div key={label} className="flex items-center gap-2">
-          <div
-            className={`flex flex-col items-center gap-1.5 rounded-xl border ${border} ${bg} px-3 py-2.5`}
-          >
-            <Icon className={`h-4 w-4 ${color}`} />
-            <span className="text-[10px] font-semibold text-foreground/70 whitespace-nowrap">
-              {label}
-            </span>
-          </div>
-          {i < steps.length - 1 && (
-            <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50" />
-          )}
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function CRMMockup() {
-  const customers = [
-    {
-      name: "Acme Corp",
-      status: "Active",
-      value: "$3,400",
-      color: "bg-blue-100 text-blue-700",
-    },
-    {
-      name: "Pixel & Co.",
-      status: "Lead",
-      value: "$1,200",
-      color: "bg-violet-100 text-violet-700",
-    },
-    {
-      name: "BuildRight",
-      status: "Active",
-      value: "$5,800",
-      color: "bg-emerald-100 text-emerald-700",
-    },
-  ];
-  return (
-    <div className="flex flex-col divide-y divide-border rounded-xl border border-border bg-background shadow-sm">
-      <div className="flex items-center justify-between bg-muted/50 px-3 py-2">
-        <span className="text-[11px] font-semibold text-foreground/70">
-          Customers
-        </span>
-        <span className="text-[10px] text-muted-foreground">3 of 200</span>
-      </div>
-      {customers.map(({ name, status, value, color }) => (
-        <div key={name} className="flex items-center justify-between px-3 py-2">
-          <div className="flex items-center gap-2">
-            <div
-              className={`flex h-6 w-6 items-center justify-center rounded-full text-[9px] font-bold ${color}`}
-            >
-              {name[0]}
-            </div>
-            <span className="text-[11px] font-medium text-foreground">
-              {name}
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span
-              className={`rounded-full px-1.5 py-0.5 text-[9px] font-semibold ${color}`}
-            >
-              {status}
-            </span>
-            <span className="text-[11px] font-semibold text-foreground">
-              {value}
-            </span>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function ReportMockup() {
-  const bars = [
-    { id: "b1", height: 45 },
-    { id: "b2", height: 72 },
-    { id: "b3", height: 60 },
-    { id: "b4", height: 88 },
-    { id: "b5", height: 55 },
-    { id: "b6", height: 95 },
-    { id: "b7", height: 78 },
-  ];
-  const days = [
-    { id: "mon", label: "M" },
-    { id: "tue", label: "T" },
-    { id: "wed", label: "W" },
-    { id: "thu", label: "T" },
-    { id: "fri", label: "F" },
-    { id: "sat", label: "S" },
-    { id: "sun", label: "S" },
-  ];
-  return (
-    <div className="flex flex-col gap-3">
-      <div className="flex items-end justify-between">
-        <div>
-          <p className="text-xs text-muted-foreground">Revenue this month</p>
-          <p className="text-xl font-bold text-foreground">$18,340</p>
-        </div>
-        <span className="flex items-center gap-1 text-xs font-semibold text-emerald-600">
-          <TrendingUp className="h-3 w-3" />
-          +24%
-        </span>
-      </div>
-      <div className="flex items-end justify-between gap-1 h-14">
-        {bars.map(({ id, height }, i) => (
-          <div
-            key={id}
-            className={`flex-1 rounded-t-md ${i === bars.length - 1 ? "bg-primary" : "bg-primary/20"}`}
-            style={{ height: `${height}%` }}
-          />
-        ))}
-      </div>
-      <div className="flex justify-between text-[10px] text-muted-foreground">
-        {days.map(({ id, label }) => (
-          <span key={id} className="flex-1 text-center">
-            {label}
-          </span>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-/* ─────────────────────────────────────────────
-   Page
-───────────────────────────────────────────── */
 
 export default function LandingPage() {
   return (
-    <div className="overflow-hidden">
-      {/* ── HERO ── */}
-      <section className="relative  pb-0 pt-20">
-        {/* background blobs */}
-        <div aria-hidden className="pointer-events-none absolute inset-0">
-          <div className="absolute left-1/2 top-0 h-[600px] w-[1000px] -translate-x-1/2 rounded-full bg-gradient-to-b from-primary/8 to-transparent blur-[80px]" />
-          <div className="absolute -left-32 top-40 h-80 w-80 rounded-full bg-violet-200/50 blur-[60px]" />
-          <div className="absolute -right-32 top-56 h-80 w-80 rounded-full bg-cyan-200/40 blur-[60px]" />
-        </div>
+    <>
+      <HomeFaqJsonLd />
 
-        <div className="relative mx-auto max-w-5xl px-6 text-center">
-          {/* badge */}
-          <div className="mb-7 inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/8 px-4 py-2.5 text-xs font-semibold text-primary">
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-60" />
-              <span className="relative h-2 w-2 rounded-full bg-primary" />
-            </span>
-            Quote → Paid → Done. One platform.
-          </div>
-
-          <h1 className="mx-auto mb-6 max-w-4xl text-balance text-[clamp(2.5rem,6vw,4.5rem)] font-bold leading-[1.1] tracking-tight text-foreground">
-            From quote to cash to done{" "}
-            <span className="relative inline-block">
-              <span className="bg-gradient-to-r from-primary via-violet-500 to-cyan-500 bg-clip-text text-transparent">
-                — without the chaos
-              </span>
-              <svg
-                aria-hidden
-                viewBox="0 0 300 12"
-                className="absolute -bottom-2 left-0 w-full"
-                fill="none"
+      {/* Hero */}
+      <section className="overflow-hidden bg-canary">
+        <div className="mx-auto grid max-w-6xl gap-14 px-6 pb-14 pt-14 lg:grid-cols-[1.1fr_1fr] lg:items-center lg:gap-10 lg:pb-20 lg:pt-20">
+          <div>
+            <h1 className="text-[clamp(3rem,7.4vw,6rem)] font-extrabold leading-[0.95] tracking-[-0.045em] text-foreground">
+              Quote it. Get paid. Do the work.
+            </h1>
+            <p className="mt-7 max-w-xl text-lg leading-relaxed text-foreground sm:text-xl">
+              Orgaflow is estimate and invoice software for small businesses.
+              Every job moves from the first quote to the finished work in one
+              place.
+            </p>
+            <div className="mt-8 flex flex-wrap items-center gap-x-5 gap-y-3">
+              <Button
+                size="lg"
+                asChild
+                className="h-12 bg-foreground px-7 text-base text-background hover:bg-foreground/85"
               >
-                <title>Decorative underline</title>
-                <path
-                  d="M2 8 C60 3, 140 10, 298 4"
-                  stroke="url(#underline-grad)"
-                  strokeWidth="3"
-                  strokeLinecap="round"
-                />
-                <defs>
-                  <linearGradient
-                    id="underline-grad"
-                    x1="0"
-                    y1="0"
-                    x2="1"
-                    y2="0"
-                  >
-                    <stop offset="0%" stopColor="hsl(243,75%,59%)" />
-                    <stop offset="100%" stopColor="hsl(189,94%,43%)" />
-                  </linearGradient>
-                </defs>
-              </svg>
-            </span>
-          </h1>
-
-          <p className="mx-auto mb-10 max-w-xl text-lg leading-relaxed text-muted-foreground">
-            Send estimates your clients approve in one click, collect payment
-            online, and let automations start the work the moment you're paid.
-            Built for small teams who'd rather do the job than chase the admin.
-          </p>
-
-          <div className="flex flex-wrap items-center justify-center gap-3">
-            <Button
-              size="lg"
-              asChild
-              className="h-12 gap-2 px-8 shadow-xl shadow-primary/20 text-base"
-            >
-              <NextLink href="/register">
-                Start free
-                <ArrowRight className="h-4 w-4" />
+                <NextLink href="/register">Start free</NextLink>
+              </Button>
+              <NextLink
+                href="#how-it-works"
+                className="font-semibold text-foreground underline decoration-2 underline-offset-4"
+              >
+                See how a job moves
               </NextLink>
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              asChild
-              className="h-12 px-8 text-base"
-            >
-              <NextLink href="#how-it-works">See how it works</NextLink>
-            </Button>
-          </div>
-
-          <p className="mt-5 text-sm text-muted-foreground">
-            No credit card required · Set up in under 5 minutes
-          </p>
-        </div>
-
-        {/* Dashboard image */}
-        <div className="relative mx-auto mt-16 max-w-6xl px-6">
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-x-0 top-8 mx-auto h-40 max-w-3xl rounded-full bg-primary/10 blur-3xl"
-          />
-
-          <div className="relative rounded-2xl border border-border shadow-2xl shadow-black/10 ring-1 ring-border">
-            {/* Browser bar */}
-            <div className="flex items-center gap-3 border-b border-border bg-muted/60 px-4 py-3">
-              <div className="flex gap-1.5">
-                <div className="h-3 w-3 rounded-full bg-rose-400" />
-                <div className="h-3 w-3 rounded-full bg-amber-400" />
-                <div className="h-3 w-3 rounded-full bg-emerald-400" />
-              </div>
-              <div className="flex flex-1 items-center justify-center">
-                <div className="flex h-6 w-52 items-center justify-center rounded-md bg-background px-3 text-[11px] text-muted-foreground shadow-sm ring-1 ring-border">
-                  orgaflow.dev/app
-                </div>
-              </div>
-              <div className="w-12" />
             </div>
-
-            {/* Screenshot */}
-            <Image
-              src="/screencapture-orgaflow.png"
-              alt="Orgaflow dashboard"
-              className="w-full"
-              width={1920}
-              height={1080}
-              quality={100}
-              priority
-              unoptimized
-            />
+            <p className="mt-5 text-sm text-foreground">
+              Free plan available. No credit card needed.
+            </p>
           </div>
 
-          <div
-            aria-hidden
-            className="pointer-events-none absolute bottom-0 left-0 right-0 h-72 bg-gradient-to-t from-background via-background/80 to-transparent"
-          />
-        </div>
-
-        {/* stats strip — overlaps image */}
-        <div className="relative mx-auto -mt-8 max-w-6xl px-6">
-          <div className="flex divide-x divide-border  rounded-2xl border border-border bg-background/80 shadow-lg backdrop-blur-sm">
-            {STATS.map(({ value, label, Icon }) => (
-              <div
-                key={label}
-                className="flex flex-1 flex-col items-center py-6 px-4"
-              >
-                <Icon className="mb-1.5 h-4 w-4 text-primary/60" aria-hidden />
-                <span className="text-2xl font-bold text-foreground sm:text-3xl">
-                  {value}
-                </span>
-                <span className="mt-0.5 text-xs text-muted-foreground">
-                  {label}
-                </span>
-              </div>
-            ))}
-          </div>
+          <JobTicket />
         </div>
       </section>
 
-      {/* ── PROBLEM → PROMISE ── */}
-      <section className="py-28">
-        <div className="mx-auto max-w-3xl px-6 text-center">
-          <h2 className="mx-auto max-w-2xl text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-            Stop running your business across five disconnected tabs
+      {/* Problem */}
+      <section className="border-b-2 border-foreground">
+        <div className="mx-auto max-w-6xl px-6 py-20 sm:py-24">
+          <h2 className="max-w-4xl text-balance text-3xl font-bold leading-[1.15] tracking-[-0.025em] sm:text-5xl">
+            The quote is in a doc, the invoice is in another app, and the job is
+            on a sticky note.
           </h2>
-          <p className="mt-6 text-lg leading-relaxed text-muted-foreground">
-            You quote in Google Docs, invoice in another tool, chase payments by
-            email, and track the actual work on sticky notes. Things slip.
-            Clients wait. You lose hours every week to handoffs that should be
-            automatic.
-          </p>
-          <p className="mt-4 text-lg leading-relaxed text-foreground/80">
-            Orgaflow puts the whole cycle — estimate, approval, invoice,
-            payment, and the work that follows — in one place, so nothing falls
-            through the cracks.
+          <p className="mt-6 max-w-2xl text-lg leading-relaxed text-muted-foreground">
+            Every handoff is a chance for something to slip. Orgaflow keeps the
+            estimate, the invoice, the payment, and the task connected, so you
+            can see where each job stands.
           </p>
         </div>
       </section>
 
-      {/* ── FEATURES BENTO ── */}
-      <section id="features" className="py-28">
-        <div className="mx-auto max-w-7xl px-6">
-          <div className="mb-14 text-center">
-            <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-primary">
-              Features
-            </p>
-            <h2 className="mx-auto max-w-2xl text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
-              Everything your team needs,{" "}
-              <span className="text-muted-foreground font-normal">
-                nothing it doesn't
-              </span>
-            </h2>
-          </div>
+      {/* One job, five steps */}
+      <section id="how-it-works" className="scroll-mt-20">
+        <div className="mx-auto max-w-6xl px-6 py-20 sm:py-24">
+          <h2 className="text-4xl font-extrabold tracking-[-0.03em] sm:text-5xl">
+            How a job moves through Orgaflow
+          </h2>
 
-          {/* Bento grid */}
-          <div className="grid grid-cols-12 gap-4">
-            {/* ── LARGE: Estimates → Invoice flow ── */}
-            <div className="col-span-12 md:col-span-7 rounded-2xl border border-border bg-gradient-to-br from-violet-50 to-background p-7 shadow-sm">
-              <div className="mb-1 flex h-10 w-10 items-center justify-center rounded-xl bg-violet-500/10">
-                <FileText className="h-5 w-5 text-violet-600" />
-              </div>
-              <h3 className="mt-4 text-xl font-bold text-foreground">
-                Estimates & Invoices
-              </h3>
-              <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
-                Build professional quotes with line items, send a secure link,
-                and get a one-click approval — no client login required. Convert
-                any approved estimate to an invoice instantly, branded PDF
-                included.
-              </p>
-              <div className="mt-6 flex flex-col gap-2">
-                {[
-                  "Client approves from a shareable link",
-                  "Estimate → invoice in one click",
-                  "PDF export with your logo and colors",
-                ].map((f) => (
-                  <div
-                    key={f}
-                    className="flex items-center gap-2 text-sm text-foreground/80"
-                  >
-                    <Check className="h-4 w-4 shrink-0 text-violet-600" />
-                    {f}
-                  </div>
-                ))}
-              </div>
-              {/* Mini flow */}
-              <div className="mt-6 flex items-center gap-2">
-                {["Draft", "Sent", "Approved", "Invoiced", "Paid"].map(
-                  (step, i) => (
-                    <div key={step} className="flex items-center gap-1.5">
-                      <span
-                        className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${
-                          i === 2
-                            ? "bg-violet-600 text-white"
-                            : i < 2
-                              ? "bg-violet-100 text-violet-700"
-                              : "bg-muted text-muted-foreground"
-                        }`}
-                      >
-                        {step}
-                      </span>
-                      {i < 4 && (
-                        <ChevronRight className="h-3 w-3 text-muted-foreground/40" />
-                      )}
-                    </div>
-                  ),
-                )}
-              </div>
-            </div>
-
-            {/* ── SMALL: CRM ── */}
-            <div className="col-span-12 md:col-span-5 rounded-2xl border border-border bg-gradient-to-br from-blue-50 to-background p-7 shadow-sm">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/10">
-                <Users className="h-5 w-5 text-blue-600" />
-              </div>
-              <h3 className="mt-4 text-xl font-bold text-foreground">
-                Customer CRM
-              </h3>
-              <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
-                Every client in one place: history, activity, and every linked
-                estimate and invoice — scoped to your workspace. Know exactly
-                where each relationship stands before you pick up the phone.
-              </p>
-              <div className="mt-5">
-                <CRMMockup />
-              </div>
-            </div>
-
-            {/* ── LARGE SPOTLIGHT: Automations + Tasks ── */}
-            <div className="col-span-12 rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/5 via-violet-50/60 to-amber-50/40 p-8 shadow-sm  relative">
-              {/* decorative blob */}
-              <div
-                aria-hidden
-                className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-primary/8 blur-3xl"
-              />
-              <div
-                aria-hidden
-                className="pointer-events-none absolute -bottom-16 right-32 h-48 w-48 rounded-full bg-amber-300/15 blur-3xl"
-              />
-
-              <div className="relative grid grid-cols-1 gap-10 lg:grid-cols-2 lg:items-center">
-                {/* Left: copy */}
+          <ol className="mt-14">
+            {STEPS.map(({ title, body, plan, slip }, i) => (
+              <li
+                key={title}
+                className="relative grid grid-cols-[2.5rem_1fr] gap-x-4 pb-14 last:pb-0 sm:grid-cols-[3.5rem_1fr] md:grid-cols-[3.5rem_1fr_19rem] md:gap-x-10"
+              >
+                {i < STEPS.length - 1 ? (
+                  <span
+                    aria-hidden
+                    className="absolute bottom-0 left-[1.2rem] top-11 w-0.5 bg-primary sm:left-[1.7rem] sm:top-14"
+                  />
+                ) : null}
+                <span
+                  aria-hidden
+                  className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-lg font-bold text-primary-foreground sm:h-14 sm:w-14 sm:text-2xl"
+                >
+                  {i + 1}
+                </span>
                 <div>
-                  <div className="mb-4 flex items-center gap-2">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
-                      <Zap className="h-5 w-5 text-primary" />
-                    </div>
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10">
-                      <CheckCircle2 className="h-5 w-5 text-amber-600" />
-                    </div>
-                  </div>
-                  <h3 className="text-2xl font-bold text-foreground">
-                    Automations + Tasks — <br />
-                    <span className="text-primary">your team on autopilot</span>
+                  <h3 className="text-2xl font-bold tracking-tight sm:text-3xl">
+                    {title}
                   </h3>
-                  <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-                    Here's where Orgaflow pulls ahead: the moment a client pays
-                    an invoice or approves an estimate, Orgaflow creates the task
-                    and assigns it to the right person. No manual handoffs, no
-                    dropped balls.
+                  <p className="mt-3 max-w-xl leading-relaxed text-muted-foreground">
+                    {body}
                   </p>
-                  <div className="mt-5 flex flex-col gap-2.5">
-                    {[
-                      "Triggers like invoice paid and estimate approved",
-                      "Auto-create tasks with title, assignee, and due date",
-                      "Track everything on a visual Kanban board",
-                      "Customize stages to match how your team actually works",
-                    ].map((f) => (
-                      <div
-                        key={f}
-                        className="flex items-start gap-2.5 text-sm text-foreground/80"
-                      >
-                        <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                        {f}
-                      </div>
-                    ))}
-                  </div>
-                  <Button asChild className="mt-7 shadow-md shadow-primary/20">
-                    <NextLink href="/pricing">
-                      See which plans include automations
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </NextLink>
-                  </Button>
-                </div>
-
-                {/* Right: visual */}
-                <div className="flex flex-col gap-4">
-                  {/* Automation flow */}
-                  <div className="rounded-xl border border-border bg-background/90 p-4 shadow-sm backdrop-blur-sm">
-                    <p className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                      Automation rule
-                    </p>
-                    <AutomationFlowMockup />
-                    <div className="mt-3 rounded-lg bg-muted/60 px-3 py-2 text-[11px] text-muted-foreground">
-                      <span className="font-semibold text-foreground">
-                        → Task:
-                      </span>{" "}
-                      "Deliver project files" assigned to{" "}
-                      <span className="font-medium text-primary">Lucas M.</span>{" "}
-                      · Due in 3 days
-                    </div>
-                  </div>
-
-                  {/* Kanban */}
-                  <div className="rounded-xl border border-border bg-background/90 p-4 shadow-sm backdrop-blur-sm">
-                    <p className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                      Task board
-                    </p>
-                    <KanbanMockup />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* ── Reports ── */}
-            <div className="col-span-12 md:col-span-5 rounded-2xl border border-border bg-gradient-to-br from-rose-50 to-background p-7 shadow-sm">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-500/10">
-                <BarChart3 className="h-5 w-5 text-rose-600" />
-              </div>
-              <h3 className="mt-4 text-xl font-bold text-foreground">
-                Reports & Analytics
-              </h3>
-              <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
-                Revenue by period, outstanding balances, quote-to-win conversion
-                — the numbers that actually run a small business, no accounting
-                degree required.
-              </p>
-              <div className="mt-5">
-                <ReportMockup />
-              </div>
-            </div>
-
-            {/* ── Payments ── */}
-            <div className="col-span-12 md:col-span-7 rounded-2xl border border-border bg-gradient-to-br from-emerald-50 to-background p-7 shadow-sm">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10">
-                <CreditCard className="h-5 w-5 text-emerald-600" />
-              </div>
-              <h3 className="mt-4 text-xl font-bold text-foreground">
-                Payments & Collections
-              </h3>
-              <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
-                Log payments manually or let clients pay online via Stripe. See
-                what's collected, outstanding, and overdue — per invoice, per
-                client, per period — at a glance.
-              </p>
-              <div className="mt-5 grid grid-cols-3 gap-3">
-                {[
-                  {
-                    label: "Collected",
-                    value: "$18,340",
-                    color: "bg-emerald-50 border-emerald-200 text-emerald-700",
-                  },
-                  {
-                    label: "Outstanding",
-                    value: "$4,200",
-                    color: "bg-amber-50 border-amber-200 text-amber-700",
-                  },
-                  {
-                    label: "Overdue",
-                    value: "$890",
-                    color: "bg-rose-50 border-rose-200 text-rose-700",
-                  },
-                ].map(({ label, value, color }) => (
-                  <div
-                    key={label}
-                    className={`rounded-xl border px-3 py-3 ${color}`}
-                  >
-                    <p className="text-[10px] font-semibold uppercase tracking-wide opacity-70">
-                      {label}
-                    </p>
-                    <p className="mt-1 text-lg font-bold">{value}</p>
-                  </div>
-                ))}
-              </div>
-              <div className="mt-4 flex flex-col gap-1.5">
-                {[
-                  "Online payments with Stripe Connect (Scale plan)",
-                  "Invoice status updates itself when fully paid",
-                  "Know your real cash position without a spreadsheet",
-                ].map((f) => (
-                  <div
-                    key={f}
-                    className="flex items-center gap-2 text-sm text-foreground/75"
-                  >
-                    <Check className="h-3.5 w-3.5 shrink-0 text-emerald-600" />
-                    {f}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── HOW IT WORKS ── */}
-      <section id="how-it-works" className="scroll-mt-20 bg-muted/40 py-28">
-        <div className="mx-auto max-w-6xl px-6">
-          <div className="mb-14 text-center">
-            <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-primary">
-              How it works
-            </p>
-            <h2 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
-              Up and running in minutes
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-            {[
-              {
-                step: "01",
-                title: "Set up in 2 minutes",
-                description:
-                  "Sign up, name your workspace, invite your team. Set your currency, taxes, and branding once.",
-                accent: "bg-primary/8 border-primary/20 text-primary",
-              },
-              {
-                step: "02",
-                title: "Win clients with shareable quotes",
-                description:
-                  "Add clients, build an estimate with line items, and send a secure link. They approve in one click — no account, no friction.",
-                accent: "bg-violet-50 border-violet-200 text-violet-700",
-              },
-              {
-                step: "03",
-                title: "Get paid, then let it run",
-                description:
-                  "Convert the approved quote to an invoice, collect payment online, and let automations spin up the work automatically.",
-                accent: "bg-emerald-50 border-emerald-200 text-emerald-700",
-              },
-            ].map(({ step, title, description, accent }) => (
-              <div
-                key={step}
-                className="rounded-2xl border border-border bg-background p-7 shadow-sm"
-              >
-                <div
-                  className={`mb-5 inline-flex rounded-xl border px-3 py-1.5 text-sm font-bold ${accent}`}
-                >
-                  {step}
-                </div>
-                <h3 className="mb-2 text-lg font-bold text-foreground">
-                  {title}
-                </h3>
-                <p className="text-sm leading-relaxed text-muted-foreground">
-                  {description}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── DIFFERENTIATOR ── */}
-      <section className="py-28">
-        <div className="mx-auto max-w-5xl px-6">
-          <div className="relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-violet-50 via-background to-cyan-50/60 px-8 py-16 text-center shadow-sm sm:px-16">
-            <div
-              aria-hidden
-              className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-primary/8 blur-3xl"
-            />
-            <div className="relative">
-              <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-primary">
-                Why Orgaflow
-              </p>
-              <h2 className="mx-auto max-w-2xl text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-                Not another accounting app
-              </h2>
-              <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-muted-foreground">
-                FreshBooks and QuickBooks are built for your bookkeeper. Orgaflow
-                is built for{" "}
-                <span className="font-semibold text-foreground">you</span> — the
-                person winning the work and getting it done. We start where the
-                money starts (the quote) and don't stop until the job's
-                delivered. Keep your accountant; we'll handle everything before
-                the books.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── TESTIMONIALS ── */}
-      <section className="py-28">
-        <div className="mx-auto max-w-7xl px-6">
-          <div className="mb-14 text-center">
-            <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-primary">
-              Testimonials
-            </p>
-            <h2 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
-              Loved by growing teams
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
-            {TESTIMONIALS.map(
-              ({ name, role, avatar, avatarColor, content, stars }) => (
-                <div
-                  key={name}
-                  className="flex flex-col gap-5 rounded-2xl border border-border bg-background p-7 shadow-sm transition-shadow hover:shadow-md"
-                >
-                  <div className="flex gap-0.5">
-                    {STAR_KEYS.slice(0, stars).map((k) => (
-                      <Star
-                        key={`${name}-star-${k}`}
-                        className="h-4 w-4 fill-amber-400 text-amber-400"
-                      />
-                    ))}
-                  </div>
-                  <p className="flex-1 text-sm leading-relaxed text-foreground/75">
-                    &ldquo;{content}&rdquo;
+                  <p className="mt-3 text-sm font-semibold text-primary">
+                    {plan}
                   </p>
-                  <div className="flex items-center gap-3 border-t border-border pt-5">
+                </div>
+                <dl
+                  aria-hidden
+                  className="col-start-2 mt-5 self-start border-t-2 border-primary bg-white px-4 py-1.5 md:col-start-3 md:mt-1"
+                >
+                  {slip.map(([term, value]) => (
                     <div
-                      className={`flex h-9 w-9 items-center justify-center rounded-full text-xs font-bold ${avatarColor}`}
+                      key={term}
+                      className="flex items-baseline justify-between gap-3 border-b border-border py-2 last:border-b-0"
                     >
-                      {avatar}
+                      <dt className="text-sm text-muted-foreground">{term}</dt>
+                      <dd className="text-right font-hand text-lg leading-tight text-primary">
+                        {value}
+                      </dd>
                     </div>
-                    <div>
-                      <p className="text-sm font-semibold text-foreground">
-                        {name}
-                      </p>
-                      <p className="text-xs text-muted-foreground">{role}</p>
-                    </div>
-                  </div>
+                  ))}
+                </dl>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
+
+      {/* Also included */}
+      <section id="features" className="scroll-mt-20 bg-copy-pink">
+        <div className="mx-auto grid max-w-6xl gap-12 px-6 py-20 sm:py-24 lg:grid-cols-[1fr_1.35fr] lg:items-start">
+          <div>
+            <h2 className="text-4xl font-extrabold tracking-[-0.03em] sm:text-5xl">
+              Everything around the job, too
+            </h2>
+            <dl className="mt-10">
+              {ALSO_INCLUDED.map(({ term, body }) => (
+                <div key={term} className="border-t-2 border-foreground py-4">
+                  <dt className="font-bold">{term}</dt>
+                  <dd className="mt-1 leading-relaxed">{body}</dd>
                 </div>
-              ),
-            )}
+              ))}
+            </dl>
+          </div>
+          <Image
+            src="/screencapture-orgaflow.png"
+            alt="Orgaflow dashboard with revenue, pending documents, and recent activity"
+            width={1920}
+            height={1202}
+            sizes="(min-width: 1024px) 640px, 100vw"
+            className="w-full border-2 border-foreground lg:mt-2"
+          />
+        </div>
+      </section>
+
+      {/* Not accounting */}
+      <section className="on-dark bg-primary text-primary-foreground">
+        <div className="mx-auto max-w-6xl px-6 py-20 sm:py-24">
+          <h2 className="max-w-3xl text-4xl font-extrabold tracking-[-0.03em] sm:text-6xl">
+            Keep your accountant.
+          </h2>
+          <p className="mt-6 max-w-2xl text-lg leading-relaxed">
+            FreshBooks and QuickBooks are built around the books. Orgaflow is
+            built for the person who wins the work and gets it done. It covers
+            everything from the first quote to the finished job, and leaves the
+            bookkeeping to the tools made for it.
+          </p>
+        </div>
+      </section>
+
+      {/* Founder */}
+      <section className="border-b-2 border-foreground">
+        <div className="mx-auto grid max-w-6xl gap-6 px-6 py-20 sm:py-24 md:grid-cols-2 md:gap-12">
+          <h2 className="text-3xl font-bold leading-tight tracking-[-0.025em] sm:text-4xl">
+            When you write in, the person who builds Orgaflow answers.
+          </h2>
+          <div>
+            <p className="text-lg leading-relaxed text-muted-foreground">
+              Orgaflow is built and supported by its founder, Sylvio Lima. The
+              roadmap and changelog are public, so you can see what has shipped
+              and what comes next.
+            </p>
+            <p className="mt-5 flex flex-wrap gap-x-6 gap-y-2 font-semibold text-primary">
+              <NextLink href="/about" className="underline underline-offset-4">
+                About Orgaflow
+              </NextLink>
+              <NextLink
+                href="/roadmap"
+                className="underline underline-offset-4"
+              >
+                See the roadmap
+              </NextLink>
+            </p>
           </div>
         </div>
       </section>
 
-      {/* ── FAQ ── */}
-      <section className="bg-muted/40 py-28">
-        <div className="mx-auto max-w-4xl px-6">
-          <div className="mb-14 text-center">
-            <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-primary">
-              FAQ
-            </p>
-            <h2 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
-              Common questions
-            </h2>
-          </div>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            {FAQS.map(({ q, a }) => (
-              <div
+      {/* FAQ */}
+      <section>
+        <div className="mx-auto grid max-w-6xl gap-10 px-6 py-20 sm:py-24 lg:grid-cols-[1fr_2fr]">
+          <h2 className="text-4xl font-extrabold tracking-[-0.03em]">
+            Common questions
+          </h2>
+          <div className="border-b-2 border-foreground">
+            {HOME_FAQS.map(({ q, a }) => (
+              <details
                 key={q}
-                className="rounded-2xl border border-border bg-background p-6 shadow-sm"
+                className="group border-t-2 border-foreground py-4"
               >
-                <h3 className="mb-2 font-semibold text-foreground">{q}</h3>
-                <p className="text-sm leading-relaxed text-muted-foreground">
+                <summary className="flex cursor-pointer list-none items-start justify-between gap-6 text-lg font-bold [&::-webkit-details-marker]:hidden">
+                  {q}
+                  <span
+                    aria-hidden
+                    className="text-2xl font-normal leading-none text-primary group-open:rotate-45"
+                  >
+                    +
+                  </span>
+                </summary>
+                <p className="mt-3 max-w-2xl pr-8 leading-relaxed text-muted-foreground">
                   {a}
                 </p>
-              </div>
+              </details>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── CTA ── */}
-      <section className="py-12">
-        <div className="mx-auto max-w-5xl px-6">
-          <div className="relative rounded-3xl bg-primary px-8 py-24 text-center">
-            <div
-              aria-hidden
-              className="pointer-events-none absolute inset-0"
-            >
-              <div className="absolute -right-24 -top-24 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
-              <div className="absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
-              <div className="absolute left-1/2 top-1/2 h-96 w-96 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/5 blur-3xl" />
-            </div>
-            <div className="relative">
-              <Layers className="mx-auto mb-6 h-14 w-14 text-white/70" />
-              <h2 className="mb-4 text-4xl font-bold text-white sm:text-5xl lg:text-6xl">
-                Stop juggling tools. Start closing the loop.
-              </h2>
-              <p className="mx-auto mb-10 max-w-xl text-lg text-white/70">
-                Join the small teams that quote faster, get paid sooner, and
-                never lose a job to admin work. Free to start, set up in under
-                five minutes.
-              </p>
-              <div className="flex flex-wrap items-center justify-center gap-4">
-                <Button
-                  size="lg"
-                  asChild
-                  className="h-12 bg-white px-10 text-base text-primary shadow-2xl hover:bg-white/95"
-                >
-                  <NextLink href="/register">
-                    Start free
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </NextLink>
-                </Button>
-                <Button
-                  size="lg"
-                  variant="ghost"
-                  asChild
-                  className="h-12 px-8 text-base text-white/80 hover:bg-white/15 hover:text-white"
-                >
-                  <NextLink href="/contact">Talk to sales</NextLink>
-                </Button>
-              </div>
-            </div>
+      {/* CTA */}
+      <section className="bg-canary">
+        <div className="mx-auto flex max-w-6xl flex-col items-start gap-8 px-6 py-20 sm:py-24 md:flex-row md:items-end md:justify-between">
+          <div>
+            <h2 className="max-w-2xl text-4xl font-extrabold tracking-[-0.03em] sm:text-6xl">
+              Send your first estimate today.
+            </h2>
+            <p className="mt-4 text-lg">
+              The Starter plan is free. No credit card needed.
+            </p>
           </div>
+          <Button
+            size="lg"
+            asChild
+            className="h-12 shrink-0 bg-foreground px-7 text-base text-background hover:bg-foreground/85"
+          >
+            <NextLink href="/register">Start free</NextLink>
+          </Button>
         </div>
       </section>
-    </div>
+    </>
   );
 }

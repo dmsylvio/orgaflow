@@ -47,7 +47,7 @@ function UserMenu({ mobile = false }: { mobile?: boolean }) {
         <Button
           size="sm"
           asChild
-          className={mobile ? "justify-start" : "shadow-sm shadow-primary/20"}
+          className={mobile ? "justify-start" : undefined}
         >
           <Link href="/register">Start free</Link>
         </Button>
@@ -138,13 +138,17 @@ export function MarketingNavbar() {
     <header
       className={`sticky top-0 z-50 transition-all duration-300 ${
         scrolled
-          ? "border-b border-border bg-background/95 shadow-sm backdrop-blur-xl"
-          : "bg-background"
+          ? "border-b-2 border-foreground bg-background"
+          : "border-b-2 border-transparent bg-background"
       }`}
     >
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
+      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2.5">
+        <Link
+          href="/"
+          aria-label="Orgaflow home"
+          className="flex items-center gap-2.5"
+        >
           <MainLogo className="w-36 h-auto fill-black" />
         </Link>
 
@@ -154,10 +158,10 @@ export function MarketingNavbar() {
             <Link
               key={href}
               href={href}
-              className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+              className={`rounded px-3 py-2 text-sm font-semibold transition-colors ${
                 pathname === href
-                  ? "bg-primary/8 text-primary"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                  ? "text-foreground underline decoration-2 underline-offset-[6px]"
+                  : "text-foreground/75 hover:text-foreground"
               }`}
             >
               {label}
@@ -174,6 +178,8 @@ export function MarketingNavbar() {
         <button
           type="button"
           onClick={() => setMobileOpen((v) => !v)}
+          aria-label={mobileOpen ? "Close menu" : "Open menu"}
+          aria-expanded={mobileOpen}
           className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted md:hidden"
         >
           {mobileOpen ? (

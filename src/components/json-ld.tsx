@@ -1,102 +1,96 @@
 import { getAppBaseUrl } from "@/lib/base-url";
+import { HOME_FAQS } from "@/lib/marketing-faq";
+import { getWorkspacePlanPrice } from "@/lib/subscription-plans";
 
-const baseUrl = getAppBaseUrl();
-
-const jsonLd = {
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "FAQPage",
-      mainEntity: [
-        {
-          "@type": "Question",
-          name: "How is Orgaflow different from FreshBooks or QuickBooks?",
-          acceptedAnswer: {
-            "@type": "Answer",
-            text: "Orgaflow is built around the estimate-to-payment workflow. It combines quoting, invoicing, task management, and automations in one place — without the accounting complexity.",
-          },
-        },
-        {
-          "@type": "Question",
-          name: "Can clients sign estimates electronically?",
-          acceptedAnswer: {
-            "@type": "Answer",
-            text: "Yes. Every estimate gets a secure shareable link where clients can review and approve with one click — no account required.",
-          },
-        },
-        {
-          "@type": "Question",
-          name: "Is there a free plan?",
-          acceptedAnswer: {
-            "@type": "Answer",
-            text: "Yes. Starter is free and gives solo operators the core estimate, invoice, customer, and item workflow with usage limits.",
-          },
-        },
-        {
-          "@type": "Question",
-          name: "Does Orgaflow support multiple currencies?",
-          acceptedAnswer: {
-            "@type": "Answer",
-            text: "Yes. You can configure your organization's default currency and set per-client currencies for international work.",
-          },
-        },
-        {
-          "@type": "Question",
-          name: "Is Orgaflow good for solo freelancers?",
-          acceptedAnswer: {
-            "@type": "Answer",
-            text: "Absolutely. The Starter plan is built for one-person operations, and many features scale with you as your team grows.",
-          },
-        },
-        {
-          "@type": "Question",
-          name: "Can I import my existing clients and invoices?",
-          acceptedAnswer: {
-            "@type": "Answer",
-            text: "Yes. You can add clients individually or in bulk, and the platform is designed to get you running in under 5 minutes.",
-          },
-        },
-      ],
-    },
-    {
-      "@type": "Organization",
-      "@id": `${baseUrl}/#organization`,
-      name: "Orgaflow",
-      url: baseUrl,
-      logo: `${baseUrl}/logo.png`,
-      contactPoint: {
-        "@type": "ContactPoint",
-        contactType: "customer support",
-        email: "hello@orgaflow.io",
-      },
-      sameAs: [],
-    },
-    {
-      "@type": "SoftwareApplication",
-      "@id": `${baseUrl}/#app`,
-      name: "Orgaflow",
-      url: baseUrl,
-      applicationCategory: "BusinessApplication",
-      operatingSystem: "Web",
-      description:
-        "CRM, estimates, invoices, payments, tasks, and workflow automations for small businesses.",
-      offers: {
-        "@type": "Offer",
-        price: "0",
-        priceCurrency: "USD",
-        availability: "https://schema.org/InStock",
-      },
-      publisher: { "@id": `${baseUrl}/#organization` },
-    },
-  ],
-};
-
-export function JsonLd() {
+function JsonLdScript({ data }: { data: unknown }) {
   return (
     <script
       type="application/ld+json"
       // biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD structured data is safe static content
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      dangerouslySetInnerHTML={{
+        __html: JSON.stringify(data).replace(/</g, "\\u003c"),
+      }}
+    />
+  );
+}
+
+export function SiteJsonLd() {
+  const baseUrl = getAppBaseUrl();
+
+  return (
+    <JsonLdScript
+      data={{
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Organization",
+            "@id": `${baseUrl}/#organization`,
+            name: "Orgaflow",
+            legalName: "Orgaflow LLC",
+            url: baseUrl,
+            logo: `${baseUrl}/logo.svg`,
+            email: "app@orgaflow.dev",
+            address: {
+              "@type": "PostalAddress",
+              streetAddress: "1600 E 8th Ave A200",
+              addressLocality: "Tampa",
+              addressRegion: "FL",
+              postalCode: "33605",
+              addressCountry: "US",
+            },
+            contactPoint: {
+              "@type": "ContactPoint",
+              contactType: "customer support",
+              email: "app@orgaflow.dev",
+            },
+            sameAs: [
+              "https://x.com/orgaflowapp",
+              "https://www.instagram.com/orgaflow.app",
+            ],
+          },
+          {
+            "@type": "WebSite",
+            "@id": `${baseUrl}/#website`,
+            name: "Orgaflow",
+            url: baseUrl,
+            publisher: { "@id": `${baseUrl}/#organization` },
+          },
+          {
+            "@type": "SoftwareApplication",
+            "@id": `${baseUrl}/#app`,
+            name: "Orgaflow",
+            url: baseUrl,
+            applicationCategory: "BusinessApplication",
+            operatingSystem: "Web",
+            description:
+              "Estimate and invoice software for small businesses, with client approval links, payment tracking, scheduling, and task automations.",
+            offers: (["starter", "growth", "scale"] as const).map((plan) => ({
+              "@type": "Offer",
+              name: plan[0].toUpperCase() + plan.slice(1),
+              price: getWorkspacePlanPrice(plan, "monthly").toFixed(2),
+              priceCurrency: "USD",
+              availability: "https://schema.org/InStock",
+            })),
+            publisher: { "@id": `${baseUrl}/#organization` },
+          },
+        ],
+      }}
+    />
+  );
+}
+
+export function HomeFaqJsonLd() {
+  return (
+    <JsonLdScript
+      data={{
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        mainEntity: HOME_FAQS.map(({ q, a }) => ({
+          "@type": "Question",
+          name: q,
+          acceptedAnswer: { "@type": "Answer", text: a },
+        })),
+      }}
     />
   );
 }

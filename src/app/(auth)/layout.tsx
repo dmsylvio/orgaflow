@@ -76,20 +76,6 @@ export default function AuthLayout({
               ))}
             </ul>
           </div>
-
-          {/* Footer stats */}
-          <div className="hidden lg:flex items-center gap-6">
-            {[
-              { value: "200+", label: "Businesses" },
-              { value: "120k",  label: "Invoices" },
-              { value: "4.9★", label: "Rating" },
-            ].map(({ value, label }) => (
-              <div key={label} className="flex flex-col">
-                <span className="text-lg font-bold text-foreground">{value}</span>
-                <span className="text-xs text-muted-foreground">{label}</span>
-              </div>
-            ))}
-          </div>
         </div>
       </div>
 

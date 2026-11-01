@@ -1,25 +1,15 @@
 import type { Metadata } from "next";
 import NextLink from "next/link";
+import { PageHero } from "@/components/marketing/page-hero";
 import { Button } from "@/components/ui/button";
+import { marketingMetadata } from "@/lib/marketing-metadata";
 
-export const metadata: Metadata = {
-  title: "Changelog",
+export const metadata: Metadata = marketingMetadata({
+  title: "Changelog: New Features and Fixes",
   description:
-    "What's new in Orgaflow. Every update, fix, and improvement — documented as we ship.",
-  alternates: { canonical: "/changelog" },
-  openGraph: {
-    title: "Changelog — Orgaflow",
-    description:
-      "What's new in Orgaflow. Every update, fix, and improvement — documented as we ship.",
-    url: "/changelog",
-    type: "website",
-  },
-  twitter: {
-    title: "Changelog — Orgaflow",
-    description:
-      "What's new in Orgaflow. Every update, fix, and improvement — documented as we ship.",
-  },
-};
+    "Every Orgaflow release in one place, with the new features, improvements, and fixes in each version.",
+  path: "/changelog",
+});
 
 interface ChangelogEntry {
   version: string;
@@ -792,27 +782,9 @@ const TYPE_CONFIG = {
 export default function ChangelogPage() {
   return (
     <div className="overflow-hidden">
-      {/* Hero */}
-      <section className="relative pb-16 pt-20 text-center">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 overflow-hidden"
-        >
-          <div className="absolute left-1/2 top-0 h-80 w-[700px] -translate-x-1/2 rounded-full bg-primary/5 blur-[80px]" />
-        </div>
-        <div className="relative mx-auto max-w-3xl px-6">
-          <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-primary">
-            Changelog
-          </p>
-          <h1 className="mb-4 text-5xl font-bold tracking-tight text-foreground sm:text-6xl">
-            What's new
-          </h1>
-          <p className="text-lg text-muted-foreground">
-            Every update, improvement, and fix — documented as we ship. We
-            release new versions every 1–2 weeks.
-          </p>
-        </div>
-      </section>
+      <PageHero title="What's new in Orgaflow.">
+        Every release, with its new features, improvements, and fixes.
+      </PageHero>
 
       {/* Entries */}
       <section className="mx-auto max-w-3xl px-6 pb-28">

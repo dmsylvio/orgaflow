@@ -97,11 +97,8 @@ export default function CookiePolicyPage() {
   return (
     <div className="overflow-hidden">
       {/* Hero */}
-      <section className="border-b border-border bg-muted/40 py-16 text-center">
+      <section className="border-b-2 border-foreground py-16">
         <div className="mx-auto max-w-3xl px-6">
-          <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-primary">
-            Legal
-          </p>
           <h1 className="mb-3 text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
             Cookie Policy
           </h1>
@@ -155,7 +152,7 @@ export default function CookiePolicyPage() {
               {
                 type: "Third-party",
                 description:
-                  "These cookies are set by our service providers (primarily Stripe, Google Analytics on our public website and, if enabled, our customer support chat provider) for payment security, fraud prevention, support features, and measuring website traffic. We do not control these cookies directly.",
+                  "These cookies are set by our service providers (primarily Stripe and Google Analytics on our public website) for payment security, fraud prevention, and measuring website traffic. We do not control these cookies directly.",
               },
             ].map(({ type, description }) => {
               const cfg = TYPE_CONFIG[type] ?? TYPE_CONFIG.Essential;
@@ -280,9 +277,7 @@ export default function CookiePolicyPage() {
             >
               Stripe's Privacy Policy
             </a>
-            . If enabled, our customer support chat provider (Tawk.to) may also
-            set cookies or use similar technologies to provide live chat
-            functionality and remember your chat session. Google Analytics sets
+            . Google Analytics sets
             cookies on our public website to help us understand how visitors
             use it. We do not use third-party advertising cookies.
           </p>
