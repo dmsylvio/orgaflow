@@ -10,7 +10,6 @@ import {
   Workflow,
 } from "lucide-react";
 import type { Metadata } from "next";
-import Image from "next/image";
 import NextLink from "next/link";
 import { HomeFaqJsonLd } from "@/components/json-ld";
 import { JobTicket } from "@/components/marketing/job-ticket";
@@ -77,6 +76,13 @@ const STEPS = [
       ["Due", "In 3 days"],
     ],
   },
+];
+
+const JOB_RECORDS = [
+  { label: "Estimate", value: "EST-0142", status: "Approved" },
+  { label: "Invoice", value: "INV-0142", status: "Paid" },
+  { label: "Payment", value: "$860.00", status: "Recorded" },
+  { label: "Task", value: "Clean exhaust hood", status: "To do" },
 ];
 
 const FEATURES = [
@@ -184,29 +190,36 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Product */}
+      {/* Connected job */}
       <section>
         <div className="mx-auto max-w-6xl px-6 pt-14 sm:pt-20">
-          <div className="relative overflow-hidden rounded-3xl border border-border bg-foreground">
-            <Image
-              src="/screencapture-orgaflow.png"
-              alt="Orgaflow dashboard with revenue, pending documents, and recent activity"
-              width={1920}
-              height={1202}
-              sizes="(min-width: 1152px) 1104px, 100vw"
-              className="w-full"
-            />
-            <div className="bg-foreground p-6 text-background md:absolute md:inset-x-0 md:bottom-0 md:bg-foreground/90 md:px-8 md:py-6 md:backdrop-blur-sm">
-              <h2 className="text-balance text-2xl font-bold leading-[1.15] tracking-[-0.025em] md:text-3xl">
-                The quote is in a doc, the invoice is in another app, and the
-                job is on a sticky note.
-              </h2>
-              <p className="mt-3 max-w-4xl leading-relaxed text-background/90">
-                Every handoff is a chance for something to slip. Orgaflow keeps
-                the estimate, the invoice, the payment, and the task connected,
-                so you can see where each job stands.
-              </p>
-            </div>
+          <div className="rounded-3xl bg-foreground p-6 text-background sm:p-10 lg:p-12">
+            <h2 className="max-w-4xl text-balance text-3xl font-bold leading-[1.1] tracking-[-0.03em] sm:text-5xl">
+              The quote is in a doc, the invoice is in another app, and the job
+              is on a sticky note.
+            </h2>
+            <p className="mt-5 max-w-3xl text-lg leading-relaxed text-background/85">
+              Every handoff is a chance for something to slip. Orgaflow keeps
+              the estimate, the invoice, the payment, and the task connected, so
+              you can see where each job stands.
+            </p>
+            <ol
+              aria-label="A sample job in Orgaflow"
+              className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-4"
+            >
+              {JOB_RECORDS.map(({ label, value, status }) => (
+                <li
+                  key={label}
+                  className="relative rounded-2xl bg-white p-5 text-foreground lg:[&:not(:last-child)]:after:absolute lg:[&:not(:last-child)]:after:left-full lg:[&:not(:last-child)]:after:top-1/2 lg:[&:not(:last-child)]:after:h-0.5 lg:[&:not(:last-child)]:after:w-3 lg:[&:not(:last-child)]:after:bg-canary"
+                >
+                  <p className="text-sm text-muted-foreground">{label}</p>
+                  <p className="mt-1 font-bold">{value}</p>
+                  <p className="mt-4 inline-block rounded-full bg-canary px-3 py-1 text-sm font-semibold">
+                    {status}
+                  </p>
+                </li>
+              ))}
+            </ol>
           </div>
         </div>
       </section>
