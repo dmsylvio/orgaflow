@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   },
 };
 
-const LAST_UPDATED = "March 30, 2026";
+const LAST_UPDATED = "November 1, 2026";
 const EFFECTIVE_DATE = "March 30, 2026";
 
 export default function PrivacyPolicyPage() {
@@ -131,7 +131,7 @@ export default function PrivacyPolicyPage() {
                 <>
                   <p>
                     We share your data only with trusted third-party services
-                    necessary to operate Orgaflow:
+                    used to operate Orgaflow and measure website traffic:
                   </p>
                   <ul>
                     <li>
@@ -141,6 +141,10 @@ export default function PrivacyPolicyPage() {
                     <li>
                       <strong>Tawk.to</strong> — customer support chat widget
                       (if enabled).
+                    </li>
+                    <li>
+                      <strong>Google Analytics</strong> — website traffic
+                      measurement on our public website.
                     </li>
                     <li>
                       <strong>Resend / Nodemailer</strong> — transactional email

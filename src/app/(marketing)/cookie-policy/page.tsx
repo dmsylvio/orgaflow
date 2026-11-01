@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   },
 };
 
-const LAST_UPDATED = "March 30, 2026";
+const LAST_UPDATED = "November 1, 2026";
 const EFFECTIVE_DATE = "March 30, 2026";
 
 interface CookieRow {
@@ -57,6 +57,18 @@ const COOKIES: CookieRow[] = [
     type: "Third-party",
     purpose: "Stripe session identification during checkout.",
     duration: "30 minutes",
+  },
+  {
+    name: "_ga",
+    type: "Third-party",
+    purpose: "Google Analytics: distinguishes website visitors.",
+    duration: "2 years",
+  },
+  {
+    name: "_ga_*",
+    type: "Third-party",
+    purpose: "Google Analytics: maintains session state.",
+    duration: "2 years",
   },
 ];
 
@@ -143,7 +155,7 @@ export default function CookiePolicyPage() {
               {
                 type: "Third-party",
                 description:
-                  "These cookies are set by our service providers (primarily Stripe and, if enabled, our customer support chat provider) for payment security, fraud prevention, and support features. We do not control these cookies directly.",
+                  "These cookies are set by our service providers (primarily Stripe, Google Analytics on our public website and, if enabled, our customer support chat provider) for payment security, fraud prevention, support features, and measuring website traffic. We do not control these cookies directly.",
               },
             ].map(({ type, description }) => {
               const cfg = TYPE_CONFIG[type] ?? TYPE_CONFIG.Essential;
@@ -270,8 +282,9 @@ export default function CookiePolicyPage() {
             </a>
             . If enabled, our customer support chat provider (Tawk.to) may also
             set cookies or use similar technologies to provide live chat
-            functionality and remember your chat session. We do not use
-            third-party advertising cookies.
+            functionality and remember your chat session. Google Analytics sets
+            cookies on our public website to help us understand how visitors
+            use it. We do not use third-party advertising cookies.
           </p>
         </div>
 
