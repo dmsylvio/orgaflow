@@ -1,27 +1,14 @@
-import {
-  BarChart3,
-  CalendarDays,
-  CheckCircle2,
-  CreditCard,
-  Eye,
-  FileSearch,
-  FileText,
-  History,
-  Layers,
-  Mail,
-  Paperclip,
-  RefreshCw,
-  Settings,
-  ShieldCheck,
-  Smartphone,
-  Users,
-  Zap,
-} from "lucide-react";
 import type { Metadata } from "next";
 import NextLink from "next/link";
 import { PageHero } from "@/components/marketing/page-hero";
 import { Button } from "@/components/ui/button";
 import { marketingMetadata } from "@/lib/marketing-metadata";
+import {
+  COLUMNS,
+  EFFORT_CONFIG,
+  ROADMAP_ITEMS,
+  STATUS_CONFIG,
+} from "@/lib/roadmap";
 
 export const metadata: Metadata = marketingMetadata({
   title: "Product Roadmap",
@@ -29,383 +16,6 @@ export const metadata: Metadata = marketingMetadata({
     "See what Orgaflow has shipped, what's in progress, and what's planned next for its estimate, invoice, and workflow software.",
   path: "/roadmap",
 });
-
-type Status = "shipped" | "in-progress" | "planned" | "considering";
-
-interface RoadmapItem {
-  id: number;
-  Icon: React.ComponentType<{ className?: string }>;
-  title: string;
-  description: string;
-  status: Status;
-  effort: "Low" | "Medium" | "High";
-  category: string;
-}
-
-const ITEMS: RoadmapItem[] = [
-  {
-    id: 1,
-    Icon: Paperclip,
-    title: "File Attachments",
-    description:
-      "Attach receipts, contracts, and files to expenses, estimates, and invoices. Client-visible toggle controls what appears on public estimate pages.",
-    status: "shipped",
-    effort: "Medium",
-    category: "Core",
-  },
-  {
-    id: 2,
-    Icon: CheckCircle2,
-    title: "Client Approve / Reject Flow",
-    description:
-      "Clients can approve or reject estimates directly from the public link. Rejection includes an optional rich-text reason shown back to the sender.",
-    status: "shipped",
-    effort: "Medium",
-    category: "Core",
-  },
-  {
-    id: 13,
-    Icon: FileText,
-    title: "Public Estimate Page Redesign",
-    description:
-      "Professional document-style layout for client-facing estimate pages. Sticky approve/reject bar, rich-text notes, attachment grid with thumbnails, and highlighted totals.",
-    status: "shipped",
-    effort: "Low",
-    category: "UX",
-  },
-  {
-    id: 3,
-    Icon: FileText,
-    title: "PDF Export",
-    description:
-      "Download estimates and invoices as professional PDFs — from the admin dashboard and directly from the client-facing public page.",
-    status: "shipped",
-    effort: "Medium",
-    category: "Core",
-  },
-  {
-    id: 4,
-    Icon: BarChart3,
-    title: "Reports & Analytics",
-    description:
-      "Revenue vs expenses chart, estimate approval rates, invoice status breakdown, and top customers — with a 3/6/12-month period selector.",
-    status: "shipped",
-    effort: "High",
-    category: "Analytics",
-  },
-  {
-    id: 14,
-    Icon: Mail,
-    title: "Document Viewed Notifications",
-    description:
-      "Email notifications when a client opens an estimate or invoice for the first time. Configurable per toggle in Settings → Notifications.",
-    status: "shipped",
-    effort: "Low",
-    category: "Communication",
-  },
-  {
-    id: 15,
-    Icon: Settings,
-    title: "Settings Routing",
-    description:
-      "Settings home now redirects directly to Company Settings. Dead links removed and unknown routes return a proper 404.",
-    status: "shipped",
-    effort: "Low",
-    category: "Platform",
-  },
-  {
-    id: 16,
-    Icon: BarChart3,
-    title: "Live Dashboard",
-    description:
-      "Real KPIs, a 12-month revenue area chart, pending estimates and invoices panels, and a recent activity feed — all with live data.",
-    status: "shipped",
-    effort: "Medium",
-    category: "Core",
-  },
-  {
-    id: 18,
-    Icon: Eye,
-    title: "Per-Module Price Visibility Permissions",
-    description:
-      "Six granular permissions (one per module) let owners restrict which team members can see monetary amounts — prices, totals, and financial charts are hidden server-side and in the UI.",
-    status: "shipped",
-    effort: "Medium",
-    category: "RBAC",
-  },
-  {
-    id: 19,
-    Icon: Layers,
-    title: "Task Side Drawers & Linked Document Review",
-    description:
-      "Tasks now open in dedicated right-side drawers with wider editing space, explicit close actions, and a second layered drawer for reviewing linked invoices and estimates without leaving the board.",
-    status: "shipped",
-    effort: "Low",
-    category: "UX",
-  },
-  {
-    id: 20,
-    Icon: Zap,
-    title: "Tasks Linked to Invoices & Estimates",
-    description:
-      "Tasks and automations can now attach related invoices and estimates directly, making follow-up work easier to review and act on from the task flow.",
-    status: "shipped",
-    effort: "Medium",
-    category: "Automation",
-  },
-  {
-    id: 21,
-    Icon: Mail,
-    title: "Expanded Notification Events",
-    description:
-      "Notification settings now cover more lifecycle events, including estimate status updates, overdue invoices, and payment received emails.",
-    status: "shipped",
-    effort: "Medium",
-    category: "Communication",
-  },
-  {
-    id: 22,
-    Icon: CreditCard,
-    title: "Checkout Currency & Promo Codes",
-    description:
-      "Stripe checkout now supports organization currency and promotion codes, with cleaner success and cancel routing for subscription flows.",
-    status: "shipped",
-    effort: "Low",
-    category: "Billing",
-  },
-  {
-    id: 17,
-    Icon: ShieldCheck,
-    title: "Payment Reliability & Retry Flow",
-    description:
-      "Plan gates now enforce subscription status — incomplete or canceled subscriptions can no longer access paid features. Global banner alerts for failed payments, dedicated billing section with one-click portal access, and webhook sync for expired checkout sessions.",
-    status: "shipped",
-    effort: "Medium",
-    category: "Billing",
-  },
-  {
-    id: 23,
-    Icon: CreditCard,
-    title: "Free Starter & Internal Trial Lifecycle",
-    description:
-      "Starter is now fully free without Stripe checkout. Paid plans start with a 15-day Orgaflow-managed trial, then require payment after the trial expires.",
-    status: "shipped",
-    effort: "Medium",
-    category: "Billing",
-  },
-  {
-    id: 24,
-    Icon: ShieldCheck,
-    title: "Permission Dependency Mapping",
-    description:
-      "Role permissions now map and enforce their required dependencies automatically. The role editor expands required permissions and shrinks dependent permissions in cascade.",
-    status: "shipped",
-    effort: "Medium",
-    category: "RBAC",
-  },
-  {
-    id: 39,
-    Icon: CalendarDays,
-    title: "Schedule Calendar & Visit Billing",
-    description:
-      "Month calendar for one-off and recurring service visits (daily, weekly, bi-weekly, monthly). Bill per visit or consolidate by period, with on-completion / period-end / manual triggers, conflict warnings, edit/delete scopes, 7-day payment terms, and optional auto-send. Available on every plan including Starter.",
-    status: "shipped",
-    effort: "High",
-    category: "Core",
-  },
-  {
-    id: 40,
-    Icon: Users,
-    title: "Schedule Staff Assignment",
-    description:
-      "Assign team members to appointments and filter the calendar by assignee — useful for crews and multi-technician schedules.",
-    status: "considering",
-    effort: "Medium",
-    category: "Core",
-  },
-  {
-    id: 27,
-    Icon: Settings,
-    title: "Expanded Settings",
-    description:
-      "Deeper settings coverage: document branding, custom number formats, and additional customization options.",
-    status: "planned",
-    effort: "Low",
-    category: "Platform",
-  },
-  {
-    id: 28,
-    Icon: CreditCard,
-    title: "Online Payments via Stripe",
-    description:
-      "Let clients pay invoices directly online via Stripe Connect. Generate a payment link and track status automatically. Available on the Scale plan.",
-    status: "in-progress",
-    effort: "High",
-    category: "Payments",
-  },
-  {
-    id: 29,
-    Icon: Layers,
-    title: "Multi-Currency with Live Rates",
-    description:
-      "Automatic exchange rate fetching and conversion logic for businesses working with international clients.",
-    status: "planned",
-    effort: "Medium",
-    category: "Core",
-  },
-  {
-    id: 30,
-    Icon: FileSearch,
-    title: "Advanced Search & Filters",
-    description:
-      "Full-text search, date range filters, client filters, and amount filters across estimates, invoices, and customers.",
-    status: "planned",
-    effort: "Medium",
-    category: "UX",
-  },
-  {
-    id: 31,
-    Icon: Smartphone,
-    title: "SMS Notifications",
-    description:
-      "Send automated SMS messages to clients for key events: unpaid invoice reminders, estimate awaiting approval, payment received confirmations, and overdue alerts. Businesses can enable SMS per-client and configure which events trigger messages.",
-    status: "considering",
-    effort: "High",
-    category: "Communication",
-  },
-  {
-    id: 32,
-    Icon: History,
-    title: "Activity Log & Audit Trail",
-    description:
-      "See who did what and when — approvals, edits, sends, payments — with a visible timeline on every document.",
-    status: "considering",
-    effort: "Medium",
-    category: "Platform",
-  },
-  {
-    id: 33,
-    Icon: CheckCircle2,
-    title: "Bulk Actions",
-    description:
-      "Select multiple estimates or invoices to change status, delete, or send in a single action.",
-    status: "considering",
-    effort: "Low",
-    category: "UX",
-  },
-  {
-    id: 34,
-    Icon: Zap,
-    title: "Advanced Custom Branding",
-    description:
-      "Pick brand colors, customize fonts, and fully control the header and footer of your estimates and invoices beyond the current template options.",
-    status: "planned",
-    effort: "High",
-    category: "Customization",
-  },
-  {
-    id: 35,
-    Icon: RefreshCw,
-    title: "Recurring Invoices",
-    description:
-      "Schedule invoices to be generated automatically on a set interval — ideal for monthly retainers and ongoing contracts. Configurable frequency, start date, limits, due-date offset, and optional auto-send.",
-    status: "shipped",
-    effort: "High",
-    category: "Automation",
-  },
-  {
-    id: 36,
-    Icon: FileText,
-    title: "PDF Templates",
-    description:
-      "Three selectable layouts per document type: Classic (centered logo, clean divider), Branded (purple header band with white doc title), and Modern (split header with logo and address). Each template embeds the company logo, org address, and customer billing address.",
-    status: "shipped",
-    effort: "Medium",
-    category: "Customization",
-  },
-  {
-    id: 37,
-    Icon: Paperclip,
-    title: "Company Logo & File Visibility",
-    description:
-      "Upload a company logo in Settings — shown on document pages. Toggle file visibility per attachment on estimates so only selected files appear on the public link. Public invoice pages now display attachments. Blob cleanup on deletion keeps storage tidy.",
-    status: "shipped",
-    effort: "Medium",
-    category: "Core",
-  },
-  {
-    id: 38,
-    Icon: Smartphone,
-    title: "Mobile-Responsive App Shell",
-    description:
-      "The private app shell is now fully responsive. On mobile the sidebar becomes a slide-in drawer with backdrop, a top bar with hamburger and logo, auto-close on navigation, horizontal scrollable settings tabs, and a user dropdown with Account Settings and Log out.",
-    status: "shipped",
-    effort: "Medium",
-    category: "UX",
-  },
-];
-
-const STATUS_CONFIG: Record<
-  Status,
-  { label: string; dot: string; badge: string; text: string }
-> = {
-  shipped: {
-    label: "Shipped",
-    dot: "bg-emerald-500",
-    badge: "bg-emerald-50 border-emerald-200",
-    text: "text-emerald-700",
-  },
-  "in-progress": {
-    label: "In Progress",
-    dot: "bg-primary",
-    badge: "bg-primary/10 border-primary/20",
-    text: "text-primary",
-  },
-  planned: {
-    label: "Planned",
-    dot: "bg-amber-500",
-    badge: "bg-amber-50 border-amber-200",
-    text: "text-amber-700",
-  },
-  considering: {
-    label: "Considering",
-    dot: "bg-muted-foreground/40",
-    badge: "bg-muted border-border",
-    text: "text-muted-foreground",
-  },
-};
-
-const EFFORT_CONFIG: Record<
-  "Low" | "Medium" | "High",
-  { label: string; color: string }
-> = {
-  Low: { label: "Low effort", color: "text-emerald-600" },
-  Medium: { label: "Medium effort", color: "text-amber-600" },
-  High: { label: "High effort", color: "text-rose-600" },
-};
-
-const COLUMNS: { status: Status; title: string; description: string }[] = [
-  {
-    status: "shipped",
-    title: "Recently Shipped",
-    description: "Released in the last cycle",
-  },
-  {
-    status: "in-progress",
-    title: "In Progress",
-    description: "Actively being built",
-  },
-  {
-    status: "planned",
-    title: "Planned",
-    description: "Confirmed for upcoming cycles",
-  },
-  {
-    status: "considering",
-    title: "Considering",
-    description: "On our radar, not yet scheduled",
-  },
-];
 
 export default function RoadmapPage() {
   const lastUpdated = "August 5, 2026 (v1.11.0)";
@@ -445,7 +55,7 @@ export default function RoadmapPage() {
         <div className="grid grid-cols-1 gap-4 items-start lg:grid-cols-4">
           {COLUMNS.map(({ status, title }) => {
             const cfg = STATUS_CONFIG[status];
-            const items = ITEMS.filter((i) => i.status === status);
+            const items = ROADMAP_ITEMS.filter((i) => i.status === status);
 
             return (
               <div key={status}>
@@ -463,6 +73,7 @@ export default function RoadmapPage() {
                   {items.map(
                     ({
                       id,
+                      slug,
                       Icon,
                       title: itemTitle,
                       description,
@@ -472,9 +83,10 @@ export default function RoadmapPage() {
                       const effortCfg = EFFORT_CONFIG[effort];
 
                       return (
-                        <div
+                        <NextLink
                           key={id}
-                          className="rounded-xl border border-border bg-background p-4 shadow-sm"
+                          href={`/roadmap/${slug}`}
+                          className="block rounded-xl border border-border bg-background p-4 transition-colors hover:border-primary"
                         >
                           {/* Top row */}
                           <div className="mb-2 flex items-start justify-between gap-3">
@@ -491,10 +103,7 @@ export default function RoadmapPage() {
                           <h3 className="mb-1 text-sm font-semibold text-foreground">
                             {itemTitle}
                           </h3>
-                          <p
-                            className="mb-2 line-clamp-2 text-xs leading-snug text-muted-foreground"
-                            title={description}
-                          >
+                          <p className="mb-2 line-clamp-2 text-xs leading-snug text-muted-foreground">
                             {description}
                           </p>
 
@@ -509,7 +118,7 @@ export default function RoadmapPage() {
                               {effortCfg.label}
                             </span>
                           </div>
-                        </div>
+                        </NextLink>
                       );
                     },
                   )}

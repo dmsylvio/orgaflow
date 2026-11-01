@@ -182,8 +182,8 @@ const PLANS: Plan[] = [
     features: [
       "Up to 2 team members",
       "Up to 50 customers",
-      "Up to 50 estimates",
-      "Up to 50 invoices",
+      "Up to 200 estimates",
+      "Up to 200 invoices",
       "Public estimate & invoice links",
       "Email support",
     ],

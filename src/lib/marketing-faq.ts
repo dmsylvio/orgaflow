@@ -10,7 +10,7 @@ export const HOME_FAQS = [
   },
   {
     q: "Is there a free plan?",
-    a: "Yes. Starter is free and needs no credit card. It includes estimates, invoices, customers, and the schedule, with limits of 50 customers, 50 estimates, and 50 invoices.",
+    a: "Yes. Starter is free and needs no credit card. It includes estimates, invoices, customers, and the schedule, with limits of 50 customers, 200 estimates, and 200 invoices.",
   },
   {
     q: "Can clients pay invoices online?",

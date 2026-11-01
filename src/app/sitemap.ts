@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { getAppBaseUrl } from "@/lib/base-url";
+import { ROADMAP_ITEMS } from "@/lib/roadmap";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = getAppBaseUrl();
@@ -59,6 +60,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "yearly",
       priority: 0.3,
     },
+    ...ROADMAP_ITEMS.map(({ slug }) => ({
+      url: `${baseUrl}/roadmap/${slug}`,
+      lastModified: new Date("2026-11-01"),
+      changeFrequency: "monthly" as const,
+      priority: 0.5,
+    })),
   ];
 }
-

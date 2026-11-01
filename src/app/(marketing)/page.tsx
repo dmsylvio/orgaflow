@@ -127,7 +127,7 @@ const PLANS = [
     name: "Starter",
     price: "Free",
     note: "No credit card needed",
-    points: ["2 team members", "50 customers, estimates, and invoices"],
+    points: ["2 team members", "50 customers, 200 estimates, and 200 invoices"],
   },
   {
     name: "Growth",
@@ -185,39 +185,29 @@ export default function LandingPage() {
       </section>
 
       {/* Product */}
-      <section className="mx-auto max-w-6xl px-6 pt-14 sm:pt-20">
-        <div className="overflow-hidden rounded-3xl border border-border bg-white shadow-[0_24px_60px_-30px_rgba(19,20,42,0.35)]">
-          <div
-            aria-hidden
-            className="flex items-center gap-1.5 border-b border-border px-5 py-3"
-          >
-            <span className="h-2.5 w-2.5 rounded-full bg-foreground/15" />
-            <span className="h-2.5 w-2.5 rounded-full bg-foreground/15" />
-            <span className="h-2.5 w-2.5 rounded-full bg-foreground/15" />
-          </div>
-          <Image
-            src="/screencapture-orgaflow.png"
-            alt="Orgaflow dashboard with revenue, pending documents, and recent activity"
-            width={1920}
-            height={1202}
-            sizes="(min-width: 1152px) 1104px, 100vw"
-            className="w-full"
-          />
-        </div>
-      </section>
-
-      {/* Problem */}
       <section>
-        <div className="mx-auto max-w-6xl px-6 pb-4 pt-20 sm:pt-24">
-          <h2 className="max-w-4xl text-balance text-3xl font-bold leading-[1.15] tracking-[-0.025em] sm:text-5xl">
-            The quote is in a doc, the invoice is in another app, and the job is
-            on a sticky note.
-          </h2>
-          <p className="mt-6 max-w-2xl text-lg leading-relaxed text-muted-foreground">
-            Every handoff is a chance for something to slip. Orgaflow keeps the
-            estimate, the invoice, the payment, and the task connected, so you
-            can see where each job stands.
-          </p>
+        <div className="mx-auto max-w-6xl px-6 pt-14 sm:pt-20">
+          <div className="relative overflow-hidden rounded-3xl border border-border bg-foreground">
+            <Image
+              src="/screencapture-orgaflow.png"
+              alt="Orgaflow dashboard with revenue, pending documents, and recent activity"
+              width={1920}
+              height={1202}
+              sizes="(min-width: 1152px) 1104px, 100vw"
+              className="w-full"
+            />
+            <div className="bg-foreground p-6 text-background md:absolute md:inset-x-0 md:bottom-0 md:bg-foreground/90 md:px-8 md:py-6 md:backdrop-blur-sm">
+              <h2 className="text-balance text-2xl font-bold leading-[1.15] tracking-[-0.025em] md:text-3xl">
+                The quote is in a doc, the invoice is in another app, and the
+                job is on a sticky note.
+              </h2>
+              <p className="mt-3 max-w-4xl leading-relaxed text-background/90">
+                Every handoff is a chance for something to slip. Orgaflow keeps
+                the estimate, the invoice, the payment, and the task connected,
+                so you can see where each job stands.
+              </p>
+            </div>
+          </div>
         </div>
       </section>
 

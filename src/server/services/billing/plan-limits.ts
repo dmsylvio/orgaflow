@@ -19,11 +19,11 @@ export function getUsageLimit(
   }
 
   if (resource === "estimates") {
-    return plan === "starter" ? 50 : null;
+    return plan === "starter" ? 200 : null;
   }
 
   if (resource === "invoices") {
-    return plan === "starter" ? 50 : null;
+    return plan === "starter" ? 200 : null;
   }
 
   return null;

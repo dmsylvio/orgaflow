@@ -43,7 +43,8 @@ const WORKSPACE_PLAN_OPTIONS: readonly WorkspacePlanOption[] = [
     summary:
       "For solo operators and lean teams that want the full billing flow with lower limits and the core CRM, estimate, and invoice toolkit.",
     limits: [
-      "Up to 50 invoices, estimates, customers, and items",
+      "Up to 200 invoices and 200 estimates",
+      "Up to 50 customers and 50 items",
       "Up to 2 users",
       "File attachments not included",
     ],
