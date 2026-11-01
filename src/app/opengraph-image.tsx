@@ -23,13 +23,13 @@ export default async function OpenGraphImage() {
       <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
         <div
           style={{
-            fontSize: 104,
+            fontSize: 88,
             fontWeight: 800,
             lineHeight: 1,
             letterSpacing: -4,
           }}
         >
-          Quote it. Get paid. Do the work.
+          Estimates, invoices, and work in one place
         </div>
         <div style={{ fontSize: 34 }}>
           Estimate and invoice software for small businesses

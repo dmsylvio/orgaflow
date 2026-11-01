@@ -1,5 +1,6 @@
 "use client";
 
+import { Check } from "lucide-react";
 import { useState } from "react";
 
 const STAGES = [
@@ -8,7 +9,8 @@ const STAGES = [
     label: "Estimate",
     doc: "Estimate",
     number: "EST-0142",
-    stamp: null,
+    status: "Sent",
+    done: false,
     caption: "You send the estimate as a secure link.",
   },
   {
@@ -16,7 +18,8 @@ const STAGES = [
     label: "Approved",
     doc: "Estimate",
     number: "EST-0142",
-    stamp: "Approved",
+    status: "Approved",
+    done: true,
     caption: "Your client approves it. No account needed.",
   },
   {
@@ -24,7 +27,8 @@ const STAGES = [
     label: "Invoice",
     doc: "Invoice",
     number: "INV-0142",
-    stamp: null,
+    status: "Unpaid",
+    done: false,
     caption: "The approved estimate becomes an invoice in one click.",
   },
   {
@@ -32,7 +36,8 @@ const STAGES = [
     label: "Paid",
     doc: "Invoice",
     number: "INV-0142",
-    stamp: "Paid",
+    status: "Paid",
+    done: true,
     caption: "You record the payment and the invoice updates itself.",
   },
   {
@@ -40,7 +45,8 @@ const STAGES = [
     label: "Work",
     doc: "Task",
     number: "Created automatically",
-    stamp: null,
+    status: "To do",
+    done: false,
     caption: "An automation creates the task and assigns it.",
   },
 ] as const;
@@ -56,97 +62,79 @@ export function JobTicket() {
   const stage = STAGES.find(({ id }) => id === stageId) ?? STAGES[1];
 
   return (
-    <div className="w-full">
-      <div className="relative mx-auto max-w-[29rem]">
-        {/* The carbon copies underneath */}
-        <div
-          aria-hidden
-          className="absolute inset-0 translate-x-3 translate-y-3 rotate-[1.5deg] bg-copy-pink"
-        />
-        <div
-          aria-hidden
-          className="absolute inset-0 translate-x-1.5 translate-y-1.5 rotate-[0.6deg] bg-white"
-        />
-
-        <div className="pad-sheet relative flex min-h-[24.5rem] flex-col bg-white px-6 pb-6 pt-8 text-foreground sm:px-8">
-          <div className="flex items-baseline justify-between gap-4 border-b-2 border-primary pb-3 text-primary">
-            <p className="text-2xl font-extrabold tracking-tight">
-              {stage.doc}
-            </p>
-            <p className="text-sm font-semibold">{stage.number}</p>
+    <div className="mx-auto w-full max-w-[29rem]">
+      <div className="flex min-h-[21rem] flex-col rounded-3xl bg-white p-6 text-foreground shadow-[0_20px_50px_-20px_rgba(19,20,42,0.35)] sm:p-7">
+        <div className="flex items-start justify-between gap-4 border-b border-border pb-4">
+          <div>
+            <p className="text-lg font-bold tracking-tight">{stage.doc}</p>
+            <p className="text-sm text-muted-foreground">{stage.number}</p>
           </div>
+          <span
+            className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-sm font-semibold ${
+              stage.done
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted text-foreground"
+            }`}
+          >
+            {stage.done ? <Check aria-hidden className="h-3.5 w-3.5" /> : null}
+            {stage.status}
+          </span>
+        </div>
 
-          {stage.id === "work" ? (
-            <dl className="mt-5 flex-1 text-sm">
-              {[
-                ["Task", "Clean exhaust hood"],
-                ["Customer", "Maple Street Bakery"],
-                ["Assigned to", "Dana"],
-                ["Due", "In 3 days"],
-              ].map(([term, value]) => (
+        {stage.id === "work" ? (
+          <dl className="mt-2 flex-1 text-sm">
+            {[
+              ["Task", "Clean exhaust hood"],
+              ["Customer", "Maple Street Bakery"],
+              ["Assigned to", "Dana"],
+              ["Due", "In 3 days"],
+            ].map(([term, value]) => (
+              <div
+                key={term}
+                className="flex items-baseline justify-between gap-4 border-b border-border py-3 last:border-b-0"
+              >
+                <dt className="text-muted-foreground">{term}</dt>
+                <dd className="text-right font-semibold">{value}</dd>
+              </div>
+            ))}
+          </dl>
+        ) : (
+          <div className="flex flex-1 flex-col">
+            <p className="mt-4 text-sm text-muted-foreground">Customer</p>
+            <p className="font-semibold">Maple Street Bakery</p>
+            <div className="mt-3 text-sm">
+              {LINES.map(({ item, amount }) => (
                 <div
-                  key={term}
-                  className="flex items-baseline justify-between gap-4 border-b border-border py-3"
+                  key={item}
+                  className="flex items-baseline justify-between gap-4 border-b border-border py-2.5"
                 >
-                  <dt className="text-muted-foreground">{term}</dt>
-                  <dd className="text-right font-hand text-xl text-primary">
-                    {value}
-                  </dd>
+                  <span>{item}</span>
+                  <span className="font-medium">{amount}</span>
                 </div>
               ))}
-            </dl>
-          ) : (
-            <div className="relative flex flex-1 flex-col">
-              <p className="mt-4 text-sm text-muted-foreground">Bill to</p>
-              <p className="font-hand text-2xl leading-tight text-primary">
-                Maple Street Bakery
-              </p>
-              <div className="mt-4 text-sm">
-                {LINES.map(({ item, amount }) => (
-                  <div
-                    key={item}
-                    className="flex items-baseline justify-between gap-4 border-b border-border py-2.5"
-                  >
-                    <span className="font-hand text-lg leading-tight text-primary">
-                      {item}
-                    </span>
-                    <span className="font-hand text-lg text-primary">
-                      {amount}
-                    </span>
-                  </div>
-                ))}
-              </div>
-              <div className="mt-auto flex items-baseline justify-between pt-5">
-                <span className="text-sm font-semibold">Total</span>
-                <span className="text-3xl font-extrabold tracking-tight">
-                  $860.00
-                </span>
-              </div>
-              {stage.stamp ? (
-                <p
-                  key={stage.id}
-                  className="stamp absolute bottom-[3.75rem] right-0 rounded border-[3px] border-primary px-3 py-1 text-2xl font-extrabold tracking-tight text-primary"
-                >
-                  {stage.stamp}
-                </p>
-              ) : null}
             </div>
-          )}
-        </div>
+            <div className="mt-auto flex items-baseline justify-between pt-5">
+              <span className="text-sm font-semibold">Total</span>
+              <span className="text-2xl font-extrabold tracking-tight">
+                $860.00
+              </span>
+            </div>
+          </div>
+        )}
       </div>
 
-      <fieldset className="mx-auto mt-9 max-w-[29rem] border-0 p-0">
+      <fieldset className="mt-5 border-0 p-0">
         <legend className="sr-only">
           Follow a sample job through Orgaflow
         </legend>
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex rounded-full bg-foreground/10 p-1">
           {STAGES.map(({ id, label }) => (
             <button
               key={id}
               type="button"
               aria-pressed={id === stageId}
               onClick={() => setStageId(id)}
-              className={`rounded px-3 py-1.5 text-sm font-semibold transition-colors ${
+              className={`flex-1 rounded-full px-1 py-1.5 text-[13px] font-semibold transition-colors sm:text-sm ${
                 id === stageId
                   ? "bg-foreground text-background"
                   : "text-foreground hover:bg-foreground/10"
@@ -156,10 +144,7 @@ export function JobTicket() {
             </button>
           ))}
         </div>
-        <p
-          aria-live="polite"
-          className="mt-3 min-h-[3rem] text-sm text-foreground"
-        >
+        <p aria-live="polite" className="mt-3 min-h-6 text-sm text-foreground">
           {stage.caption}
         </p>
       </fieldset>

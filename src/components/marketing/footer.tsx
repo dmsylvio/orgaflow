@@ -22,7 +22,7 @@ const FOOTER_LINKS = {
 
 export function MarketingFooter() {
   return (
-    <footer className="border-t-2 border-foreground bg-background">
+    <footer className="bg-background">
       <div className="mx-auto max-w-6xl px-6 py-16">
         <div className="grid grid-cols-2 gap-10 md:grid-cols-5">
           {/* Brand */}
@@ -38,7 +38,7 @@ export function MarketingFooter() {
               <Link
                 href="https://x.com/orgaflowapp"
                 aria-label="Orgaflow on X"
-                className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground transition-colors hover:border-primary/30 hover:text-primary"
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-background text-muted-foreground transition-colors hover:border-primary/30 hover:text-primary"
               >
                 <svg
                   viewBox="0 0 24 24"
@@ -51,7 +51,7 @@ export function MarketingFooter() {
               </Link>
               <Link
                 href="https://www.instagram.com/orgaflow.app"
-                className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground transition-colors hover:border-primary/30 hover:text-primary"
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-background text-muted-foreground transition-colors hover:border-primary/30 hover:text-primary"
               >
                 <Instagram className="h-4 w-4" aria-hidden />
                 <span className="sr-only">Instagram</span>

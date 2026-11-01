@@ -1,3 +1,14 @@
+import {
+  BarChart3,
+  CalendarDays,
+  Check,
+  FileText,
+  Paperclip,
+  Repeat,
+  ShieldCheck,
+  Users,
+  Workflow,
+} from "lucide-react";
 import type { Metadata } from "next";
 import Image from "next/image";
 import NextLink from "next/link";
@@ -6,6 +17,11 @@ import { JobTicket } from "@/components/marketing/job-ticket";
 import { Button } from "@/components/ui/button";
 import { HOME_FAQS } from "@/lib/marketing-faq";
 import { marketingMetadata } from "@/lib/marketing-metadata";
+import {
+  formatUsdPrice,
+  getWorkspacePlanPrice,
+  PLAN_TRIAL_DAYS,
+} from "@/lib/subscription-plans";
 
 export const metadata: Metadata = marketingMetadata({
   title: "Estimate & Invoice Software for Small Businesses | Orgaflow",
@@ -63,26 +79,67 @@ const STEPS = [
   },
 ];
 
-const ALSO_INCLUDED = [
+const FEATURES = [
   {
-    term: "Customers",
-    body: "Each client's details, estimates, and invoices in one record.",
+    Icon: FileText,
+    title: "Estimates and invoices",
+    body: "Build documents with line items and taxes, then export them with three PDF templates.",
   },
   {
-    term: "Schedule",
-    body: "Plan service visits on a calendar, repeat them, and bill for completed work. Included on every plan.",
+    Icon: Users,
+    title: "Customers",
+    body: "Keep each client's details, estimates, and invoices in one record.",
   },
   {
-    term: "Dashboard and reports",
+    Icon: CalendarDays,
+    title: "Schedule",
+    body: "Plan service visits on a calendar, repeat them, and bill for completed work.",
+  },
+  {
+    Icon: Repeat,
+    title: "Recurring invoices",
+    body: "Generate invoices on a set schedule, with the option to send them automatically.",
+  },
+  {
+    Icon: Workflow,
+    title: "Tasks and automations",
+    body: "Track work on a board. On Scale, tasks are created when a client approves or pays.",
+  },
+  {
+    Icon: BarChart3,
+    title: "Dashboard and reports",
     body: "See revenue and pending documents at a glance. Advanced reports come with Scale.",
   },
   {
-    term: "Team permissions",
+    Icon: ShieldCheck,
+    title: "Team permissions",
     body: "Choose what each role can do, and hide prices from people who don't need them.",
   },
   {
-    term: "File attachments",
-    body: "Add photos and documents to estimates and invoices, with 1 GB on Growth and 10 GB on Scale.",
+    Icon: Paperclip,
+    title: "File attachments",
+    body: "Add photos and documents to your work, with 1 GB on Growth and 10 GB on Scale.",
+  },
+];
+
+const PLANS = [
+  {
+    name: "Starter",
+    price: "Free",
+    note: "No credit card needed",
+    points: ["2 team members", "50 customers, estimates, and invoices"],
+  },
+  {
+    name: "Growth",
+    price: `${formatUsdPrice(getWorkspacePlanPrice("growth", "monthly"))}/mo`,
+    note: `${PLAN_TRIAL_DAYS}-day free trial`,
+    points: ["5 team members", "Unlimited documents, task board, and branding"],
+  },
+  {
+    name: "Scale",
+    price: `${formatUsdPrice(getWorkspacePlanPrice("scale", "monthly"))}/mo`,
+    note: `${PLAN_TRIAL_DAYS}-day free trial`,
+    points: ["10 team members", "Automations and advanced reports"],
   },
 ];
 
@@ -92,22 +149,22 @@ export default function LandingPage() {
       <HomeFaqJsonLd />
 
       {/* Hero */}
-      <section className="overflow-hidden bg-canary">
+      <section className="mx-3 rounded-[2rem] sm:mx-5 mt-1 overflow-hidden bg-canary">
         <div className="mx-auto grid max-w-6xl gap-14 px-6 pb-14 pt-14 lg:grid-cols-[1.1fr_1fr] lg:items-center lg:gap-10 lg:pb-20 lg:pt-20">
           <div>
-            <h1 className="text-[clamp(3rem,7.4vw,6rem)] font-extrabold leading-[0.95] tracking-[-0.045em] text-foreground">
-              Quote it. Get paid. Do the work.
+            <h1 className="text-[clamp(2.75rem,5.4vw,4.5rem)] font-extrabold leading-[1.03] tracking-[-0.035em] text-foreground">
+              Estimates, invoices, and work in one place
             </h1>
             <p className="mt-7 max-w-xl text-lg leading-relaxed text-foreground sm:text-xl">
-              Orgaflow is estimate and invoice software for small businesses.
-              Every job moves from the first quote to the finished work in one
-              place.
+              Orgaflow is the SaaS platform small businesses use to send
+              estimates, get them approved, invoice clients, track payments, and
+              start the work.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-x-5 gap-y-3">
               <Button
                 size="lg"
                 asChild
-                className="h-12 bg-foreground px-7 text-base text-background hover:bg-foreground/85"
+                className="h-12 rounded-full bg-foreground px-7 text-base text-background hover:bg-foreground/85"
               >
                 <NextLink href="/register">Start free</NextLink>
               </Button>
@@ -115,11 +172,11 @@ export default function LandingPage() {
                 href="#how-it-works"
                 className="font-semibold text-foreground underline decoration-2 underline-offset-4"
               >
-                See how a job moves
+                See how it works
               </NextLink>
             </div>
             <p className="mt-5 text-sm text-foreground">
-              Free plan available. No credit card needed.
+              Free plan available. No credit card needed. Works in your browser.
             </p>
           </div>
 
@@ -127,9 +184,31 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Product */}
+      <section className="mx-auto max-w-6xl px-6 pt-14 sm:pt-20">
+        <div className="overflow-hidden rounded-3xl border border-border bg-white shadow-[0_24px_60px_-30px_rgba(19,20,42,0.35)]">
+          <div
+            aria-hidden
+            className="flex items-center gap-1.5 border-b border-border px-5 py-3"
+          >
+            <span className="h-2.5 w-2.5 rounded-full bg-foreground/15" />
+            <span className="h-2.5 w-2.5 rounded-full bg-foreground/15" />
+            <span className="h-2.5 w-2.5 rounded-full bg-foreground/15" />
+          </div>
+          <Image
+            src="/screencapture-orgaflow.png"
+            alt="Orgaflow dashboard with revenue, pending documents, and recent activity"
+            width={1920}
+            height={1202}
+            sizes="(min-width: 1152px) 1104px, 100vw"
+            className="w-full"
+          />
+        </div>
+      </section>
+
       {/* Problem */}
-      <section className="border-b-2 border-foreground">
-        <div className="mx-auto max-w-6xl px-6 py-20 sm:py-24">
+      <section>
+        <div className="mx-auto max-w-6xl px-6 pb-4 pt-20 sm:pt-24">
           <h2 className="max-w-4xl text-balance text-3xl font-bold leading-[1.15] tracking-[-0.025em] sm:text-5xl">
             The quote is in a doc, the invoice is in another app, and the job is
             on a sticky note.
@@ -180,7 +259,7 @@ export default function LandingPage() {
                 </div>
                 <dl
                   aria-hidden
-                  className="col-start-2 mt-5 self-start border-t-2 border-primary bg-white px-4 py-1.5 md:col-start-3 md:mt-1"
+                  className="col-start-2 mt-5 self-start rounded-2xl border border-border bg-white px-4 py-1.5 md:col-start-3 md:mt-1"
                 >
                   {slip.map(([term, value]) => (
                     <div
@@ -188,7 +267,7 @@ export default function LandingPage() {
                       className="flex items-baseline justify-between gap-3 border-b border-border py-2 last:border-b-0"
                     >
                       <dt className="text-sm text-muted-foreground">{term}</dt>
-                      <dd className="text-right font-hand text-lg leading-tight text-primary">
+                      <dd className="text-right text-sm font-semibold text-foreground">
                         {value}
                       </dd>
                     </div>
@@ -200,35 +279,33 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Also included */}
-      <section id="features" className="scroll-mt-20 bg-copy-pink">
-        <div className="mx-auto grid max-w-6xl gap-12 px-6 py-20 sm:py-24 lg:grid-cols-[1fr_1.35fr] lg:items-start">
-          <div>
-            <h2 className="text-4xl font-extrabold tracking-[-0.03em] sm:text-5xl">
-              Everything around the job, too
-            </h2>
-            <dl className="mt-10">
-              {ALSO_INCLUDED.map(({ term, body }) => (
-                <div key={term} className="border-t-2 border-foreground py-4">
-                  <dt className="font-bold">{term}</dt>
-                  <dd className="mt-1 leading-relaxed">{body}</dd>
-                </div>
-              ))}
-            </dl>
-          </div>
-          <Image
-            src="/screencapture-orgaflow.png"
-            alt="Orgaflow dashboard with revenue, pending documents, and recent activity"
-            width={1920}
-            height={1202}
-            sizes="(min-width: 1024px) 640px, 100vw"
-            className="w-full border-2 border-foreground lg:mt-2"
-          />
+      {/* Features */}
+      <section
+        id="features"
+        className="mx-3 scroll-mt-20 rounded-[2rem] bg-copy-pink sm:mx-5"
+      >
+        <div className="mx-auto max-w-6xl px-6 py-20 sm:py-24">
+          <h2 className="max-w-3xl text-4xl font-extrabold tracking-[-0.03em] sm:text-5xl">
+            Everything you need to run client work
+          </h2>
+          <ul className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {FEATURES.map(({ Icon, title, body }) => (
+              <li key={title} className="rounded-3xl bg-white p-6">
+                <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary text-primary-foreground">
+                  <Icon aria-hidden className="h-5 w-5" />
+                </span>
+                <h3 className="mt-5 font-bold">{title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                  {body}
+                </p>
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
 
       {/* Not accounting */}
-      <section className="on-dark bg-primary text-primary-foreground">
+      <section className="on-dark mx-3 rounded-[2rem] sm:mx-5 mt-5 bg-primary text-primary-foreground">
         <div className="mx-auto max-w-6xl px-6 py-20 sm:py-24">
           <h2 className="max-w-3xl text-4xl font-extrabold tracking-[-0.03em] sm:text-6xl">
             Keep your accountant.
@@ -243,7 +320,7 @@ export default function LandingPage() {
       </section>
 
       {/* Founder */}
-      <section className="border-b-2 border-foreground">
+      <section>
         <div className="mx-auto grid max-w-6xl gap-6 px-6 py-20 sm:py-24 md:grid-cols-2 md:gap-12">
           <h2 className="text-3xl font-bold leading-tight tracking-[-0.025em] sm:text-4xl">
             When you write in, the person who builds Orgaflow answers.
@@ -269,23 +346,65 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Plans */}
+      <section>
+        <div className="mx-auto max-w-6xl px-6 pb-4 pt-4 sm:pt-8">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <h2 className="text-4xl font-extrabold tracking-[-0.03em] sm:text-5xl">
+              Plans for every stage
+            </h2>
+            <NextLink
+              href="/pricing"
+              className="font-semibold text-primary underline underline-offset-4"
+            >
+              Compare all plans
+            </NextLink>
+          </div>
+          <ul className="mt-10 grid gap-4 md:grid-cols-3">
+            {PLANS.map(({ name, price, note, points }) => (
+              <li
+                key={name}
+                className="rounded-3xl border-2 border-foreground/10 bg-white p-7"
+              >
+                <h3 className="font-bold">{name}</h3>
+                <p className="mt-3 text-3xl font-extrabold tracking-[-0.03em]">
+                  {price}
+                </p>
+                <p className="mt-1 text-sm text-muted-foreground">{note}</p>
+                <ul className="mt-5 flex flex-col gap-2 text-sm">
+                  {points.map((point) => (
+                    <li key={point} className="flex items-start gap-2">
+                      <Check
+                        aria-hidden
+                        className="mt-0.5 h-4 w-4 shrink-0 text-primary"
+                      />
+                      {point}
+                    </li>
+                  ))}
+                </ul>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
       {/* FAQ */}
       <section>
         <div className="mx-auto grid max-w-6xl gap-10 px-6 py-20 sm:py-24 lg:grid-cols-[1fr_2fr]">
           <h2 className="text-4xl font-extrabold tracking-[-0.03em]">
             Common questions
           </h2>
-          <div className="border-b-2 border-foreground">
+          <div className="flex flex-col gap-2">
             {HOME_FAQS.map(({ q, a }) => (
               <details
                 key={q}
-                className="group border-t-2 border-foreground py-4"
+                className="group border-t border-foreground/15 py-4 first:border-t-0"
               >
                 <summary className="flex cursor-pointer list-none items-start justify-between gap-6 text-lg font-bold [&::-webkit-details-marker]:hidden">
                   {q}
                   <span
                     aria-hidden
-                    className="text-2xl font-normal leading-none text-primary group-open:rotate-45"
+                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted text-xl font-normal leading-none text-primary transition-transform group-open:rotate-45"
                   >
                     +
                   </span>
@@ -300,7 +419,7 @@ export default function LandingPage() {
       </section>
 
       {/* CTA */}
-      <section className="bg-canary">
+      <section className="mx-3 rounded-[2rem] sm:mx-5 mb-5 bg-canary">
         <div className="mx-auto flex max-w-6xl flex-col items-start gap-8 px-6 py-20 sm:py-24 md:flex-row md:items-end md:justify-between">
           <div>
             <h2 className="max-w-2xl text-4xl font-extrabold tracking-[-0.03em] sm:text-6xl">
@@ -313,7 +432,7 @@ export default function LandingPage() {
           <Button
             size="lg"
             asChild
-            className="h-12 shrink-0 bg-foreground px-7 text-base text-background hover:bg-foreground/85"
+            className="h-12 shrink-0 rounded-full bg-foreground px-7 text-base text-background hover:bg-foreground/85"
           >
             <NextLink href="/register">Start free</NextLink>
           </Button>

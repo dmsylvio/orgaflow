@@ -59,14 +59,14 @@ export default function PricingPage() {
         <PricingPlans />
       </section>
 
-      <section className="bg-muted">
+      <section className="mx-3 rounded-[2rem] sm:mx-5 bg-muted">
         <div className="mx-auto grid max-w-6xl gap-10 px-6 py-20 lg:grid-cols-[1fr_2fr]">
           <h2 className="text-4xl font-extrabold tracking-[-0.03em]">
             Pricing questions
           </h2>
-          <div className="border-b-2 border-foreground">
+          <div className="flex flex-col gap-2">
             {FAQS.map(({ q, a }) => (
-              <div key={q} className="border-t-2 border-foreground py-5">
+              <div key={q} className="rounded-2xl bg-white px-5 py-5">
                 <h3 className="text-lg font-bold">{q}</h3>
                 <p className="mt-2 max-w-2xl leading-relaxed text-muted-foreground">
                   {a}
@@ -77,7 +77,7 @@ export default function PricingPage() {
         </div>
       </section>
 
-      <section className="bg-canary">
+      <section className="mx-3 rounded-[2rem] sm:mx-5 mb-5 mt-5 bg-canary">
         <div className="mx-auto flex max-w-6xl flex-col items-start gap-6 px-6 py-16 md:flex-row md:items-center md:justify-between">
           <h2 className="text-3xl font-extrabold tracking-[-0.03em] sm:text-5xl">
             Send your first estimate today.
@@ -85,7 +85,7 @@ export default function PricingPage() {
           <Button
             size="lg"
             asChild
-            className="h-12 shrink-0 bg-foreground px-7 text-base text-background hover:bg-foreground/85"
+            className="h-12 shrink-0 rounded-full bg-foreground px-7 text-base text-background hover:bg-foreground/85"
           >
             <NextLink href="/register">Start free</NextLink>
           </Button>

@@ -47,7 +47,7 @@ function UserMenu({ mobile = false }: { mobile?: boolean }) {
         <Button
           size="sm"
           asChild
-          className={mobile ? "justify-start" : undefined}
+          className={mobile ? "justify-start" : "rounded-full px-4"}
         >
           <Link href="/register">Start free</Link>
         </Button>
@@ -138,8 +138,8 @@ export function MarketingNavbar() {
     <header
       className={`sticky top-0 z-50 transition-all duration-300 ${
         scrolled
-          ? "border-b-2 border-foreground bg-background"
-          : "border-b-2 border-transparent bg-background"
+          ? "border-b border-border bg-background"
+          : "border-b border-transparent bg-background"
       }`}
     >
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
@@ -158,10 +158,10 @@ export function MarketingNavbar() {
             <Link
               key={href}
               href={href}
-              className={`rounded px-3 py-2 text-sm font-semibold transition-colors ${
+              className={`rounded-full px-3.5 py-2 text-sm font-semibold transition-colors ${
                 pathname === href
-                  ? "text-foreground underline decoration-2 underline-offset-[6px]"
-                  : "text-foreground/75 hover:text-foreground"
+                  ? "bg-muted text-foreground"
+                  : "text-foreground/75 hover:bg-muted hover:text-foreground"
               }`}
             >
               {label}

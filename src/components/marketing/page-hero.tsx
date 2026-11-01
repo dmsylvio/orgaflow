@@ -10,9 +10,9 @@ export function PageHero({
   note?: ReactNode;
 }) {
   return (
-    <section className="border-b-2 border-foreground">
-      <div className="mx-auto max-w-6xl px-6 pb-12 pt-16 sm:pt-20">
-        <h1 className="max-w-4xl text-balance text-[clamp(2.5rem,6vw,4.75rem)] font-extrabold leading-[1.02] tracking-[-0.035em] text-foreground">
+    <section>
+      <div className="mx-auto max-w-6xl px-6 pb-6 pt-14 sm:pt-16">
+        <h1 className="max-w-4xl text-balance text-[clamp(2.5rem,6vw,4.75rem)] font-extrabold leading-[1.02] tracking-[-0.03em] text-foreground">
           {title}
         </h1>
         {children ? (

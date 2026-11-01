@@ -27,8 +27,8 @@ export default function ContactPage() {
         </div>
 
         <div className="lg:pt-14">
-          <dl>
-            <div className="border-t-2 border-foreground py-4">
+          <dl className="rounded-3xl bg-muted px-6 py-2">
+            <div className="border-t border-foreground/15 py-4 first:border-t-0">
               <dt className="font-bold">Email</dt>
               <dd className="mt-1">
                 <a
@@ -39,7 +39,7 @@ export default function ContactPage() {
                 </a>
               </dd>
             </div>
-            <div className="border-t-2 border-foreground py-4">
+            <div className="border-t border-foreground/15 py-4 first:border-t-0">
               <dt className="font-bold">Mailing address</dt>
               <dd className="mt-1 text-muted-foreground">
                 <a
@@ -50,7 +50,7 @@ export default function ContactPage() {
                 </a>
               </dd>
             </div>
-            <div className="border-y-2 border-foreground py-4">
+            <div className="border-t border-foreground/15 py-4">
               <dt className="font-bold">Phone support</dt>
               <dd className="mt-1 text-muted-foreground">
                 We don't offer phone support right now. Email is the best way to

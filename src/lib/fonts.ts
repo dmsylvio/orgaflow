@@ -1,4 +1,4 @@
-import { Kalam, Poppins, Schibsted_Grotesk } from "next/font/google";
+import { Poppins, Schibsted_Grotesk } from "next/font/google";
 
 /**
  * Poppins is not a variable font, so weights must be listed explicitly.
@@ -16,13 +16,5 @@ export const poppins = Poppins({
 export const schibsted = Schibsted_Grotesk({
   subsets: ["latin"],
   variable: "--font-marketing",
-  display: "swap",
-});
-
-/** Handwritten values on the sample carbon-copy estimate. */
-export const kalam = Kalam({
-  subsets: ["latin"],
-  weight: ["400"],
-  variable: "--font-hand",
   display: "swap",
 });

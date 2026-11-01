@@ -26,7 +26,7 @@ export default function PrivacyPolicyPage() {
   return (
     <div className="overflow-hidden">
       {/* Hero */}
-      <section className="border-b-2 border-foreground py-16">
+      <section className="py-16">
         <div className="mx-auto max-w-3xl px-6">
           <h1 className="mb-3 text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
             Privacy Policy

@@ -20,12 +20,12 @@ export function PricingPlans() {
   return (
     <>
       <div className="flex justify-center">
-        <div className="inline-flex items-center gap-1 rounded border-2 border-foreground/15 bg-white p-1">
+        <div className="inline-flex items-center gap-1 rounded-full border border-foreground/15 bg-white p-1">
           <button
             type="button"
             aria-pressed={!isAnnual}
             onClick={() => setBillingInterval("monthly")}
-            className={`rounded px-5 py-1.5 text-sm font-medium transition-colors ${
+            className={`rounded-full px-5 py-1.5 text-sm font-medium transition-colors ${
               isAnnual
                 ? "text-muted-foreground hover:text-foreground"
                 : "bg-primary text-primary-foreground "
@@ -37,7 +37,7 @@ export function PricingPlans() {
             type="button"
             aria-pressed={isAnnual}
             onClick={() => setBillingInterval("annual")}
-            className={`flex items-center gap-1.5 rounded px-5 py-1.5 text-sm font-medium transition-colors ${
+            className={`flex items-center gap-1.5 rounded-full px-5 py-1.5 text-sm font-medium transition-colors ${
               isAnnual
                 ? "bg-primary text-primary-foreground "
                 : "text-muted-foreground hover:text-foreground"
@@ -59,7 +59,16 @@ export function PricingPlans() {
 
       <div className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-3">
         {PLANS.map(
-          ({ name, plan, description, cta, ctaHref, popular, features, missing }) => {
+          ({
+            name,
+            plan,
+            description,
+            cta,
+            ctaHref,
+            popular,
+            features,
+            missing,
+          }) => {
             const isPaid = plan !== null;
             const annualTotal = isPaid
               ? getWorkspacePlanPrice(plan, "annual")
@@ -73,15 +82,15 @@ export function PricingPlans() {
             return (
               <div
                 key={name}
-                className={`relative flex flex-col overflow-hidden rounded ${
+                className={`relative flex flex-col overflow-hidden rounded-3xl ${
                   popular
                     ? "border-2 border-primary bg-white"
-                    : "border-2 border-foreground/15 bg-white"
+                    : "border-2 border-foreground/10 bg-white"
                 } p-8`}
               >
                 {popular && (
-                  <div className="absolute right-0 top-0">
-                    <div className="bg-canary px-3 py-1.5 text-xs font-bold text-foreground">
+                  <div className="absolute right-4 top-4">
+                    <div className="rounded-full bg-canary px-3 py-1 text-xs font-bold text-foreground">
                       Recommended
                     </div>
                   </div>
@@ -94,7 +103,7 @@ export function PricingPlans() {
                   <p className="text-sm text-muted-foreground">{description}</p>
                 </div>
 
-                <div className="mb-8">
+                <div className="mb-8 rounded-full">
                   <div className="flex items-end gap-1">
                     <span className="text-5xl font-extrabold tracking-[-0.03em] text-foreground">
                       {displayPrice}
@@ -116,12 +125,10 @@ export function PricingPlans() {
 
                 <Button
                   asChild
-                  className="mb-8"
+                  className="mb-8 rounded-full"
                   variant={popular ? "default" : "outline"}
                 >
-                  <NextLink href={ctaHref}>
-                    {cta}
-                  </NextLink>
+                  <NextLink href={ctaHref}>{cta}</NextLink>
                 </Button>
 
                 <div className="flex flex-1 flex-col gap-3">
@@ -144,7 +151,7 @@ export function PricingPlans() {
         )}
       </div>
 
-      <div className="mt-8 border-t-2 border-foreground pt-6">
+      <div className="mt-6 rounded-2xl bg-muted px-6 py-5">
         <p className="mb-2 text-sm text-muted-foreground">
           Online card payments through Stripe are in development for the Scale
           plan.
@@ -168,8 +175,7 @@ const PLANS: Plan[] = [
   {
     name: "Starter",
     plan: null,
-    description:
-      "For freelancers and very small teams getting started.",
+    description: "For freelancers and very small teams getting started.",
     cta: "Start free",
     ctaHref: "/register",
     popular: false,
@@ -192,7 +198,8 @@ const PLANS: Plan[] = [
   {
     name: "Growth",
     plan: "growth",
-    description: "For teams that need unlimited documents, a task board, and their own branding.",
+    description:
+      "For teams that need unlimited documents, a task board, and their own branding.",
     cta: `Start ${PLAN_TRIAL_DAYS}-day trial`,
     ctaHref: "/register",
     popular: true,
@@ -207,10 +214,7 @@ const PLANS: Plan[] = [
       "Custom branding on exports",
       "Priority email support",
     ],
-    missing: [
-      "Workflow automations",
-      "Advanced reports",
-    ],
+    missing: ["Workflow automations", "Advanced reports"],
   },
   {
     name: "Scale",

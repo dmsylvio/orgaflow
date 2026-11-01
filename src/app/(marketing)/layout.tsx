@@ -2,7 +2,7 @@ import { GoogleAnalytics } from "@next/third-parties/google";
 import { SiteJsonLd } from "@/components/json-ld";
 import { MarketingFooter } from "@/components/marketing/footer";
 import { MarketingNavbar } from "@/components/marketing/navbar";
-import { kalam, schibsted } from "@/lib/fonts";
+import { schibsted } from "@/lib/fonts";
 
 export default function MarketingLayout({
   children,
@@ -13,7 +13,7 @@ export default function MarketingLayout({
 
   return (
     <div
-      className={`marketing ${schibsted.variable} ${kalam.variable} flex min-h-dvh flex-col overflow-visible bg-background`}
+      className={`marketing ${schibsted.variable} flex min-h-dvh flex-col overflow-visible bg-background`}
     >
       <SiteJsonLd />
       <MarketingNavbar />

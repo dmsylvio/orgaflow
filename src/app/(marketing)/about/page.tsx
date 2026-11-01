@@ -80,7 +80,7 @@ export default function AboutPage() {
           </div>
         </div>
 
-        <ol className="self-start border-l-2 border-primary pl-6">
+        <ol className="self-start rounded-3xl bg-muted p-6">
           {MILESTONES.map(({ when, title, body }) => (
             <li key={title} className="pb-8 last:pb-0">
               <p className="text-sm font-semibold text-primary">{when}</p>
@@ -93,7 +93,7 @@ export default function AboutPage() {
         </ol>
       </section>
 
-      <section className="bg-copy-pink">
+      <section className="mx-3 rounded-[2rem] sm:mx-5 bg-copy-pink">
         <div className="mx-auto grid max-w-6xl gap-8 px-6 py-20 md:grid-cols-2 md:gap-16">
           <div>
             <h2 className="text-3xl font-extrabold tracking-[-0.03em] sm:text-4xl">
@@ -116,7 +116,7 @@ export default function AboutPage() {
         </h2>
         <dl className="mt-10 grid gap-x-12 md:grid-cols-2">
           {VALUES.map(({ title, body }) => (
-            <div key={title} className="border-t-2 border-foreground py-5">
+            <div key={title} className="border-t border-foreground/15 py-5">
               <dt className="text-lg font-bold">{title}</dt>
               <dd className="mt-1 leading-relaxed text-muted-foreground">
                 {body}
@@ -126,7 +126,7 @@ export default function AboutPage() {
         </dl>
       </section>
 
-      <section className="bg-canary">
+      <section className="mx-3 rounded-[2rem] sm:mx-5 mb-5 bg-canary">
         <div className="mx-auto flex max-w-6xl flex-col items-start gap-6 px-6 py-16 md:flex-row md:items-center md:justify-between">
           <h2 className="text-3xl font-extrabold tracking-[-0.03em] sm:text-5xl">
             Try it on your next job.
@@ -135,7 +135,7 @@ export default function AboutPage() {
             <Button
               size="lg"
               asChild
-              className="h-12 bg-foreground px-7 text-base text-background hover:bg-foreground/85"
+              className="h-12 rounded-full bg-foreground px-7 text-base text-background hover:bg-foreground/85"
             >
               <NextLink href="/register">Start free</NextLink>
             </Button>
