@@ -37,8 +37,6 @@
     "**/*.mts"
   ],
   "exclude": [
-    "node_modules",
-    ".open-next",
-    "worker.ts"
+    "node_modules"
   ]
 }

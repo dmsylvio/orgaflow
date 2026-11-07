@@ -1,12 +1,6 @@
-// On Cloudflare Workers NEXT_RUNTIME is also "nodejs", but a Worker cannot keep
-// timers alive: there the same jobs run from Cron Triggers (worker.ts).
-const isCloudflareWorker =
-  typeof navigator !== "undefined" &&
-  navigator.userAgent === "Cloudflare-Workers";
-
 export async function register() {
-  // Only run the cron scheduler on a long-running Node.js server (Railway).
-  if (process.env.NEXT_RUNTIME === "nodejs" && !isCloudflareWorker) {
+  // Only run the cron scheduler in the Node.js runtime (not Edge).
+  if (process.env.NEXT_RUNTIME === "nodejs") {
     const { schedule } = await import("node-cron");
     const { processRecurringInvoices } = await import(
       "@/server/services/recurring-invoices/process-recurring-invoices"
