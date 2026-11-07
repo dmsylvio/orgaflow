@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { auth } from "./auth";
+import { auth } from "@/server/auth/auth.edge";
 
 const PUBLIC_ROUTES = ["/", "/pricing"];
 const AUTH_ROUTES = ["/login", "/register", "/auth/error"];
@@ -11,7 +11,9 @@ function matchesRoute(pathname: string, routes: string[]) {
   });
 }
 
-export const proxy = auth((req) => {
+// Uses `middleware` (Edge runtime) instead of Next 16's Node-runtime `proxy`:
+// OpenNext's Cloudflare adapter cannot bundle Node-runtime proxy/middleware yet.
+export default auth((req) => {
   const { nextUrl } = req;
   const { pathname, search } = nextUrl;
   const isAuthenticated = !!req.auth;
