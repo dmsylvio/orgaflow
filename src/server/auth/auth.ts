@@ -3,7 +3,7 @@ import "server-only";
 import { compare, hash } from "bcryptjs";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { createAuthMiddleware } from "better-auth/api";
+import { APIError, createAuthMiddleware } from "better-auth/api";
 import { nextCookies } from "better-auth/next-js";
 import { magicLink } from "better-auth/plugins/magic-link";
 import { and, eq } from "drizzle-orm";
@@ -42,7 +42,20 @@ async function deliverAuthEmail(
     console.info(`[auth] ${kind} link for ${email}: ${url}`);
     return;
   }
-  await send();
+
+  try {
+    await send();
+  } catch (error) {
+    // Usually RESEND_API_KEY / RESEND_FROM_EMAIL missing or an unverified domain.
+    console.error(`[auth] Failed to send ${kind} email`, {
+      to: email,
+      error: error instanceof Error ? error.message : error,
+    });
+    throw new APIError("INTERNAL_SERVER_ERROR", {
+      message:
+        "We couldn't send the email right now. Please try again in a few minutes.",
+    });
+  }
 }
 
 /**

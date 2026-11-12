@@ -1,4 +1,4 @@
-DROP TABLE "accounts" CASCADE;--> statement-breakpoint
-DROP TABLE "authenticator" CASCADE;--> statement-breakpoint
-DROP TABLE "session" CASCADE;--> statement-breakpoint
-DROP TABLE "verificationToken" CASCADE;
+DROP TABLE IF EXISTS "accounts" CASCADE;--> statement-breakpoint
+DROP TABLE IF EXISTS "authenticator" CASCADE;--> statement-breakpoint
+DROP TABLE IF EXISTS "session" CASCADE;--> statement-breakpoint
+DROP TABLE IF EXISTS "verificationToken" CASCADE;

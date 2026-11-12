@@ -1,6 +1,18 @@
 export async function register() {
   // Only run the cron scheduler in the Node.js runtime (not Edge).
   if (process.env.NEXT_RUNTIME === "nodejs") {
+    // Better Auth needs its tables; create any that are missing (idempotent).
+    if (process.env.DATABASE_URL) {
+      try {
+        const { ensureAuthSchema } = await import(
+          "@/server/db/ensure-auth-schema"
+        );
+        await ensureAuthSchema();
+      } catch (err) {
+        console.error("[db] Could not verify the auth schema:", err);
+      }
+    }
+
     const { schedule } = await import("node-cron");
     const { processRecurringInvoices } = await import(
       "@/server/services/recurring-invoices/process-recurring-invoices"
