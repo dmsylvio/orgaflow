@@ -1,15 +1,10 @@
-import type { Session } from "next-auth";
-
+import type { CurrentSession } from "@/server/auth/session";
 import type { AbilityContext } from "@/server/iam";
 import type { CurrentMembership } from "@/server/services/iam/get-current-ability";
 import type { TRPCContext } from "@/server/trpc/context";
 
-/**
- * NextAuth session after we verified `user.id` exists (JWT / DB session).
- */
-export type AppSession = Session & {
-  user: NonNullable<Session["user"]> & { id: string };
-};
+/** Better Auth session for a signed-in user (`user.id` always present). */
+export type AppSession = CurrentSession;
 
 /** After `authMiddleware` — user is guaranteed signed in with `user.id`. */
 export type AuthenticatedTRPCContext = TRPCContext & {

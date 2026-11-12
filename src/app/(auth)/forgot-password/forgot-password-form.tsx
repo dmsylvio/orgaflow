@@ -9,12 +9,12 @@ import { AuthField } from "@/components/auth/auth-field";
 import { Button } from "@/components/ui/button";
 import { Callout } from "@/components/ui/callout";
 import { Input } from "@/components/ui/input";
+import { authClient } from "@/lib/auth-client";
 import { toast } from "@/lib/toast";
 import {
   type ForgotPasswordFormValues,
   forgotPasswordSchema,
 } from "@/schemas/forgot-password";
-import { forgotPasswordAction } from "@/server/actions/auth";
 
 export function ForgotPasswordForm() {
   const [sent, setSent] = useState(false);
@@ -37,18 +37,21 @@ export function ForgotPasswordForm() {
         <output aria-live="polite">
           <Callout variant="success">
             If an account exists for that email, you will receive reset
-            instructions shortly. In development, check the server console for
-            the reset URL.
+            instructions shortly. You can also sign in with an email link
+            instead.
           </Callout>
         </output>
       ) : (
         <form
           onSubmit={handleSubmit(async (values) => {
-            const result = await forgotPasswordAction(values);
+            const { error } = await authClient.requestPasswordReset({
+              email: values.email.trim().toLowerCase(),
+              redirectTo: "/reset-password",
+            });
 
-            if (!result.success) {
+            if (error) {
               toast.error("Couldn't send reset link", {
-                description: result.message,
+                description: error.message ?? "Please try again in a moment.",
               });
               return;
             }

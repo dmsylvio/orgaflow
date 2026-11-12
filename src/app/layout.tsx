@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { Toaster } from "sonner";
-import { AuthSessionProvider } from "@/components/providers/auth-session-provider";
 import { getAppBaseUrl } from "@/lib/base-url";
 import { appFont } from "@/lib/fonts";
 import { TRPCReactProvider } from "@/trpc/client";
@@ -82,10 +81,8 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="h-full">
-        <AuthSessionProvider>
-          <TRPCReactProvider>{children}</TRPCReactProvider>
-          <Toaster />
-        </AuthSessionProvider>
+        <TRPCReactProvider>{children}</TRPCReactProvider>
+        <Toaster />
       </body>
     </html>
   );

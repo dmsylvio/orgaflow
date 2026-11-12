@@ -3,7 +3,6 @@
 import { BriefcaseBusiness, ChevronDown, LogOut, Menu, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { signOut, useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import MainLogo from "@/components/logo";
 import { Button } from "@/components/ui/button";
@@ -16,6 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { appPaths } from "@/lib/app-paths";
+import { signOutAndRedirect, useSession } from "@/lib/auth-client";
 
 const NAV_LINKS = [
   { href: "/features", label: "Features" },
@@ -112,7 +112,7 @@ function UserMenu({ mobile = false }: { mobile?: boolean }) {
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onSelect={() => {
-            void signOut({ callbackUrl: "/" });
+            void signOutAndRedirect("/");
           }}
         >
           <LogOut className="h-4 w-4" />

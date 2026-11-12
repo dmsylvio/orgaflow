@@ -1,8 +1,8 @@
 "use client";
 
 import { LogOut } from "lucide-react";
-import { signOut, useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
+import { signOutAndRedirect, useSession } from "@/lib/auth-client";
 
 export function WorkspaceUserMenu() {
   const { data: session } = useSession();
@@ -17,7 +17,7 @@ export function WorkspaceUserMenu() {
         variant="outline"
         size="sm"
         className="gap-1.5"
-        onClick={() => void signOut({ callbackUrl: "/" })}
+        onClick={() => void signOutAndRedirect("/")}
       >
         <LogOut className="h-4 w-4" />
         Log out

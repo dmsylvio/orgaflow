@@ -1,8 +1,9 @@
-import { compare, hash } from "bcryptjs";
-import { eq } from "drizzle-orm";
+import { TRPCError } from "@trpc/server";
+import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 
-import { userEmailPreferences, users } from "@/server/db/schemas";
+import { auth } from "@/server/auth/auth";
+import { authAccounts, userEmailPreferences, users } from "@/server/db/schemas";
 import { syncContactToAllUsersAudience } from "@/server/services/email/audiences";
 import { createTRPCRouter, protectedProcedure } from "@/server/trpc/init";
 import { getSessionUserId } from "@/server/trpc/utils";
@@ -23,12 +24,22 @@ export const accountRouter = createTRPCRouter({
       return null;
     }
 
+    const credential = await ctx.db.query.authAccounts.findFirst({
+      where: and(
+        eq(authAccounts.userId, userId),
+        eq(authAccounts.providerId, "credential"),
+      ),
+      columns: { password: true },
+    });
+
     return {
       id: row.id,
       name: row.name,
       email: row.email,
       image: row.image,
       emailVerified: row.emailVerified,
+      /** False for accounts that only ever signed in with an email link. */
+      hasPassword: Boolean(credential?.password),
     };
   }),
 
@@ -54,11 +65,15 @@ export const accountRouter = createTRPCRouter({
       return { ok: true as const };
     }),
 
+  /**
+   * Changes the password, or sets a first one for accounts created with an
+   * email link (those have no current password to confirm).
+   */
   updatePassword: protectedProcedure
     .input(
       z
         .object({
-          currentPassword: z.string().min(1),
+          currentPassword: z.string().optional(),
           newPassword: z
             .string()
             .min(8, "Password must be at least 8 characters"),
@@ -72,26 +87,44 @@ export const accountRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const userId = getSessionUserId(ctx);
 
-      const row = await ctx.db.query.users.findFirst({
-        where: eq(users.id, userId),
-        columns: { id: true, password: true },
+      const credential = await ctx.db.query.authAccounts.findFirst({
+        where: and(
+          eq(authAccounts.userId, userId),
+          eq(authAccounts.providerId, "credential"),
+        ),
+        columns: { password: true },
       });
 
-      if (!row) {
-        throw new Error("User not found.");
+      try {
+        if (credential?.password) {
+          if (!input.currentPassword) {
+            throw new TRPCError({
+              code: "BAD_REQUEST",
+              message: "Enter your current password.",
+            });
+          }
+          await auth.api.changePassword({
+            headers: ctx.headers,
+            body: {
+              currentPassword: input.currentPassword,
+              newPassword: input.newPassword,
+              revokeOtherSessions: true,
+            },
+          });
+        } else {
+          await auth.api.setPassword({
+            headers: ctx.headers,
+            body: { newPassword: input.newPassword },
+          });
+        }
+      } catch (error) {
+        if (error instanceof TRPCError) throw error;
+        const message =
+          error instanceof Error && /invalid password/i.test(error.message)
+            ? "Current password is incorrect."
+            : "Couldn't update your password. Please try again.";
+        throw new TRPCError({ code: "BAD_REQUEST", message });
       }
-
-      const valid = await compare(input.currentPassword, row.password);
-      if (!valid) {
-        throw new Error("Current password is incorrect.");
-      }
-
-      const hashed = await hash(input.newPassword, 12);
-
-      await ctx.db
-        .update(users)
-        .set({ password: hashed, updatedAt: new Date() })
-        .where(eq(users.id, userId));
 
       return { ok: true as const };
     }),
@@ -129,9 +162,7 @@ export const accountRouter = createTRPCRouter({
           .set({ ...input, updatedAt: now })
           .where(eq(userEmailPreferences.userId, userId));
       } else {
-        await ctx.db
-          .insert(userEmailPreferences)
-          .values({ userId, ...input });
+        await ctx.db.insert(userEmailPreferences).values({ userId, ...input });
       }
 
       // Sync unsubscribed status to Resend audience.

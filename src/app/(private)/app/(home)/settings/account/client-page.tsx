@@ -162,7 +162,8 @@ export default function AccountSettingsPage() {
         setNewPassword("");
         setConfirmPassword("");
         setPwError(null);
-        toast.success("Password changed.");
+        queryClient.invalidateQueries(trpc.account.me.queryOptions());
+        toast.success("Password saved.");
       },
       onError: (e) => {
         setPwError(e.message);
@@ -193,7 +194,11 @@ export default function AccountSettingsPage() {
   function handleChangePassword(e: React.FormEvent) {
     e.preventDefault();
     setPwError(null);
-    updatePassword.mutate({ currentPassword, newPassword, confirmPassword });
+    updatePassword.mutate({
+      currentPassword: me?.hasPassword ? currentPassword : undefined,
+      newPassword,
+      confirmPassword,
+    });
   }
 
   function handleSaveEmailPreferences(e: React.FormEvent) {
@@ -258,7 +263,11 @@ export default function AccountSettingsPage() {
       {/* Password */}
       <Section
         title="Password"
-        description="Use a strong password of at least 8 characters."
+        description={
+          me?.hasPassword
+            ? "Use a strong password of at least 8 characters."
+            : "You sign in with email links. Add a password if you also want to sign in with one."
+        }
       >
         <form onSubmit={handleChangePassword} className="space-y-4">
           {pwError ? (
@@ -266,16 +275,18 @@ export default function AccountSettingsPage() {
               {pwError}
             </Alert>
           ) : null}
-          <Field label="Current password" htmlFor="pw-current">
-            <Input
-              id="pw-current"
-              type="password"
-              value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
-              autoComplete="current-password"
-              placeholder="••••••••"
-            />
-          </Field>
+          {me?.hasPassword ? (
+            <Field label="Current password" htmlFor="pw-current">
+              <Input
+                id="pw-current"
+                type="password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                autoComplete="current-password"
+                placeholder="••••••••"
+              />
+            </Field>
+          ) : null}
           <Field label="New password" htmlFor="pw-new">
             <Input
               id="pw-new"
@@ -303,12 +314,12 @@ export default function AccountSettingsPage() {
               loading={updatePassword.isPending}
               disabled={
                 updatePassword.isPending ||
-                !currentPassword ||
+                (me?.hasPassword && !currentPassword) ||
                 !newPassword ||
                 !confirmPassword
               }
             >
-              Change password
+              {me?.hasPassword ? "Change password" : "Set password"}
             </Button>
           </div>
         </form>

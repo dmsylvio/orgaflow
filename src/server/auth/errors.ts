@@ -1,20 +1,5 @@
 import "server-only";
 
-type AuthErrorLike = {
-  type?: string;
-  cause?: unknown;
-};
-
-export function isJWTSessionError(error: unknown) {
-  if (!error || typeof error !== "object") {
-    return false;
-  }
-
-  const authError = error as AuthErrorLike;
-
-  return authError.type === "JWTSessionError";
-}
-
 type NextDynamicServerUsageErrorLike = {
   digest?: string;
 };

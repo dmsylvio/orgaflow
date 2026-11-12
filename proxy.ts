@@ -1,36 +1,24 @@
-import { NextResponse } from "next/server";
-import { auth } from "./auth";
+import { getSessionCookie } from "better-auth/cookies";
+import { type NextRequest, NextResponse } from "next/server";
 
-const PUBLIC_ROUTES = ["/", "/pricing"];
-const AUTH_ROUTES = ["/login", "/register", "/auth/error"];
-
-function matchesRoute(pathname: string, routes: string[]) {
-  return routes.some((route) => {
-    if (route === "/") return pathname === "/";
-    return pathname === route || pathname.startsWith(`${route}/`);
-  });
-}
-
-export const proxy = auth((req) => {
-  const { nextUrl } = req;
+/**
+ * Optimistic redirects based on the presence of the session cookie only.
+ * Every protected page and API still validates the session on the server.
+ * (Signed-in users are sent away from /login and /register by those pages,
+ * which check the real session, so a stale cookie can't cause a loop.)
+ */
+export function proxy(request: NextRequest) {
+  const { nextUrl } = request;
   const { pathname, search } = nextUrl;
-  const isAuthenticated = !!req.auth;
+  const hasSession = Boolean(getSessionCookie(request));
 
-  const isAuthRoute = matchesRoute(pathname, AUTH_ROUTES);
-  const isPublicRoute = matchesRoute(pathname, PUBLIC_ROUTES);
-  const isAppRoute = pathname.startsWith("/app");
-
-  if (isAuthRoute && isAuthenticated) {
-    return NextResponse.redirect(new URL("/app", nextUrl));
-  }
-
-  if (!isAuthenticated && isAppRoute && !isPublicRoute) {
+  if (pathname.startsWith("/app") && !hasSession) {
     const next = encodeURIComponent(`${pathname}${search}`);
     return NextResponse.redirect(new URL(`/login?next=${next}`, nextUrl));
   }
 
   return NextResponse.next();
-});
+}
 
 export const config = {
   matcher: [

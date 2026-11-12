@@ -28,7 +28,6 @@ import {
 } from "lucide-react";
 import NextLink from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { signOut, useSession } from "next-auth/react";
 import { type ReactNode, useCallback, useEffect, useState } from "react";
 import MainLogo from "@/components/logo";
 import { Button } from "@/components/ui/button";
@@ -42,6 +41,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Spinner } from "@/components/ui/spinner";
 import { appPaths } from "@/lib/app-paths";
+import { signOutAndRedirect, useSession } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
 import { useTRPC } from "@/trpc/client";
 
@@ -140,7 +140,7 @@ function UserMenuItems() {
       <DropdownMenuSeparator />
       <DropdownMenuItem
         className="cursor-pointer text-destructive focus:text-destructive"
-        onSelect={() => void signOut({ callbackUrl: "/" })}
+        onSelect={() => void signOutAndRedirect("/")}
       >
         <LogOut className="h-4 w-4" />
         Log out

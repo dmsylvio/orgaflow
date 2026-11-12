@@ -1,10 +1,14 @@
 import { relations } from "drizzle-orm";
-import { pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
+import {
+  boolean,
+  pgTable,
+  text,
+  timestamp,
+  uniqueIndex,
+} from "drizzle-orm/pg-core";
 import { uuidv7 } from "uuidv7";
-import { accounts } from "./accounts";
-import { authenticators } from "./authenticators";
+import { authAccounts, authSessions } from "./auth";
 import { organizationMembers } from "./organization-members";
-import { sessions } from "./sessions";
 import { userEmailPreferences } from "./user-email-preferences";
 
 export const users = pgTable(
@@ -16,8 +20,12 @@ export const users = pgTable(
     image: text("image"),
     name: text("name").notNull(),
     email: text("email").notNull().unique(),
-    password: text("password").notNull(),
-    emailVerified: timestamp("email_verified", { mode: "date" }),
+    /**
+     * @deprecated Legacy NextAuth bcrypt hash, kept for rollback only.
+     * Passwords now live in `auth_accounts` (provider "credential").
+     */
+    password: text("password"),
+    emailVerified: boolean("email_verified").default(false).notNull(),
     createdAt: timestamp("created_at", {
       withTimezone: true,
       mode: "date",
@@ -35,9 +43,8 @@ export const users = pgTable(
 );
 
 export const usersRelations = relations(users, ({ many, one }) => ({
-  accounts: many(accounts),
-  sessions: many(sessions),
-  authenticators: many(authenticators),
+  authAccounts: many(authAccounts),
+  authSessions: many(authSessions),
   organizationMembers: many(organizationMembers),
   emailPreferences: one(userEmailPreferences, {
     fields: [users.id],

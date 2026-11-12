@@ -39,7 +39,7 @@ For product narrative (high-level), see `README_orgaflow.md`.
 | --- | --- |
 | App & routing | Next.js `16.2.0` (App Router) + React `19` |
 | API | tRPC v11 (end-to-end types) |
-| Auth | Auth.js / NextAuth v5 (beta) + Drizzle adapter |
+| Auth | Better Auth (email + password, magic links) + Drizzle adapter |
 | Database | PostgreSQL + Drizzle ORM (+ SQL migrations in `drizzle/`) |
 | Validation & forms | Zod + React Hook Form |
 | UI | Tailwind CSS + Radix UI primitives + custom components in `src/components/ui/` |
@@ -156,7 +156,7 @@ pnpm install
 Copy `.env.example` to `.env` and fill the required values:
 
 - `DATABASE_URL` (PostgreSQL connection string)
-- `AUTH_SECRET`
+- `BETTER_AUTH_SECRET` (or the legacy `AUTH_SECRET`, used as a fallback)
 - `NEXT_PUBLIC_APP_URL` (e.g. `http://localhost:3000`)
 - `BLOB_READ_WRITE_TOKEN` (for uploads)
 - Stripe variables if you want to test billing flows

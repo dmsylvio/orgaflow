@@ -134,6 +134,20 @@
       "when": 1785955901119,
       "tag": "0018_watery_the_santerians",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1794510467505,
+      "tag": "0019_better_auth_tables",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1794510481475,
+      "tag": "0020_drop_nextauth_tables",
+      "breakpoints": true
     }
   ]
 }

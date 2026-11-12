@@ -1,13 +1,19 @@
 import "server-only";
-import { auth } from "../../../auth";
-import { isJWTSessionError, isNextDynamicServerUsageError } from "./errors";
+import { headers } from "next/headers";
+import { auth } from "./auth";
+import { isNextDynamicServerUsageError } from "./errors";
 
-export async function getCurrentSession() {
+/** The signed-in user and session, or `null`. */
+export type CurrentSession = NonNullable<
+  Awaited<ReturnType<typeof auth.api.getSession>>
+>;
+
+export async function getCurrentSession(): Promise<CurrentSession | null> {
   try {
-    return await auth();
+    return await auth.api.getSession({ headers: await headers() });
   } catch (error) {
-    if (isJWTSessionError(error) || isNextDynamicServerUsageError(error)) {
-      return null;
+    if (isNextDynamicServerUsageError(error)) {
+      throw error;
     }
 
     console.error("[auth] failed to load current session", error);

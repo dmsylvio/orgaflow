@@ -9,18 +9,23 @@ import { AuthCard } from "@/components/auth/auth-card";
 import { AuthField } from "@/components/auth/auth-field";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { authClient } from "@/lib/auth-client";
 import { toast } from "@/lib/toast";
 import {
   type ResetPasswordFormValues,
   resetPasswordSchema,
 } from "@/schemas/reset-password";
-import { resetPasswordAction } from "@/server/actions/auth";
 
 interface ResetPasswordFormProps {
   initialToken: string;
+  /** Set when Better Auth redirects back with an invalid/expired token. */
+  initialError?: string;
 }
 
-export function ResetPasswordForm({ initialToken }: ResetPasswordFormProps) {
+export function ResetPasswordForm({
+  initialToken,
+  initialError,
+}: ResetPasswordFormProps) {
   const router = useRouter();
 
   const {
@@ -41,13 +46,14 @@ export function ResetPasswordForm({ initialToken }: ResetPasswordFormProps) {
   const tokenMissing = !tokenValue?.trim();
 
   useEffect(() => {
-    if (!tokenMissing) return;
+    if (!tokenMissing && !initialError) return;
 
     toast.error("Reset link invalid", {
-      description:
-        "This reset link is missing a token. Open the link from your email or request a new one.",
+      description: initialError
+        ? "This reset link is invalid or has expired. Request a new one."
+        : "This reset link is missing a token. Open the link from your email or request a new one.",
     });
-  }, [tokenMissing]);
+  }, [tokenMissing, initialError]);
 
   return (
     <AuthCard
@@ -58,11 +64,17 @@ export function ResetPasswordForm({ initialToken }: ResetPasswordFormProps) {
 
       <form
         onSubmit={handleSubmit(async (values) => {
-          const result = await resetPasswordAction(values);
+          const { error } = await authClient.resetPassword({
+            token: values.token,
+            newPassword: values.password,
+          });
 
-          if (!result.success) {
+          if (error) {
             toast.error("Couldn't reset password", {
-              description: result.message,
+              description:
+                error.code === "INVALID_TOKEN"
+                  ? "This reset link is invalid or has expired."
+                  : (error.message ?? "Please try again."),
             });
             return;
           }
