@@ -112,11 +112,9 @@ function SettingsPage({
   children: React.ReactNode;
 }) {
   return (
-    <div className="w-full p-6 md:p-8">
+    <div className="w-full px-4 py-6 sm:px-6 md:px-8 md:py-8">
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-          {title}
-        </h1>
+        <h1 className="app-page-title">{title}</h1>
         {description ? (
           <p className="mt-1 text-sm text-muted-foreground">{description}</p>
         ) : null}
@@ -216,9 +214,7 @@ function CreateRoleForm({
         </div>
       </div>
 
-      <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
-        Permissions
-      </p>
+      <p className="mb-3 app-th">Permissions</p>
       <div className="mb-4 space-y-4">
         {permissionGroups.map((g) => (
           <div key={g.groupId}>
@@ -333,7 +329,7 @@ function RoleRow({
   }
 
   return (
-    <div className="rounded-xl border border-border bg-card shadow-sm">
+    <div className="app-card">
       <div className="flex items-center gap-3 p-4">
         <button
           type="button"

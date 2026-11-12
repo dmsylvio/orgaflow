@@ -1,5 +1,4 @@
-import { Separator } from "@/components/ui/separator";
-import { cn } from "@/lib/utils";
+import { StatusPill, type StatusTone } from "@/components/app/page-shell";
 
 export type InvoiceStatus =
   | "DRAFT"
@@ -11,41 +10,18 @@ export type InvoiceStatus =
   | "OVERDUE"
   | "VOID";
 
-const STATUS_STYLES: Record<InvoiceStatus, string> = {
-  DRAFT: "bg-slate-100 text-slate-700",
-  PENDING: "bg-amber-100 text-amber-700",
-  SENT: "bg-blue-100 text-blue-700",
-  VIEWED: "bg-cyan-100 text-cyan-700",
-  PARTIALLY_PAID: "bg-indigo-100 text-indigo-700",
-  PAID: "bg-emerald-100 text-emerald-700",
-  OVERDUE: "bg-rose-100 text-rose-700",
-  VOID: "bg-zinc-100 text-zinc-700",
+const STATUS_TONES: Record<InvoiceStatus, StatusTone> = {
+  DRAFT: "slate",
+  PENDING: "amber",
+  SENT: "blue",
+  VIEWED: "violet",
+  PARTIALLY_PAID: "amber",
+  PAID: "emerald",
+  OVERDUE: "rose",
+  VOID: "zinc",
 };
 
-export function PageShell({
-  title,
-  description,
-  children,
-}: {
-  title: string;
-  description?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="min-w-0 w-full p-6 md:p-8">
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-          {title}
-        </h1>
-        {description ? (
-          <p className="mt-1 text-sm text-muted-foreground">{description}</p>
-        ) : null}
-      </div>
-      <Separator className="mb-8" />
-      {children}
-    </div>
-  );
-}
+export { PageShell } from "@/components/app/page-shell";
 
 export function formatInvoiceDate(value: string | null) {
   if (!value) return null;
@@ -64,13 +40,6 @@ export function InvoiceStatusBadge({ status }: { status: InvoiceStatus }) {
     .join(" ");
 
   return (
-    <span
-      className={cn(
-        "inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium",
-        STATUS_STYLES[status] ?? "bg-muted text-muted-foreground",
-      )}
-    >
-      {label}
-    </span>
+    <StatusPill tone={STATUS_TONES[status] ?? "slate"}>{label}</StatusPill>
   );
 }

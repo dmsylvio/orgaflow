@@ -2,7 +2,6 @@ import { GoogleAnalytics } from "@next/third-parties/google";
 import { SiteJsonLd } from "@/components/json-ld";
 import { MarketingFooter } from "@/components/marketing/footer";
 import { MarketingNavbar } from "@/components/marketing/navbar";
-import { marketingFont } from "@/lib/fonts";
 
 export default function MarketingLayout({
   children,
@@ -13,7 +12,7 @@ export default function MarketingLayout({
 
   return (
     <div
-      className={`marketing ${marketingFont.variable} flex min-h-dvh flex-col overflow-visible bg-background`}
+      className={`marketing flex min-h-dvh flex-col overflow-visible bg-background`}
     >
       <SiteJsonLd />
       <MarketingNavbar />

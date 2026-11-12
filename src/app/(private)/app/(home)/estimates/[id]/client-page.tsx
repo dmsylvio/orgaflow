@@ -86,7 +86,7 @@ function EstimateFilesSection({ estimateId }: { estimateId: string }) {
   const files = filesQuery.data ?? [];
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-5">
+    <div className="app-card p-5">
       <div className="flex items-center gap-2">
         <Paperclip className="h-4 w-4 text-muted-foreground" />
         <h2 className="text-sm font-semibold text-foreground">Attachments</h2>
@@ -261,7 +261,7 @@ export default function EstimateDetailPage() {
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <div className="rounded-2xl border border-border bg-card p-4">
+          <div className="app-card p-4">
             <p className="text-xs uppercase tracking-wide text-muted-foreground/70">
               Estimate date
             </p>
@@ -269,7 +269,7 @@ export default function EstimateDetailPage() {
               {formatEstimateDate(estimate.estimateDate)}
             </p>
           </div>
-          <div className="rounded-2xl border border-border bg-card p-4">
+          <div className="app-card p-4">
             <p className="text-xs uppercase tracking-wide text-muted-foreground/70">
               Expiry
             </p>
@@ -278,7 +278,7 @@ export default function EstimateDetailPage() {
             </p>
           </div>
           {canViewPrices ? (
-            <div className="rounded-2xl border border-border bg-card p-4">
+            <div className="app-card p-4">
               <p className="text-xs uppercase tracking-wide text-muted-foreground/70">
                 Subtotal
               </p>
@@ -291,7 +291,7 @@ export default function EstimateDetailPage() {
             </div>
           ) : null}
           {canViewPrices ? (
-            <div className="rounded-2xl border border-border bg-card p-4">
+            <div className="app-card p-4">
               <p className="text-xs uppercase tracking-wide text-muted-foreground/70">
                 Total
               </p>
@@ -302,7 +302,7 @@ export default function EstimateDetailPage() {
           ) : null}
         </div>
 
-        <div className="rounded-2xl border border-border bg-card p-5">
+        <div className="app-card p-5">
           <div className="flex items-center justify-between gap-3">
             <h2 className="text-lg font-semibold text-foreground">
               Line items
@@ -404,7 +404,7 @@ export default function EstimateDetailPage() {
         </div>
 
         {estimate.notes ? (
-          <div className="rounded-2xl border border-border bg-card p-5">
+          <div className="app-card p-5">
             <h2 className="text-lg font-semibold text-foreground">Notes</h2>
             <RichTextContent
               html={estimate.notes}

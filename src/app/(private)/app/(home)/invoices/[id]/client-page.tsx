@@ -73,7 +73,7 @@ function InvoiceFilesSection({ invoiceId }: { invoiceId: string }) {
   const files = filesQuery.data ?? [];
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-5">
+    <div className="app-card p-5">
       <div className="flex items-center gap-2">
         <Paperclip className="h-4 w-4 text-muted-foreground" />
         <h2 className="text-sm font-semibold text-foreground">Attachments</h2>
@@ -173,7 +173,7 @@ export default function InvoiceDetailPage() {
 
   if (isPending || !invoice) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex min-h-0 flex-1 items-center justify-center py-24">
         <Spinner className="size-5 text-primary" label="Loading" />
       </div>
     );
@@ -216,7 +216,7 @@ export default function InvoiceDetailPage() {
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <div className="rounded-2xl border border-border bg-card p-4">
+          <div className="app-card p-4">
             <p className="text-xs uppercase tracking-wide text-muted-foreground/70">
               Invoice date
             </p>
@@ -224,7 +224,7 @@ export default function InvoiceDetailPage() {
               {formatInvoiceDate(invoice.invoiceDate)}
             </p>
           </div>
-          <div className="rounded-2xl border border-border bg-card p-4">
+          <div className="app-card p-4">
             <p className="text-xs uppercase tracking-wide text-muted-foreground/70">
               Due date
             </p>
@@ -233,7 +233,7 @@ export default function InvoiceDetailPage() {
             </p>
           </div>
           {canViewPrices ? (
-            <div className="rounded-2xl border border-border bg-card p-4">
+            <div className="app-card p-4">
               <p className="text-xs uppercase tracking-wide text-muted-foreground/70">
                 Subtotal
               </p>
@@ -246,7 +246,7 @@ export default function InvoiceDetailPage() {
             </div>
           ) : null}
           {canViewPrices ? (
-            <div className="rounded-2xl border border-border bg-card p-4">
+            <div className="app-card p-4">
               <p className="text-xs uppercase tracking-wide text-muted-foreground/70">
                 Total
               </p>
@@ -257,7 +257,7 @@ export default function InvoiceDetailPage() {
           ) : null}
         </div>
 
-        <div className="rounded-2xl border border-border bg-card p-5">
+        <div className="app-card p-5">
           <div className="flex items-center justify-between gap-3">
             <h2 className="text-lg font-semibold text-foreground">
               Line items
@@ -355,7 +355,7 @@ export default function InvoiceDetailPage() {
         </div>
 
         {invoice.notes ? (
-          <div className="rounded-2xl border border-border bg-card p-5">
+          <div className="app-card p-5">
             <h2 className="text-lg font-semibold text-foreground">Notes</h2>
             <RichTextContent
               html={invoice.notes}

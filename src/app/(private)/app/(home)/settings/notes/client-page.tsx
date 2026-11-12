@@ -31,11 +31,9 @@ function SettingsPage({
   children: React.ReactNode;
 }) {
   return (
-    <div className="w-full p-6 md:p-8">
+    <div className="w-full px-4 py-6 sm:px-6 md:px-8 md:py-8">
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-          {title}
-        </h1>
+        <h1 className="app-page-title">{title}</h1>
         {description ? (
           <p className="mt-1 text-sm text-muted-foreground">{description}</p>
         ) : null}
@@ -379,9 +377,9 @@ export default function NotesPage() {
       title="Notes"
       description="Save time by creating notes and reusing them on your invoices, estimates & payments."
     >
-      <div className="rounded-xl border border-border bg-card shadow-sm">
+      <div className="app-card">
         <div className="flex items-center justify-between border-b border-border px-4 py-3">
-          <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
+          <p className="app-th">
             {items.length} note{items.length !== 1 ? "s" : ""}
           </p>
           <Button
@@ -442,7 +440,9 @@ export default function NotesPage() {
         <EditNoteDialog
           note={editTarget}
           open={!!editTarget}
-          onOpenChange={(v) => { if (!v) setEditTarget(null); }}
+          onOpenChange={(v) => {
+            if (!v) setEditTarget(null);
+          }}
           onSuccess={invalidate}
         />
       ) : null}

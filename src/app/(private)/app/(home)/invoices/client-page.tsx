@@ -267,7 +267,7 @@ export default function InvoicesPage() {
       <div className="space-y-8">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="grid gap-3 sm:grid-cols-3">
-            <div className="rounded-2xl border border-border bg-card px-4 py-3">
+            <div className="app-card px-4 py-3">
               <p className="text-xs uppercase tracking-wide text-muted-foreground/70">
                 Total invoices
               </p>
@@ -275,7 +275,7 @@ export default function InvoicesPage() {
                 {usage?.total ?? invoices.length}
               </p>
             </div>
-            <div className="rounded-2xl border border-border bg-card px-4 py-3">
+            <div className="app-card px-4 py-3">
               <p className="text-xs uppercase tracking-wide text-muted-foreground/70">
                 Draft
               </p>
@@ -284,7 +284,7 @@ export default function InvoicesPage() {
               </p>
             </div>
             {canViewPrices ? (
-              <div className="rounded-2xl border border-border bg-card px-4 py-3">
+              <div className="app-card px-4 py-3">
                 <p className="text-xs uppercase tracking-wide text-muted-foreground/70">
                   Billed value
                 </p>
@@ -385,31 +385,29 @@ export default function InvoicesPage() {
             </p>
           </div>
         ) : (
-          <div className="overflow-hidden rounded-2xl border border-border bg-card">
+          <div className="overflow-hidden app-card">
             <table className="w-full table-fixed">
               <thead>
                 <tr className="border-b border-border">
-                  <th className="w-[18%] py-3 pl-4 pr-2 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
+                  <th className="w-[18%] py-3 pl-4 pr-2 text-left app-th">
                     Invoice
                   </th>
-                  <th className="w-[12%] px-2 py-3 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
-                    Status
-                  </th>
-                  <th className="w-[22%] px-2 py-3 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
+                  <th className="w-[12%] px-2 py-3 text-left app-th">Status</th>
+                  <th className="w-[22%] px-2 py-3 text-left app-th">
                     Customer
                   </th>
-                  <th className="w-[14%] px-2 py-3 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
+                  <th className="w-[14%] px-2 py-3 text-left app-th">
                     Invoice date
                   </th>
-                  <th className="w-[14%] px-2 py-3 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
+                  <th className="w-[14%] px-2 py-3 text-left app-th">
                     Due date
                   </th>
                   {canViewPrices ? (
-                    <th className="w-[12%] px-2 py-3 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
+                    <th className="w-[12%] px-2 py-3 text-left app-th">
                       Total
                     </th>
                   ) : null}
-                  <th className="w-16 py-3 pl-2 pr-4 text-right text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
+                  <th className="w-16 py-3 pl-2 pr-4 text-right app-th">
                     Actions
                   </th>
                 </tr>

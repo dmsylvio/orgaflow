@@ -1,7 +1,16 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { DollarSign, FileText, Paperclip, Percent, Plus, Trash2, Upload, X } from "lucide-react";
+import {
+  DollarSign,
+  FileText,
+  Paperclip,
+  Percent,
+  Plus,
+  Trash2,
+  Upload,
+  X,
+} from "lucide-react";
 import NextLink from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -367,7 +376,7 @@ export function EditEstimateForm() {
           </Button>
         </div>
 
-        <div className="rounded-2xl border border-border bg-card p-4">
+        <div className="app-card p-4">
           {draftItems.map((draftItem, index) => {
             const catalogItem = draftItem.itemId
               ? itemsById.get(draftItem.itemId)
@@ -563,7 +572,7 @@ export function EditEstimateForm() {
           </TabsContent>
         </Tabs>
 
-        <div className="rounded-2xl border border-border bg-card p-4">
+        <div className="app-card p-4">
           <p className="text-sm font-semibold text-foreground">Summary</p>
           <div className="mt-4 space-y-3 text-sm">
             <div className="flex items-center justify-between text-muted-foreground">
@@ -594,9 +603,7 @@ export function EditEstimateForm() {
                     className="absolute inset-0 z-10 cursor-pointer opacity-0"
                     aria-label="Discount type: fixed amount or percentage"
                     title={
-                      discountType === "fixed"
-                        ? "Fixed amount"
-                        : "Percentage"
+                      discountType === "fixed" ? "Fixed amount" : "Percentage"
                     }
                   >
                     <option value="fixed">Fixed</option>

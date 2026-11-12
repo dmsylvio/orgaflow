@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Toaster } from "sonner";
 import { AuthSessionProvider } from "@/components/providers/auth-session-provider";
 import { getAppBaseUrl } from "@/lib/base-url";
-import { poppins } from "@/lib/fonts";
+import { appFont } from "@/lib/fonts";
 import { TRPCReactProvider } from "@/trpc/client";
 import "@/styles/styles.css";
 
@@ -78,7 +78,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${poppins.variable} h-full`}
+      className={`${appFont.variable} h-full`}
       suppressHydrationWarning
     >
       <body className="h-full">

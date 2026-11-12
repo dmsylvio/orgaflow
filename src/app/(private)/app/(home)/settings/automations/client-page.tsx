@@ -58,22 +58,79 @@ function defaultStatusFor(doc: TriggerDoc): TriggerStatus {
   return doc === "invoice" ? "PAID" : "APPROVED";
 }
 
-const DEFAULT_TEMPLATES: Record<TriggerDoc, Record<string, { title: string; description: string }>> = {
+const DEFAULT_TEMPLATES: Record<
+  TriggerDoc,
+  Record<string, { title: string; description: string }>
+> = {
   invoice: {
-    DRAFT: { title: "Review draft invoice {{invoice.number}} for {{customer.name}}", description: "Invoice {{invoice.number}} has been created as a draft. Review and send when ready." },
-    SENT: { title: "Follow up on invoice {{invoice.number}} sent to {{customer.name}}", description: "Invoice {{invoice.number}} was sent to {{customer.name}}. Follow up if no response within a few days." },
-    VIEWED: { title: "Invoice {{invoice.number}} viewed by {{customer.name}}", description: "{{customer.name}} has viewed invoice {{invoice.number}}. Good time to follow up." },
-    PAID: { title: "Invoice {{invoice.number}} paid — start work for {{customer.name}}", description: "Payment received for invoice {{invoice.number}}. Begin production or fulfillment." },
-    OVERDUE: { title: "Overdue invoice {{invoice.number}} — follow up with {{customer.name}}", description: "Invoice {{invoice.number}} is overdue. Contact {{customer.name}} to arrange payment." },
-    CANCELLED: { title: "Invoice {{invoice.number}} cancelled for {{customer.name}}", description: "Invoice {{invoice.number}} has been cancelled. Follow up with {{customer.name}} if needed." },
+    DRAFT: {
+      title: "Review draft invoice {{invoice.number}} for {{customer.name}}",
+      description:
+        "Invoice {{invoice.number}} has been created as a draft. Review and send when ready.",
+    },
+    SENT: {
+      title:
+        "Follow up on invoice {{invoice.number}} sent to {{customer.name}}",
+      description:
+        "Invoice {{invoice.number}} was sent to {{customer.name}}. Follow up if no response within a few days.",
+    },
+    VIEWED: {
+      title: "Invoice {{invoice.number}} viewed by {{customer.name}}",
+      description:
+        "{{customer.name}} has viewed invoice {{invoice.number}}. Good time to follow up.",
+    },
+    PAID: {
+      title:
+        "Invoice {{invoice.number}} paid — start work for {{customer.name}}",
+      description:
+        "Payment received for invoice {{invoice.number}}. Begin production or fulfillment.",
+    },
+    OVERDUE: {
+      title:
+        "Overdue invoice {{invoice.number}} — follow up with {{customer.name}}",
+      description:
+        "Invoice {{invoice.number}} is overdue. Contact {{customer.name}} to arrange payment.",
+    },
+    CANCELLED: {
+      title: "Invoice {{invoice.number}} cancelled for {{customer.name}}",
+      description:
+        "Invoice {{invoice.number}} has been cancelled. Follow up with {{customer.name}} if needed.",
+    },
   },
   estimate: {
-    DRAFT: { title: "Review draft estimate {{estimate.number}} for {{customer.name}}", description: "Estimate {{estimate.number}} is in draft. Review before sending to {{customer.name}}." },
-    SENT: { title: "Follow up on estimate {{estimate.number}} sent to {{customer.name}}", description: "Estimate {{estimate.number}} was sent to {{customer.name}}. Follow up if no response." },
-    VIEWED: { title: "Estimate {{estimate.number}} viewed by {{customer.name}}", description: "{{customer.name}} has viewed estimate {{estimate.number}}. Good time to reach out." },
-    APPROVED: { title: "Start work for {{customer.name}} — estimate {{estimate.number}} approved", description: "Estimate {{estimate.number}} was approved by {{customer.name}}. Proceed with production." },
-    REJECTED: { title: "Estimate {{estimate.number}} rejected by {{customer.name}}", description: "{{customer.name}} rejected estimate {{estimate.number}}. Follow up to understand their concerns." },
-    EXPIRED: { title: "Estimate {{estimate.number}} expired — follow up with {{customer.name}}", description: "Estimate {{estimate.number}} has expired. Contact {{customer.name}} to renew or discuss." },
+    DRAFT: {
+      title: "Review draft estimate {{estimate.number}} for {{customer.name}}",
+      description:
+        "Estimate {{estimate.number}} is in draft. Review before sending to {{customer.name}}.",
+    },
+    SENT: {
+      title:
+        "Follow up on estimate {{estimate.number}} sent to {{customer.name}}",
+      description:
+        "Estimate {{estimate.number}} was sent to {{customer.name}}. Follow up if no response.",
+    },
+    VIEWED: {
+      title: "Estimate {{estimate.number}} viewed by {{customer.name}}",
+      description:
+        "{{customer.name}} has viewed estimate {{estimate.number}}. Good time to reach out.",
+    },
+    APPROVED: {
+      title:
+        "Start work for {{customer.name}} — estimate {{estimate.number}} approved",
+      description:
+        "Estimate {{estimate.number}} was approved by {{customer.name}}. Proceed with production.",
+    },
+    REJECTED: {
+      title: "Estimate {{estimate.number}} rejected by {{customer.name}}",
+      description:
+        "{{customer.name}} rejected estimate {{estimate.number}}. Follow up to understand their concerns.",
+    },
+    EXPIRED: {
+      title:
+        "Estimate {{estimate.number}} expired — follow up with {{customer.name}}",
+      description:
+        "Estimate {{estimate.number}} has expired. Contact {{customer.name}} to renew or discuss.",
+    },
   },
 };
 
@@ -142,8 +199,7 @@ function NativeSelect({
 
 const PLACEHOLDERS_HINT = (
   <p className="text-xs text-muted-foreground">
-    Placeholders:{" "}
-    <code className="font-mono">{"{{invoice.number}}"}</code>{" "}
+    Placeholders: <code className="font-mono">{"{{invoice.number}}"}</code>{" "}
     <code className="font-mono">{"{{estimate.number}}"}</code>{" "}
     <code className="font-mono">{"{{customer.name}}"}</code>
   </p>
@@ -219,7 +275,13 @@ function CreateRuleDialog({
   const defaultStage = stages.find((s) => s.isSystem);
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) reset(); }}>
+    <Dialog
+      open={open}
+      onOpenChange={(v) => {
+        onOpenChange(v);
+        if (!v) reset();
+      }}
+    >
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>Add Automation Rule</DialogTitle>
@@ -227,22 +289,30 @@ function CreateRuleDialog({
         <DialogBody className="space-y-5">
           {/* Trigger */}
           <div className="space-y-3">
-            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
-              Trigger
-            </p>
+            <p className="app-th">Trigger</p>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label htmlFor="cr-doc">Document</Label>
-                <NativeSelect id="cr-doc" value={doc} onChange={(v) => handleDocChange(v as TriggerDoc)}>
+                <NativeSelect
+                  id="cr-doc"
+                  value={doc}
+                  onChange={(v) => handleDocChange(v as TriggerDoc)}
+                >
                   <option value="invoice">Invoice</option>
                   <option value="estimate">Estimate</option>
                 </NativeSelect>
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="cr-status">When status becomes</Label>
-                <NativeSelect id="cr-status" value={status} onChange={(v) => handleStatusChange(v as TriggerStatus)}>
+                <NativeSelect
+                  id="cr-status"
+                  value={status}
+                  onChange={(v) => handleStatusChange(v as TriggerStatus)}
+                >
                   {statusesFor(doc).map((s) => (
-                    <option key={s.value} value={s.value}>{s.label}</option>
+                    <option key={s.value} value={s.value}>
+                      {s.label}
+                    </option>
                   ))}
                 </NativeSelect>
               </div>
@@ -251,9 +321,7 @@ function CreateRuleDialog({
 
           {/* Action */}
           <div className="space-y-3">
-            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
-              Action — Create Task
-            </p>
+            <p className="app-th">Action — Create Task</p>
             <div className="space-y-1.5">
               <Label htmlFor="cr-title">Title template</Label>
               <Input
@@ -266,7 +334,12 @@ function CreateRuleDialog({
               {PLACEHOLDERS_HINT}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="cr-desc">Description template <span className="text-xs text-muted-foreground">(optional)</span></Label>
+              <Label htmlFor="cr-desc">
+                Description template{" "}
+                <span className="text-xs text-muted-foreground">
+                  (optional)
+                </span>
+              </Label>
               <Textarea
                 id="cr-desc"
                 value={description}
@@ -277,13 +350,21 @@ function CreateRuleDialog({
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label htmlFor="cr-stage">Stage</Label>
-                <NativeSelect id="cr-stage" value={stageId} onChange={setStageId}>
+                <NativeSelect
+                  id="cr-stage"
+                  value={stageId}
+                  onChange={setStageId}
+                >
                   {defaultStage ? (
                     <option value="">{defaultStage.name} (default)</option>
                   ) : null}
-                  {stages.filter((s) => !s.isSystem).map((s) => (
-                    <option key={s.id} value={s.id}>{s.name}</option>
-                  ))}
+                  {stages
+                    .filter((s) => !s.isSystem)
+                    .map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name}
+                      </option>
+                    ))}
                 </NativeSelect>
               </div>
               <div className="space-y-1.5">
@@ -301,17 +382,27 @@ function CreateRuleDialog({
             </div>
             <div className="flex items-start justify-between gap-4 rounded-lg border border-border bg-muted/30 px-4 py-3">
               <div className="space-y-0.5">
-                <Label htmlFor="cr-attach" className="text-sm font-medium">Attach document to task</Label>
+                <Label htmlFor="cr-attach" className="text-sm font-medium">
+                  Attach document to task
+                </Label>
                 <p className="text-xs text-muted-foreground">
                   The linked {doc} will be visible inside the created task.
                 </p>
               </div>
-              <Switch id="cr-attach" checked={attachDocument} onCheckedChange={setAttachDocument} />
+              <Switch
+                id="cr-attach"
+                checked={attachDocument}
+                onCheckedChange={setAttachDocument}
+              />
             </div>
           </div>
         </DialogBody>
         <DialogFooter>
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+          >
             Cancel
           </Button>
           <Button
@@ -355,12 +446,20 @@ function EditRuleDialog({
   stages: Stage[];
   onSuccess: () => void;
 }) {
-  const [doc, setDoc] = useState<TriggerDoc>(rule.triggerDocument as TriggerDoc);
-  const [status, setStatus] = useState<TriggerStatus>(rule.triggerStatus as TriggerStatus);
+  const [doc, setDoc] = useState<TriggerDoc>(
+    rule.triggerDocument as TriggerDoc,
+  );
+  const [status, setStatus] = useState<TriggerStatus>(
+    rule.triggerStatus as TriggerStatus,
+  );
   const [stageId, setStageId] = useState(rule.taskStageId ?? "");
   const [title, setTitle] = useState(rule.taskTitleTemplate);
-  const [description, setDescription] = useState(rule.taskDescriptionTemplate ?? "");
-  const [dueDays, setDueDays] = useState(rule.dueDateOffsetDays !== null ? String(rule.dueDateOffsetDays) : "");
+  const [description, setDescription] = useState(
+    rule.taskDescriptionTemplate ?? "",
+  );
+  const [dueDays, setDueDays] = useState(
+    rule.dueDateOffsetDays !== null ? String(rule.dueDateOffsetDays) : "",
+  );
   const [attachDocument, setAttachDocument] = useState(rule.attachDocument);
   const trpc = useTRPC();
 
@@ -376,8 +475,7 @@ function EditRuleDialog({
         onOpenChange(false);
         toast.success("Automation updated.");
       },
-      onError: (e) =>
-        toast.error("Couldn't save", { description: e.message }),
+      onError: (e) => toast.error("Couldn't save", { description: e.message }),
     }),
   );
 
@@ -392,22 +490,30 @@ function EditRuleDialog({
         <DialogBody className="space-y-5">
           {/* Trigger */}
           <div className="space-y-3">
-            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
-              Trigger
-            </p>
+            <p className="app-th">Trigger</p>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label htmlFor="er-doc">Document</Label>
-                <NativeSelect id="er-doc" value={doc} onChange={(v) => handleDocChange(v as TriggerDoc)}>
+                <NativeSelect
+                  id="er-doc"
+                  value={doc}
+                  onChange={(v) => handleDocChange(v as TriggerDoc)}
+                >
                   <option value="invoice">Invoice</option>
                   <option value="estimate">Estimate</option>
                 </NativeSelect>
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="er-status">When status becomes</Label>
-                <NativeSelect id="er-status" value={status} onChange={(v) => setStatus(v as TriggerStatus)}>
+                <NativeSelect
+                  id="er-status"
+                  value={status}
+                  onChange={(v) => setStatus(v as TriggerStatus)}
+                >
                   {statusesFor(doc).map((s) => (
-                    <option key={s.value} value={s.value}>{s.label}</option>
+                    <option key={s.value} value={s.value}>
+                      {s.label}
+                    </option>
                   ))}
                 </NativeSelect>
               </div>
@@ -416,9 +522,7 @@ function EditRuleDialog({
 
           {/* Action */}
           <div className="space-y-3">
-            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
-              Action — Create Task
-            </p>
+            <p className="app-th">Action — Create Task</p>
             <div className="space-y-1.5">
               <Label htmlFor="er-title">Title template</Label>
               <Input
@@ -430,7 +534,12 @@ function EditRuleDialog({
               {PLACEHOLDERS_HINT}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="er-desc">Description template <span className="text-xs text-muted-foreground">(optional)</span></Label>
+              <Label htmlFor="er-desc">
+                Description template{" "}
+                <span className="text-xs text-muted-foreground">
+                  (optional)
+                </span>
+              </Label>
               <Textarea
                 id="er-desc"
                 value={description}
@@ -441,13 +550,21 @@ function EditRuleDialog({
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label htmlFor="er-stage">Stage</Label>
-                <NativeSelect id="er-stage" value={stageId} onChange={setStageId}>
+                <NativeSelect
+                  id="er-stage"
+                  value={stageId}
+                  onChange={setStageId}
+                >
                   {defaultStage ? (
                     <option value="">{defaultStage.name} (default)</option>
                   ) : null}
-                  {stages.filter((s) => !s.isSystem).map((s) => (
-                    <option key={s.id} value={s.id}>{s.name}</option>
-                  ))}
+                  {stages
+                    .filter((s) => !s.isSystem)
+                    .map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name}
+                      </option>
+                    ))}
                 </NativeSelect>
               </div>
               <div className="space-y-1.5">
@@ -465,17 +582,27 @@ function EditRuleDialog({
             </div>
             <div className="flex items-start justify-between gap-4 rounded-lg border border-border bg-muted/30 px-4 py-3">
               <div className="space-y-0.5">
-                <Label htmlFor="er-attach" className="text-sm font-medium">Attach document to task</Label>
+                <Label htmlFor="er-attach" className="text-sm font-medium">
+                  Attach document to task
+                </Label>
                 <p className="text-xs text-muted-foreground">
                   The linked {doc} will be visible inside the created task.
                 </p>
               </div>
-              <Switch id="er-attach" checked={attachDocument} onCheckedChange={setAttachDocument} />
+              <Switch
+                id="er-attach"
+                checked={attachDocument}
+                onCheckedChange={setAttachDocument}
+              />
             </div>
           </div>
         </DialogBody>
         <DialogFooter>
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+          >
             Cancel
           </Button>
           <Button
@@ -544,7 +671,9 @@ function RuleRow({
         </p>
         <p className="text-xs text-muted-foreground mt-0.5">
           {docLabel(rule.triggerDocument)}{" "}
-          <span className="font-medium">{statusLabel(rule.triggerDocument, rule.triggerStatus)}</span>
+          <span className="font-medium">
+            {statusLabel(rule.triggerDocument, rule.triggerStatus)}
+          </span>
           {" → Create Task"}
           {stageName ? ` · ${stageName}` : ""}
           {rule.attachDocument ? " · Doc attached" : ""}
@@ -592,9 +721,9 @@ function SettingsPage({
   children: React.ReactNode;
 }) {
   return (
-    <div className="w-full p-6 md:p-8">
+    <div className="w-full px-4 py-6 sm:px-6 md:px-8 md:py-8">
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">{title}</h1>
+        <h1 className="app-page-title">{title}</h1>
         {description ? (
           <p className="mt-1 text-sm text-muted-foreground">{description}</p>
         ) : null}
@@ -655,69 +784,73 @@ export default function AutomationsPage() {
 
   return (
     <PlanGate requiredPlan="scale">
-    <SettingsPage
-      title="Workflow Automations"
-      description="Automatically create tasks when a document reaches a specific status."
-    >
-      <div className="rounded-xl border border-border bg-card shadow-sm">
-        <div className="flex items-center justify-between border-b border-border px-4 py-3">
-          <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
-            {rules.length} rule{rules.length !== 1 ? "s" : ""}
-          </p>
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            onClick={() => setCreateOpen(true)}
-          >
-            <Plus className="h-4 w-4" />
-            Add rule
-          </Button>
+      <SettingsPage
+        title="Workflow Automations"
+        description="Automatically create tasks when a document reaches a specific status."
+      >
+        <div className="app-card">
+          <div className="flex items-center justify-between border-b border-border px-4 py-3">
+            <p className="app-th">
+              {rules.length} rule{rules.length !== 1 ? "s" : ""}
+            </p>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => setCreateOpen(true)}
+            >
+              <Plus className="h-4 w-4" />
+              Add rule
+            </Button>
+          </div>
+
+          {rules.length === 0 ? (
+            <div className="p-8 text-center">
+              <p className="text-sm text-muted-foreground">
+                No automation rules yet. Add one above.
+              </p>
+            </div>
+          ) : (
+            <table className="w-full">
+              <tbody>
+                {rules.map((rule) => (
+                  <RuleRow
+                    key={rule.id}
+                    rule={rule}
+                    stages={stages}
+                    onEdit={setEditTarget}
+                    onDelete={(id) => remove.mutate({ id })}
+                    onToggle={(id, enabled) =>
+                      toggle.mutate({ id, isEnabled: enabled })
+                    }
+                    isDeletePending={remove.isPending}
+                    isTogglePending={toggle.isPending}
+                  />
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
 
-        {rules.length === 0 ? (
-          <div className="p-8 text-center">
-            <p className="text-sm text-muted-foreground">
-              No automation rules yet. Add one above.
-            </p>
-          </div>
-        ) : (
-          <table className="w-full">
-            <tbody>
-              {rules.map((rule) => (
-                <RuleRow
-                  key={rule.id}
-                  rule={rule}
-                  stages={stages}
-                  onEdit={setEditTarget}
-                  onDelete={(id) => remove.mutate({ id })}
-                  onToggle={(id, enabled) => toggle.mutate({ id, isEnabled: enabled })}
-                  isDeletePending={remove.isPending}
-                  isTogglePending={toggle.isPending}
-                />
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
-
-      <CreateRuleDialog
-        open={createOpen}
-        onOpenChange={setCreateOpen}
-        stages={stages}
-        onSuccess={invalidate}
-      />
-
-      {editTarget ? (
-        <EditRuleDialog
-          rule={editTarget}
-          open={!!editTarget}
-          onOpenChange={(v) => { if (!v) setEditTarget(null); }}
+        <CreateRuleDialog
+          open={createOpen}
+          onOpenChange={setCreateOpen}
           stages={stages}
           onSuccess={invalidate}
         />
-      ) : null}
-    </SettingsPage>
+
+        {editTarget ? (
+          <EditRuleDialog
+            rule={editTarget}
+            open={!!editTarget}
+            onOpenChange={(v) => {
+              if (!v) setEditTarget(null);
+            }}
+            stages={stages}
+            onSuccess={invalidate}
+          />
+        ) : null}
+      </SettingsPage>
     </PlanGate>
   );
 }

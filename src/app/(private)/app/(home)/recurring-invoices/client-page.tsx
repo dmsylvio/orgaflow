@@ -177,7 +177,7 @@ export default function RecurringInvoicesClientPage() {
 
   if (isPending) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex min-h-0 flex-1 items-center justify-center py-24">
         <Spinner className="size-5 text-primary" label="Loading" />
       </div>
     );
@@ -191,7 +191,7 @@ export default function RecurringInvoicesClientPage() {
       <div className="space-y-8">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="grid gap-3 sm:grid-cols-3">
-            <div className="rounded-2xl border border-border bg-card px-4 py-3">
+            <div className="app-card px-4 py-3">
               <p className="text-xs uppercase tracking-wide text-muted-foreground/70">
                 Active
               </p>
@@ -199,7 +199,7 @@ export default function RecurringInvoicesClientPage() {
                 {activeCount}
               </p>
             </div>
-            <div className="rounded-2xl border border-border bg-card px-4 py-3">
+            <div className="app-card px-4 py-3">
               <p className="text-xs uppercase tracking-wide text-muted-foreground/70">
                 Paused
               </p>
@@ -207,7 +207,7 @@ export default function RecurringInvoicesClientPage() {
                 {pausedCount}
               </p>
             </div>
-            <div className="rounded-2xl border border-border bg-card px-4 py-3">
+            <div className="app-card px-4 py-3">
               <p className="text-xs uppercase tracking-wide text-muted-foreground/70">
                 Completed
               </p>

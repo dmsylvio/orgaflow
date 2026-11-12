@@ -34,7 +34,7 @@ export function TabsList({
   return (
     <div
       className={cn(
-        "inline-flex h-9 items-center gap-1 rounded-lg border border-border bg-muted/50 p-1",
+        "inline-flex h-10 items-center gap-1 rounded-xl border border-border bg-muted/60 p-1",
         className,
       )}
     >
@@ -59,9 +59,9 @@ export function TabsTrigger({
       type="button"
       onClick={() => setActive(value)}
       className={cn(
-        "inline-flex items-center justify-center gap-1.5 rounded-md px-3 py-1 text-sm font-medium transition-all",
+        "inline-flex items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold transition-all",
         isActive
-          ? "bg-background text-foreground shadow-xs"
+          ? "bg-card text-foreground shadow-[0_1px_3px_rgba(15,23,42,0.12)]"
           : "text-muted-foreground hover:text-foreground",
         className,
       )}

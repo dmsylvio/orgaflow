@@ -16,14 +16,14 @@ import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import { formatCurrencyDisplay } from "@/lib/currency-format";
 import { toast } from "@/lib/toast";
-import { useTRPC } from "@/trpc/client";
 import {
   FREQUENCY_LABELS,
   RECURRING_FREQUENCIES,
 } from "@/schemas/recurring-invoice";
+import { useTRPC } from "@/trpc/client";
 import {
-  formatNextRun,
   FrequencyLabel,
+  formatNextRun,
   PageShell,
   RecurringStatusBadge,
 } from "../../recurring-invoice-ui";
@@ -66,7 +66,9 @@ export function EditRecurringInvoiceForm({ id }: { id: string }) {
     trpc.items.list.queryOptions(),
   );
   const { data: generatedInvoices = [] } = useQuery(
-    trpc.recurringInvoices.listGeneratedInvoices.queryOptions({ templateId: id }),
+    trpc.recurringInvoices.listGeneratedInvoices.queryOptions({
+      templateId: id,
+    }),
   );
 
   const [name, setName] = useState("");
@@ -81,8 +83,12 @@ export function EditRecurringInvoiceForm({ id }: { id: string }) {
   const [notes, setNotes] = useState("");
   const [draftItems, setDraftItems] = useState<DraftItem[]>([makeDraftItem()]);
   const [discountValue, setDiscountValue] = useState("");
-  const [discountType, setDiscountType] = useState<"fixed" | "percentage">("fixed");
-  const [summaryTaxRows, setSummaryTaxRows] = useState<{ key: string; taxId: string }[]>([]);
+  const [discountType, setDiscountType] = useState<"fixed" | "percentage">(
+    "fixed",
+  );
+  const [summaryTaxRows, setSummaryTaxRows] = useState<
+    { key: string; taxId: string }[]
+  >([]);
   const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
@@ -93,7 +99,9 @@ export function EditRecurringInvoiceForm({ id }: { id: string }) {
     setStartDate(template.startDate);
     setLimitType(template.limitType as "none" | "date" | "count");
     setLimitDate(template.limitDate ?? "");
-    setLimitCount(template.limitCount !== null ? String(template.limitCount) : "");
+    setLimitCount(
+      template.limitCount !== null ? String(template.limitCount) : "",
+    );
     setDueDaysOffset(
       template.dueDaysOffset !== null ? String(template.dueDaysOffset) : "",
     );
@@ -119,7 +127,9 @@ export function EditRecurringInvoiceForm({ id }: { id: string }) {
   const update = useMutation(
     trpc.recurringInvoices.update.mutationOptions({
       onSuccess: () => {
-        queryClient.invalidateQueries(trpc.recurringInvoices.list.queryOptions());
+        queryClient.invalidateQueries(
+          trpc.recurringInvoices.list.queryOptions(),
+        );
         queryClient.invalidateQueries(
           trpc.recurringInvoices.getById.queryOptions({ id }),
         );
@@ -127,7 +137,9 @@ export function EditRecurringInvoiceForm({ id }: { id: string }) {
         router.push("/app/recurring-invoices");
       },
       onError: (error) =>
-        toast.error("Couldn't update recurring invoice.", { description: error.message }),
+        toast.error("Couldn't update recurring invoice.", {
+          description: error.message,
+        }),
     }),
   );
 
@@ -151,7 +163,9 @@ export function EditRecurringInvoiceForm({ id }: { id: string }) {
     }
     const discountInputVal = Number(discountValue) || 0;
     const rawDiscount =
-      discountType === "fixed" ? discountInputVal : sub * (discountInputVal / 100);
+      discountType === "fixed"
+        ? discountInputVal
+        : sub * (discountInputVal / 100);
     const discount = Math.min(rawDiscount, sub);
     const discounted = sub - discount;
     const rows = summaryTaxRows.map(({ key, taxId }) => {
@@ -163,7 +177,10 @@ export function EditRecurringInvoiceForm({ id }: { id: string }) {
     return { subTotal: sub, taxRows: rows, grandTotal: discounted + taxTotal };
   }, [draftItems, discountValue, discountType, summaryTaxRows, taxTypesById]);
 
-  function updateDraftItem(draftId: string, updater: (c: DraftItem) => DraftItem) {
+  function updateDraftItem(
+    draftId: string,
+    updater: (c: DraftItem) => DraftItem,
+  ) {
     setDraftItems((current) =>
       current.map((item) => (item.id === draftId ? updater(item) : item)),
     );
@@ -211,7 +228,7 @@ export function EditRecurringInvoiceForm({ id }: { id: string }) {
 
   if (templatePending || metaPending || itemsPending) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex min-h-0 flex-1 items-center justify-center py-24">
         <Spinner className="size-5 text-primary" label="Loading" />
       </div>
     );
@@ -241,7 +258,11 @@ export function EditRecurringInvoiceForm({ id }: { id: string }) {
             Frequency:{" "}
             <span className="font-medium text-foreground">
               <FrequencyLabel
-                frequency={template.frequency as Parameters<typeof FrequencyLabel>[0]["frequency"]}
+                frequency={
+                  template.frequency as Parameters<
+                    typeof FrequencyLabel
+                  >[0]["frequency"]
+                }
               />
             </span>
           </span>
@@ -355,7 +376,9 @@ export function EditRecurringInvoiceForm({ id }: { id: string }) {
               <div>
                 <Label htmlFor="ri-edit-due-offset">
                   Due days offset{" "}
-                  <span className="text-xs text-muted-foreground">(optional)</span>
+                  <span className="text-xs text-muted-foreground">
+                    (optional)
+                  </span>
                 </Label>
                 <Input
                   id="ri-edit-due-offset"
@@ -379,7 +402,10 @@ export function EditRecurringInvoiceForm({ id }: { id: string }) {
               checked={sendAutomatically}
               onChange={(e) => setSendAutomatically(e.target.checked)}
             />
-            <label htmlFor="ri-edit-send-auto" className="text-sm text-foreground">
+            <label
+              htmlFor="ri-edit-send-auto"
+              className="text-sm text-foreground"
+            >
               Send automatically
               <span className="ml-1 text-xs text-muted-foreground">
                 — email the invoice to the customer when it is generated
@@ -391,9 +417,12 @@ export function EditRecurringInvoiceForm({ id }: { id: string }) {
           <div className="space-y-4">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <h2 className="text-sm font-semibold text-foreground">Line items</h2>
+                <h2 className="text-sm font-semibold text-foreground">
+                  Line items
+                </h2>
                 <p className="text-xs text-muted-foreground">
-                  Items from your catalog will be copied to each generated invoice.
+                  Items from your catalog will be copied to each generated
+                  invoice.
                 </p>
               </div>
               <Button
@@ -409,13 +438,14 @@ export function EditRecurringInvoiceForm({ id }: { id: string }) {
               </Button>
             </div>
 
-            <div className="rounded-2xl border border-border bg-card p-4">
+            <div className="app-card p-4">
               {draftItems.map((draftItem, index) => {
                 const catalogItem = draftItem.itemId
                   ? itemsById.get(draftItem.itemId)
                   : null;
                 const lineTotal =
-                  Number(draftItem.quantity || 0) * Number(draftItem.unitPrice || 0);
+                  Number(draftItem.quantity || 0) *
+                  Number(draftItem.unitPrice || 0);
 
                 return (
                   <div key={draftItem.id}>
@@ -440,7 +470,9 @@ export function EditRecurringInvoiceForm({ id }: { id: string }) {
                       </div>
 
                       <div className="space-y-1.5">
-                        <Label htmlFor={`ri-edit-qty-${draftItem.id}`}>Qty</Label>
+                        <Label htmlFor={`ri-edit-qty-${draftItem.id}`}>
+                          Qty
+                        </Label>
                         <Input
                           id={`ri-edit-qty-${draftItem.id}`}
                           type="number"
@@ -528,7 +560,7 @@ export function EditRecurringInvoiceForm({ id }: { id: string }) {
               />
             </div>
 
-            <div className="rounded-2xl border border-border bg-card p-4">
+            <div className="app-card p-4">
               <p className="text-sm font-semibold text-foreground">Summary</p>
               <div className="mt-4 space-y-3 text-sm">
                 <div className="flex items-center justify-between text-muted-foreground">
@@ -539,7 +571,9 @@ export function EditRecurringInvoiceForm({ id }: { id: string }) {
                 </div>
 
                 <div className="flex items-center justify-between gap-2">
-                  <span className="shrink-0 text-muted-foreground">Discount</span>
+                  <span className="shrink-0 text-muted-foreground">
+                    Discount
+                  </span>
                   <div className="flex gap-1">
                     <Input
                       type="number"
@@ -656,7 +690,10 @@ export function EditRecurringInvoiceForm({ id }: { id: string }) {
               type="submit"
               loading={update.isPending}
               disabled={
-                update.isPending || !name || !customerId || validDraftItems.length === 0
+                update.isPending ||
+                !name ||
+                !customerId ||
+                validDraftItems.length === 0
               }
             >
               Save changes
@@ -691,7 +728,10 @@ export function EditRecurringInvoiceForm({ id }: { id: string }) {
                 </thead>
                 <tbody>
                   {generatedInvoices.map((inv) => (
-                    <tr key={inv.id} className="border-b border-border last:border-0">
+                    <tr
+                      key={inv.id}
+                      className="border-b border-border last:border-0"
+                    >
                       <td className="py-3 pl-4 pr-2 text-sm font-medium text-foreground">
                         {inv.invoiceNumber}
                       </td>

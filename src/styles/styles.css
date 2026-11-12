@@ -6,43 +6,44 @@
   :root {
     color-scheme: light;
 
-    --background: 0 0% 99%;
-    --foreground: 224 71% 4%;
+    /* Brand: midnight ink + iris. Shared by the app, auth, and public pages. */
+    --background: 228 33% 98%;
+    --foreground: 232 47% 8%;
 
     --card: 0 0% 100%;
-    --card-foreground: 224 71% 4%;
+    --card-foreground: 232 47% 8%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 224 71% 4%;
+    --popover-foreground: 232 47% 8%;
 
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 243 75% 59%;
+    --border: 228 24% 90%;
+    --input: 228 22% 85%;
+    --ring: 246 83% 60%;
 
-    --primary: 243 75% 59%;
+    --primary: 246 83% 60%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 14% 96%;
-    --secondary-foreground: 224 71% 10%;
+    --secondary: 228 30% 96%;
+    --secondary-foreground: 232 47% 12%;
 
-    --muted: 220 14% 96%;
-    --muted-foreground: 220 9% 46%;
+    --muted: 228 30% 96%;
+    --muted-foreground: 230 13% 42%;
 
-    --accent: 220 14% 96%;
-    --accent-foreground: 224 71% 10%;
+    --accent: 246 90% 96.5%;
+    --accent-foreground: 246 65% 42%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 98%;
 
-    --radius: 0.625rem;
+    --radius: 0.75rem;
 
-    /* Sidebar — deep blue-dark */
-    --sidebar: 224 71% 4%;
-    --sidebar-foreground: 213 27% 84%;
-    --sidebar-border: 225 32% 10%;
-    --sidebar-accent: 225 28% 11%;
-    --sidebar-accent-foreground: 213 27% 92%;
-    --sidebar-primary: 243 75% 68%;
+    /* Sidebar: midnight ink */
+    --sidebar: 231 52% 7%;
+    --sidebar-foreground: 228 30% 80%;
+    --sidebar-border: 232 35% 14%;
+    --sidebar-accent: 232 38% 14%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-primary: 239 90% 76%;
     --sidebar-primary-foreground: 0 0% 100%;
   }
 
@@ -58,9 +59,107 @@
   }
 }
 
+/* ---------- App (panel, auth, public documents) ---------- */
+@layer components {
+  .app-page-title {
+    @apply text-2xl font-bold tracking-[-0.025em] text-foreground sm:text-[1.75rem];
+  }
+
+  .app-th {
+    @apply text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground;
+  }
+
+  .app-card {
+    @apply rounded-2xl border border-border/80 bg-card shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-18px_rgba(30,27,75,0.25)];
+  }
+
+  .app-gradient {
+    background-image: linear-gradient(
+      135deg,
+      #6366f1 0%,
+      #8b5cf6 55%,
+      #a855f7 100%
+    );
+  }
+
+  .app-text-gradient {
+    background: linear-gradient(100deg, #4f46e5 0%, #9333ea 55%, #059669 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+}
+
+/* Soft glow behind the dark sidebar and dark panels. */
+.app-aurora {
+  background:
+    radial-gradient(60% 35% at 10% 0%, rgb(99 102 241 / 0.35), transparent 70%),
+    radial-gradient(
+      50% 30% at 100% 100%,
+      rgb(168 85 247 / 0.2),
+      transparent 70%
+    );
+}
+
+.app-grid {
+  background-image:
+    linear-gradient(to right, rgb(255 255 255 / 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(255 255 255 / 0.05) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(
+    ellipse 90% 70% at 50% 0%,
+    #000 40%,
+    transparent 100%
+  );
+}
+
+.app-grid-light {
+  background-image:
+    linear-gradient(to right, hsl(var(--border) / 0.7) 1px, transparent 1px),
+    linear-gradient(to bottom, hsl(var(--border) / 0.7) 1px, transparent 1px);
+  background-size: 40px 40px;
+  mask-image: radial-gradient(
+    ellipse 80% 60% at 50% 0%,
+    #000 25%,
+    transparent 100%
+  );
+}
+
+.app-fade-in {
+  animation: app-fade-in 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+@keyframes app-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.app-shimmer {
+  background: linear-gradient(
+    110deg,
+    hsl(var(--muted)) 30%,
+    hsl(var(--border)) 50%,
+    hsl(var(--muted)) 70%
+  );
+  background-size: 250% 100%;
+  animation: app-shimmer 1.6s ease-in-out infinite;
+}
+@keyframes app-shimmer {
+  from {
+    background-position: 150% 0;
+  }
+  to {
+    background-position: -50% 0;
+  }
+}
+
 /* Marketing site: "midnight ink + iris" palette. Scoped so the app is unaffected. */
 .marketing {
-  --font-sans: var(--font-marketing);
   --background: 228 33% 98%;
   --foreground: 232 47% 8%;
   --card: 0 0% 100%;
@@ -77,7 +176,6 @@
   --accent: 246 90% 96%;
   --accent-foreground: 246 70% 40%;
   --radius: 0.875rem;
-  font-family: var(--font-marketing), system-ui, sans-serif;
   color: hsl(var(--foreground));
 }
 
@@ -351,5 +449,31 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     opacity: 1 !important;
+  }
+}
+
+/* Open/close motion for Radix popovers, menus and dialogs. */
+.ui-pop[data-state="open"] {
+  animation: ui-pop-in 0.16s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.ui-fade[data-state="open"] {
+  animation: ui-fade-in 0.2s ease-out;
+}
+@keyframes ui-pop-in {
+  from {
+    opacity: 0;
+    scale: 0.96;
+  }
+  to {
+    opacity: 1;
+    scale: 1;
+  }
+}
+@keyframes ui-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
   }
 }

@@ -78,7 +78,7 @@ export function ForgotPasswordForm() {
             type="submit"
             loading={isSubmitting}
             disabled={isSubmitting}
-            className="w-full"
+            className="h-11 w-full text-[15px]"
             size="lg"
           >
             {isSubmitting ? "Sending…" : "Send reset link"}

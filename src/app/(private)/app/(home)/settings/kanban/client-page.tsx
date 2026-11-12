@@ -27,18 +27,18 @@ import { useTRPC } from "@/trpc/client";
 // ---------------------------------------------------------------------------
 
 export const STAGE_COLORS = [
-  { label: "Gray",   value: "#6b7280" },
-  { label: "Blue",   value: "#3b82f6" },
+  { label: "Gray", value: "#6b7280" },
+  { label: "Blue", value: "#3b82f6" },
   { label: "Indigo", value: "#6366f1" },
   { label: "Purple", value: "#a855f7" },
-  { label: "Pink",   value: "#ec4899" },
-  { label: "Red",    value: "#ef4444" },
+  { label: "Pink", value: "#ec4899" },
+  { label: "Red", value: "#ef4444" },
   { label: "Orange", value: "#f97316" },
-  { label: "Amber",  value: "#f59e0b" },
-  { label: "Green",  value: "#22c55e" },
-  { label: "Teal",   value: "#14b8a6" },
-  { label: "Cyan",   value: "#06b6d4" },
-  { label: "Sky",    value: "#0ea5e9" },
+  { label: "Amber", value: "#f59e0b" },
+  { label: "Green", value: "#22c55e" },
+  { label: "Teal", value: "#14b8a6" },
+  { label: "Cyan", value: "#06b6d4" },
+  { label: "Sky", value: "#0ea5e9" },
 ] as const;
 
 export const DEFAULT_STAGE_COLOR: string = STAGE_COLORS[1].value; // blue
@@ -102,11 +102,9 @@ function SettingsPage({
   children: React.ReactNode;
 }) {
   return (
-    <div className="w-full p-6 md:p-8">
+    <div className="w-full px-4 py-6 sm:px-6 md:px-8 md:py-8">
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-          {title}
-        </h1>
+        <h1 className="app-page-title">{title}</h1>
         {description ? (
           <p className="mt-1 text-sm text-muted-foreground">{description}</p>
         ) : null}
@@ -420,7 +418,9 @@ export default function KanbanSettingsPage() {
   const toggleFeature = useMutation(
     trpc.tasks.setKanbanEnabled.mutationOptions({
       onSuccess: () => {
-        queryClient.invalidateQueries(trpc.tasks.getKanbanEnabled.queryOptions());
+        queryClient.invalidateQueries(
+          trpc.tasks.getKanbanEnabled.queryOptions(),
+        );
         queryClient.invalidateQueries(trpc.tasks.listStages.queryOptions());
         queryClient.invalidateQueries(trpc.iam.navigation.queryOptions());
       },
@@ -484,100 +484,102 @@ export default function KanbanSettingsPage() {
 
   return (
     <PlanGate requiredPlan="scale">
-    <SettingsPage
-      title="Task Settings"
-      description="Enable the Tasks feature and manage its stages. When enabled, Tasks appears in the main menu."
-    >
-      <div className="space-y-6">
-        {/* Enable toggle */}
-        <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
-          <div className="flex items-start justify-between gap-4">
-            <div className="space-y-0.5">
-              <Label htmlFor="kanban-enabled" className="text-sm font-medium">
-                Enable Tasks
-              </Label>
-              <p className="text-xs text-muted-foreground">
-                When enabled, a Tasks section appears in the main navigation for
-                members with the task:view permission.
-              </p>
+      <SettingsPage
+        title="Task Settings"
+        description="Enable the Tasks feature and manage its stages. When enabled, Tasks appears in the main menu."
+      >
+        <div className="space-y-6">
+          {/* Enable toggle */}
+          <div className="app-card p-5 shadow-sm">
+            <div className="flex items-start justify-between gap-4">
+              <div className="space-y-0.5">
+                <Label htmlFor="kanban-enabled" className="text-sm font-medium">
+                  Enable Tasks
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  When enabled, a Tasks section appears in the main navigation
+                  for members with the task:view permission.
+                </p>
+              </div>
+              <Switch
+                id="kanban-enabled"
+                checked={kanbanEnabled}
+                onCheckedChange={(v) => toggleFeature.mutate({ enabled: v })}
+                disabled={toggleFeature.isPending}
+              />
             </div>
-            <Switch
-              id="kanban-enabled"
-              checked={kanbanEnabled}
-              onCheckedChange={(v) => toggleFeature.mutate({ enabled: v })}
-              disabled={toggleFeature.isPending}
-            />
           </div>
+
+          {/* Stages */}
+          {kanbanEnabled ? (
+            <div className="app-card">
+              <div className="flex items-center justify-between border-b border-border px-4 py-3">
+                <p className="app-th">
+                  {stages.length} stage{stages.length !== 1 ? "s" : ""}
+                </p>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setCreateOpen(true)}
+                >
+                  <Plus className="h-4 w-4" />
+                  Add stage
+                </Button>
+              </div>
+
+              {stagesPending ? (
+                <div className="flex items-center justify-center p-8">
+                  <Spinner className="size-4 text-primary" label="Loading" />
+                </div>
+              ) : (
+                <table className="w-full">
+                  <tbody>
+                    {stages.map((stage) => {
+                      const customIdx = customStages.findIndex(
+                        (s) => s.id === stage.id,
+                      );
+                      return (
+                        <StageRow
+                          key={stage.id}
+                          stage={stage}
+                          onEdit={setEditTarget}
+                          onDelete={(id) => remove.mutate({ id })}
+                          isDeletePending={remove.isPending}
+                          onMoveUp={handleMoveUp}
+                          onMoveDown={handleMoveDown}
+                          canMoveUp={!stage.isSystem && customIdx > 0}
+                          canMoveDown={
+                            !stage.isSystem &&
+                            customIdx < customStages.length - 1
+                          }
+                        />
+                      );
+                    })}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          ) : null}
         </div>
 
-        {/* Stages */}
-        {kanbanEnabled ? (
-          <div className="rounded-xl border border-border bg-card shadow-sm">
-            <div className="flex items-center justify-between border-b border-border px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
-                {stages.length} stage{stages.length !== 1 ? "s" : ""}
-              </p>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                onClick={() => setCreateOpen(true)}
-              >
-                <Plus className="h-4 w-4" />
-                Add stage
-              </Button>
-            </div>
-
-            {stagesPending ? (
-              <div className="flex items-center justify-center p-8">
-                <Spinner className="size-4 text-primary" label="Loading" />
-              </div>
-            ) : (
-              <table className="w-full">
-                <tbody>
-                  {stages.map((stage) => {
-                    const customIdx = customStages.findIndex(
-                      (s) => s.id === stage.id,
-                    );
-                    return (
-                      <StageRow
-                        key={stage.id}
-                        stage={stage}
-                        onEdit={setEditTarget}
-                        onDelete={(id) => remove.mutate({ id })}
-                        isDeletePending={remove.isPending}
-                        onMoveUp={handleMoveUp}
-                        onMoveDown={handleMoveDown}
-                        canMoveUp={!stage.isSystem && customIdx > 0}
-                        canMoveDown={
-                          !stage.isSystem &&
-                          customIdx < customStages.length - 1
-                        }
-                      />
-                    );
-                  })}
-                </tbody>
-              </table>
-            )}
-          </div>
-        ) : null}
-      </div>
-
-      <CreateStageDialog
-        open={createOpen}
-        onOpenChange={setCreateOpen}
-        onSuccess={invalidateStages}
-      />
-
-      {editTarget ? (
-        <EditStageDialog
-          stage={editTarget}
-          open={!!editTarget}
-          onOpenChange={(v) => { if (!v) setEditTarget(null); }}
+        <CreateStageDialog
+          open={createOpen}
+          onOpenChange={setCreateOpen}
           onSuccess={invalidateStages}
         />
-      ) : null}
-    </SettingsPage>
+
+        {editTarget ? (
+          <EditStageDialog
+            stage={editTarget}
+            open={!!editTarget}
+            onOpenChange={(v) => {
+              if (!v) setEditTarget(null);
+            }}
+            onSuccess={invalidateStages}
+          />
+        ) : null}
+      </SettingsPage>
     </PlanGate>
   );
 }

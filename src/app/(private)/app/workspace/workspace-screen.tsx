@@ -54,7 +54,7 @@ interface FormSectionProps {
 
 function FormSection({ title, children }: FormSectionProps) {
   return (
-    <div className="mb-6 rounded-xl border border-border bg-card p-5 shadow-sm">
+    <div className="mb-6 app-card p-5 shadow-sm">
       <h2 className="mb-4 text-sm font-semibold text-foreground">{title}</h2>
       {children}
     </div>
@@ -77,17 +77,15 @@ function StepIndicator({ current }: { current: FlowStep }) {
         const done = current === "create-plan" && step.id === "create-details";
         return (
           <div key={step.id} className="flex items-center gap-1.5">
-            {i > 0 && (
-              <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/40" />
-            )}
+            {i > 0 && <ChevronRight className="h-3.5 w-3.5 text-slate-500" />}
             <span
               className={cn(
                 "rounded-full px-3 py-0.5 text-xs font-semibold transition-colors",
                 active
-                  ? "bg-primary/10 text-primary ring-1 ring-primary/20"
+                  ? "bg-white text-[#070A1A]"
                   : done
-                    ? "bg-muted text-muted-foreground line-through"
-                    : "text-muted-foreground",
+                    ? "bg-white/10 text-slate-300 line-through"
+                    : "text-slate-400",
               )}
             >
               {step.label}
@@ -283,7 +281,7 @@ export function WorkspaceScreen() {
   if (isPending) {
     return (
       <div className="flex min-h-96 items-center justify-center p-8">
-        <div className="flex items-center gap-3 rounded-xl border border-border bg-card p-6 shadow-sm">
+        <div className="flex items-center gap-3 app-card p-6 shadow-sm">
           <Spinner className="size-5 text-primary" label="Loading" />
           <p className="text-sm text-muted-foreground">
             Loading your workspace…
@@ -304,12 +302,12 @@ export function WorkspaceScreen() {
       languageOptions.length > 0 && currencyOptions.length > 0;
 
     return (
-      <div className="mx-auto max-w-2xl px-4 py-10">
+      <div className="mx-auto max-w-2xl px-4 pb-16 pt-10">
         <StepIndicator current="create-details" />
-        <h1 className="mb-1 text-2xl font-bold tracking-tight text-foreground">
+        <h1 className="mb-1 text-2xl font-extrabold tracking-[-0.03em] text-white sm:text-3xl">
           Organization details
         </h1>
-        <p className="mb-8 text-sm text-muted-foreground">
+        <p className="mb-8 text-sm text-slate-300">
           Name, optional phone, registered address, default language, and
           currency. The URL slug is generated automatically from the name.
         </p>
@@ -457,12 +455,12 @@ export function WorkspaceScreen() {
 
   if (step === "create-plan") {
     return (
-      <div className="mx-auto max-w-6xl px-4 py-10">
+      <div className="mx-auto max-w-6xl px-8 pb-16 pt-10">
         <StepIndicator current="create-plan" />
-        <h1 className="mb-1 text-2xl font-bold tracking-tight text-foreground">
+        <h1 className="mb-1 text-2xl font-extrabold tracking-[-0.03em] text-white sm:text-3xl">
           Choose a plan
         </h1>
-        <p className="mb-8 text-sm text-muted-foreground">
+        <p className="mb-8 text-sm text-slate-300">
           Starter is free and opens immediately. Growth expands capacity, and
           Scale unlocks payments and automation.
         </p>
@@ -483,7 +481,7 @@ export function WorkspaceScreen() {
   // -------------------------------------------------------------------------
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10">
+    <div className="mx-auto max-w-6xl px-8 pb-16 pt-10">
       <WorkspaceHero />
 
       {orgList.length > 0 ? (

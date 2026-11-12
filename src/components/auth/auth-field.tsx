@@ -13,7 +13,7 @@ export function AuthField({ id, label, error, children }: AuthFieldProps) {
 
   return (
     <div className="flex flex-col gap-1.5">
-      <Label htmlFor={id} className="text-sm font-medium text-foreground">
+      <Label htmlFor={id} className="text-[13px] font-semibold text-foreground">
         {label}
       </Label>
       {children}

@@ -6,6 +6,7 @@ import {
   Clock3,
   FileText,
   Link2,
+  ListTodo,
   Paperclip,
   Pencil,
   Plus,
@@ -13,6 +14,7 @@ import {
   Trash2,
   X,
 } from "lucide-react";
+import NextLink from "next/link";
 import { useEffect, useState } from "react";
 import { usePlanCheck } from "@/components/plan-gate";
 import { Badge } from "@/components/ui/badge";
@@ -24,13 +26,13 @@ import {
   RichTextEditor,
 } from "@/components/ui/rich-text-editor";
 import { Spinner } from "@/components/ui/spinner";
+import { useCanViewPrices } from "@/hooks/use-can-view-prices";
 import {
   type CurrencyFormat,
   formatCurrencyDisplay,
 } from "@/lib/currency-format";
 import { toast } from "@/lib/toast";
 import { cn } from "@/lib/utils";
-import { useCanViewPrices } from "@/hooks/use-can-view-prices";
 import { useTRPC } from "@/trpc/client";
 import { TaskDrawer } from "./task-drawer";
 
@@ -202,9 +204,19 @@ function LinkedInvoicePanel({ doc }: { doc: InvoiceDoc }) {
           </p>
         </div>
         <div className="flex gap-3 text-xs text-muted-foreground">
-          <span>Date: <strong className="text-foreground">{formatDocDate(doc.date)}</strong></span>
+          <span>
+            Date:{" "}
+            <strong className="text-foreground">
+              {formatDocDate(doc.date)}
+            </strong>
+          </span>
           {doc.dueDate ? (
-            <span>Due: <strong className="text-foreground">{formatDocDate(doc.dueDate)}</strong></span>
+            <span>
+              Due:{" "}
+              <strong className="text-foreground">
+                {formatDocDate(doc.dueDate)}
+              </strong>
+            </span>
           ) : null}
         </div>
       </div>
@@ -212,13 +224,22 @@ function LinkedInvoicePanel({ doc }: { doc: InvoiceDoc }) {
       {canViewPrices && (
         <div className="flex flex-wrap gap-4 text-xs">
           <span className="text-muted-foreground">
-            Subtotal: <strong className="text-foreground">{formatCurrencyDisplay(doc.subTotal ?? "", doc.currency)}</strong>
+            Subtotal:{" "}
+            <strong className="text-foreground">
+              {formatCurrencyDisplay(doc.subTotal ?? "", doc.currency)}
+            </strong>
           </span>
           <span className="text-muted-foreground">
-            Tax: <strong className="text-foreground">{formatCurrencyDisplay(doc.tax ?? "", doc.currency)}</strong>
+            Tax:{" "}
+            <strong className="text-foreground">
+              {formatCurrencyDisplay(doc.tax ?? "", doc.currency)}
+            </strong>
           </span>
           <span className="text-muted-foreground">
-            Total: <strong className="text-foreground">{formatCurrencyDisplay(doc.total ?? "", doc.currency)}</strong>
+            Total:{" "}
+            <strong className="text-foreground">
+              {formatCurrencyDisplay(doc.total ?? "", doc.currency)}
+            </strong>
           </span>
         </div>
       )}
@@ -230,16 +251,25 @@ function LinkedInvoicePanel({ doc }: { doc: InvoiceDoc }) {
           </p>
           <div className="space-y-1.5">
             {doc.items.map((item) => (
-              <div key={item.id} className="flex items-start justify-between gap-2 rounded-lg bg-card px-3 py-2">
+              <div
+                key={item.id}
+                className="flex items-start justify-between gap-2 rounded-lg bg-card px-3 py-2"
+              >
                 <div className="min-w-0">
-                  <p className="text-xs font-medium text-foreground">{item.name}</p>
+                  <p className="text-xs font-medium text-foreground">
+                    {item.name}
+                  </p>
                   {item.description ? (
-                    <p className="text-xs text-muted-foreground">{item.description}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {item.description}
+                    </p>
                   ) : null}
                   <p className="text-xs text-muted-foreground">
                     Qty: {item.quantity}
                     {item.unitName ? ` · ${item.unitName}` : ""}
-                    {canViewPrices && item.price ? ` · ${formatCurrencyDisplay(item.price, doc.currency)} each` : ""}
+                    {canViewPrices && item.price
+                      ? ` · ${formatCurrencyDisplay(item.price, doc.currency)} each`
+                      : ""}
                   </p>
                 </div>
                 {canViewPrices && item.total ? (
@@ -269,7 +299,9 @@ function LinkedInvoicePanel({ doc }: { doc: InvoiceDoc }) {
               >
                 <Paperclip className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                 <span className="truncate font-medium">{file.fileName}</span>
-                <span className="ml-auto shrink-0 text-muted-foreground">{formatBytes(file.fileSize)}</span>
+                <span className="ml-auto shrink-0 text-muted-foreground">
+                  {formatBytes(file.fileSize)}
+                </span>
               </a>
             ))}
           </div>
@@ -326,9 +358,19 @@ function LinkedEstimatePanel({ doc }: { doc: EstimateDoc }) {
           </p>
         </div>
         <div className="flex gap-3 text-xs text-muted-foreground">
-          <span>Date: <strong className="text-foreground">{formatDocDate(doc.date)}</strong></span>
+          <span>
+            Date:{" "}
+            <strong className="text-foreground">
+              {formatDocDate(doc.date)}
+            </strong>
+          </span>
           {doc.expiryDate ? (
-            <span>Expires: <strong className="text-foreground">{formatDocDate(doc.expiryDate)}</strong></span>
+            <span>
+              Expires:{" "}
+              <strong className="text-foreground">
+                {formatDocDate(doc.expiryDate)}
+              </strong>
+            </span>
           ) : null}
         </div>
       </div>
@@ -336,13 +378,22 @@ function LinkedEstimatePanel({ doc }: { doc: EstimateDoc }) {
       {canViewPrices && (
         <div className="flex flex-wrap gap-4 text-xs">
           <span className="text-muted-foreground">
-            Subtotal: <strong className="text-foreground">{formatCurrencyDisplay(doc.subTotal ?? "", doc.currency)}</strong>
+            Subtotal:{" "}
+            <strong className="text-foreground">
+              {formatCurrencyDisplay(doc.subTotal ?? "", doc.currency)}
+            </strong>
           </span>
           <span className="text-muted-foreground">
-            Tax: <strong className="text-foreground">{formatCurrencyDisplay(doc.tax ?? "", doc.currency)}</strong>
+            Tax:{" "}
+            <strong className="text-foreground">
+              {formatCurrencyDisplay(doc.tax ?? "", doc.currency)}
+            </strong>
           </span>
           <span className="text-muted-foreground">
-            Total: <strong className="text-foreground">{formatCurrencyDisplay(doc.total ?? "", doc.currency)}</strong>
+            Total:{" "}
+            <strong className="text-foreground">
+              {formatCurrencyDisplay(doc.total ?? "", doc.currency)}
+            </strong>
           </span>
         </div>
       )}
@@ -354,16 +405,25 @@ function LinkedEstimatePanel({ doc }: { doc: EstimateDoc }) {
           </p>
           <div className="space-y-1.5">
             {doc.items.map((item) => (
-              <div key={item.id} className="flex items-start justify-between gap-2 rounded-lg bg-card px-3 py-2">
+              <div
+                key={item.id}
+                className="flex items-start justify-between gap-2 rounded-lg bg-card px-3 py-2"
+              >
                 <div className="min-w-0">
-                  <p className="text-xs font-medium text-foreground">{item.name}</p>
+                  <p className="text-xs font-medium text-foreground">
+                    {item.name}
+                  </p>
                   {item.description ? (
-                    <p className="text-xs text-muted-foreground">{item.description}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {item.description}
+                    </p>
                   ) : null}
                   <p className="text-xs text-muted-foreground">
                     Qty: {item.quantity}
                     {item.unitName ? ` · ${item.unitName}` : ""}
-                    {canViewPrices && item.price ? ` · ${formatCurrencyDisplay(item.price, doc.currency)} each` : ""}
+                    {canViewPrices && item.price
+                      ? ` · ${formatCurrencyDisplay(item.price, doc.currency)} each`
+                      : ""}
                   </p>
                 </div>
                 {canViewPrices && item.total ? (
@@ -393,7 +453,9 @@ function LinkedEstimatePanel({ doc }: { doc: EstimateDoc }) {
               >
                 <Paperclip className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                 <span className="truncate font-medium">{file.fileName}</span>
-                <span className="ml-auto shrink-0 text-muted-foreground">{formatBytes(file.fileSize)}</span>
+                <span className="ml-auto shrink-0 text-muted-foreground">
+                  {formatBytes(file.fileSize)}
+                </span>
               </a>
             ))}
           </div>
@@ -407,7 +469,13 @@ function LinkedEstimatePanel({ doc }: { doc: EstimateDoc }) {
 // LinkedDocumentSection — loads and renders the appropriate panel
 // ---------------------------------------------------------------------------
 
-function LinkedDocumentSection({ taskId, linkedDocumentType }: { taskId: string; linkedDocumentType: "invoice" | "estimate" }) {
+function LinkedDocumentSection({
+  taskId,
+  linkedDocumentType,
+}: {
+  taskId: string;
+  linkedDocumentType: "invoice" | "estimate";
+}) {
   const trpc = useTRPC();
   const { data, isPending } = useQuery(
     trpc.tasks.getLinkedDocument.queryOptions({ taskId }),
@@ -417,7 +485,9 @@ function LinkedDocumentSection({ taskId, linkedDocumentType }: { taskId: string;
     return (
       <div className="flex items-center gap-2 rounded-xl border border-border p-4">
         <Spinner className="size-4 text-primary" label="Loading document" />
-        <p className="text-xs text-muted-foreground">Loading linked document…</p>
+        <p className="text-xs text-muted-foreground">
+          Loading linked document…
+        </p>
       </div>
     );
   }
@@ -475,18 +545,14 @@ function ManualLinkSection({
     }
   }, [availableTypes, linkType]);
 
-  const { data: invoices = [] } = useQuery(
-    {
-      ...trpc.invoices.list.queryOptions(),
-      enabled: canViewInvoices,
-    },
-  );
-  const { data: estimates = [] } = useQuery(
-    {
-      ...trpc.estimates.list.queryOptions(),
-      enabled: canViewEstimates,
-    },
-  );
+  const { data: invoices = [] } = useQuery({
+    ...trpc.invoices.list.queryOptions(),
+    enabled: canViewInvoices,
+  });
+  const { data: estimates = [] } = useQuery({
+    ...trpc.estimates.list.queryOptions(),
+    enabled: canViewEstimates,
+  });
 
   const invoiceOptions = invoices.filter(
     (inv) =>
@@ -507,7 +573,9 @@ function ManualLinkSection({
   return (
     <div className="space-y-2 rounded-xl border border-border bg-muted/20 p-3">
       <div className="flex items-center justify-between">
-        <p className="text-xs font-semibold text-muted-foreground">Link document</p>
+        <p className="text-xs font-semibold text-muted-foreground">
+          Link document
+        </p>
         {currentId && currentType ? (
           <button
             type="button"
@@ -520,51 +588,61 @@ function ManualLinkSection({
       </div>
       {availableTypes.length > 0 ? (
         <>
-      <div className="flex gap-2">
-        <select
-          value={linkType}
-          onChange={(e) => { setLinkType(e.target.value as "invoice" | "estimate"); setSearch(""); }}
-          className="h-8 rounded-md border border-input bg-transparent px-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-        >
-          {canViewInvoices ? <option value="invoice">Invoice</option> : null}
-          {canViewEstimates ? <option value="estimate">Estimate</option> : null}
-        </select>
-        <Input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search by number or customer…"
-          className="h-8 text-xs"
-        />
-      </div>
-      <div className="max-h-40 overflow-y-auto space-y-1">
-        {options.slice(0, 20).map((opt) => {
-          const id = opt.id;
-          const number = linkType === "invoice"
-            ? (opt as (typeof invoices)[0]).invoiceNumber
-            : (opt as (typeof estimates)[0]).estimateNumber;
-          const customerName = opt.customer.displayName;
-          const isCurrent = currentId === id && currentType === linkType;
-          return (
-            <button
-              key={id}
-              type="button"
-              onClick={() => onLink(id, linkType)}
-              className={cn(
-                "flex w-full items-center justify-between rounded-lg px-3 py-1.5 text-left text-xs transition-colors",
-                isCurrent
-                  ? "bg-primary/10 text-primary font-medium"
-                  : "hover:bg-accent text-foreground",
-              )}
+          <div className="flex gap-2">
+            <select
+              value={linkType}
+              onChange={(e) => {
+                setLinkType(e.target.value as "invoice" | "estimate");
+                setSearch("");
+              }}
+              className="h-8 rounded-md border border-input bg-transparent px-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
             >
-              <span>{number}</span>
-              <span className="text-muted-foreground">{customerName}</span>
-            </button>
-          );
-        })}
-        {options.length === 0 ? (
-          <p className="px-3 py-2 text-xs text-muted-foreground">No results.</p>
-        ) : null}
-      </div>
+              {canViewInvoices ? (
+                <option value="invoice">Invoice</option>
+              ) : null}
+              {canViewEstimates ? (
+                <option value="estimate">Estimate</option>
+              ) : null}
+            </select>
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search by number or customer…"
+              className="h-8 text-xs"
+            />
+          </div>
+          <div className="max-h-40 overflow-y-auto space-y-1">
+            {options.slice(0, 20).map((opt) => {
+              const id = opt.id;
+              const number =
+                linkType === "invoice"
+                  ? (opt as (typeof invoices)[0]).invoiceNumber
+                  : (opt as (typeof estimates)[0]).estimateNumber;
+              const customerName = opt.customer.displayName;
+              const isCurrent = currentId === id && currentType === linkType;
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => onLink(id, linkType)}
+                  className={cn(
+                    "flex w-full items-center justify-between rounded-lg px-3 py-1.5 text-left text-xs transition-colors",
+                    isCurrent
+                      ? "bg-primary/10 text-primary font-medium"
+                      : "hover:bg-accent text-foreground",
+                  )}
+                >
+                  <span>{number}</span>
+                  <span className="text-muted-foreground">{customerName}</span>
+                </button>
+              );
+            })}
+            {options.length === 0 ? (
+              <p className="px-3 py-2 text-xs text-muted-foreground">
+                No results.
+              </p>
+            ) : null}
+          </div>
         </>
       ) : (
         <div className="rounded-lg border border-dashed border-border px-3 py-2">
@@ -666,11 +744,11 @@ function AddTaskDialog({
       widthClassName="max-w-[1120px]"
     >
       <div className="overflow-y-auto px-6 py-5">
-          <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.85fr)]">
-            {/* Left: title + description */}
-            <div className="space-y-5">
-              <div className="rounded-xl border border-border bg-card p-4">
-                <div className="space-y-1.5">
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.85fr)]">
+          {/* Left: title + description */}
+          <div className="space-y-5">
+            <div className="app-card p-4">
+              <div className="space-y-1.5">
                 <Label htmlFor="at-title">Title</Label>
                 <Input
                   id="at-title"
@@ -679,7 +757,7 @@ function AddTaskDialog({
                   placeholder="What needs to be done?"
                   autoFocus
                 />
-                </div>
+              </div>
               <div className="mt-4 space-y-1.5">
                 <Label>
                   Description
@@ -693,60 +771,60 @@ function AddTaskDialog({
                   placeholder="Add more details…"
                 />
               </div>
-              </div>
             </div>
+          </div>
 
-            {/* Right: meta fields */}
-            <div className="space-y-5">
-              <div className="rounded-xl border border-border bg-muted/20 p-4">
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Details
-                </p>
-                <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
-                  <div className="space-y-1.5">
-                <Label htmlFor="at-priority">Priority</Label>
-                <select
-                  id="at-priority"
-                  value={priority}
-                  onChange={(e) => setPriority(e.target.value as Priority)}
-                  className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm text-foreground shadow-xs focus:outline-none focus:ring-1 focus:ring-ring"
-                >
-                  {PRIORITIES.map((p) => (
-                    <option key={p.value} value={p.value}>
-                      {p.label}
-                    </option>
-                  ))}
-                </select>
-                  </div>
-
-                  <div className="space-y-1.5">
-                <Label htmlFor="at-stage">Stage</Label>
-                <select
-                  id="at-stage"
-                  value={stageId}
-                  onChange={(e) => setStageId(e.target.value)}
-                  className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm text-foreground shadow-xs focus:outline-none focus:ring-1 focus:ring-ring"
-                >
-                  {systemStage ? (
-                    <option value="">{systemStage.name} (default)</option>
-                  ) : null}
-                  {stages
-                    .filter((s) => !s.isSystem)
-                    .map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {s.name}
+          {/* Right: meta fields */}
+          <div className="space-y-5">
+            <div className="rounded-xl border border-border bg-muted/20 p-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Details
+              </p>
+              <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
+                <div className="space-y-1.5">
+                  <Label htmlFor="at-priority">Priority</Label>
+                  <select
+                    id="at-priority"
+                    value={priority}
+                    onChange={(e) => setPriority(e.target.value as Priority)}
+                    className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm text-foreground shadow-xs focus:outline-none focus:ring-1 focus:ring-ring"
+                  >
+                    {PRIORITIES.map((p) => (
+                      <option key={p.value} value={p.value}>
+                        {p.label}
                       </option>
                     ))}
-                </select>
-                  </div>
+                  </select>
+                </div>
 
-                  <div className="space-y-1.5">
-                <Label htmlFor="at-estimate">
-                  Estimate (hours){" "}
-                  <span className="text-xs text-muted-foreground">
-                    (optional)
-                  </span>
-                </Label>
+                <div className="space-y-1.5">
+                  <Label htmlFor="at-stage">Stage</Label>
+                  <select
+                    id="at-stage"
+                    value={stageId}
+                    onChange={(e) => setStageId(e.target.value)}
+                    className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm text-foreground shadow-xs focus:outline-none focus:ring-1 focus:ring-ring"
+                  >
+                    {systemStage ? (
+                      <option value="">{systemStage.name} (default)</option>
+                    ) : null}
+                    {stages
+                      .filter((s) => !s.isSystem)
+                      .map((s) => (
+                        <option key={s.id} value={s.id}>
+                          {s.name}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="at-estimate">
+                    Estimate (hours){" "}
+                    <span className="text-xs text-muted-foreground">
+                      (optional)
+                    </span>
+                  </Label>
                   <Input
                     id="at-estimate"
                     type="number"
@@ -757,26 +835,26 @@ function AddTaskDialog({
                     onChange={(e) => setEstimateHours(e.target.value)}
                     placeholder="2.5"
                   />
-                  </div>
+                </div>
 
-                  <div className="space-y-1.5">
-                <Label htmlFor="at-due">
-                  Due Date{" "}
-                  <span className="text-xs text-muted-foreground">
-                    (optional)
-                  </span>
-                </Label>
+                <div className="space-y-1.5">
+                  <Label htmlFor="at-due">
+                    Due Date{" "}
+                    <span className="text-xs text-muted-foreground">
+                      (optional)
+                    </span>
+                  </Label>
                   <Input
                     id="at-due"
                     type="date"
                     value={dueDate}
                     onChange={(e) => setDueDate(e.target.value)}
                   />
-                  </div>
                 </div>
               </div>
             </div>
           </div>
+        </div>
       </div>
     </TaskDrawer>
   );
@@ -889,7 +967,9 @@ function EditTaskDialog({
                       estimateInputToMinutes(estimateHours),
                     dueDate: dueDate ? new Date(dueDate) : null,
                     linkedDocumentId:
-                      task.sourceType === "manual" ? linkedDocumentId : undefined,
+                      task.sourceType === "manual"
+                        ? linkedDocumentId
+                        : undefined,
                     linkedDocumentType:
                       task.sourceType === "manual"
                         ? linkedDocumentType
@@ -908,29 +988,29 @@ function EditTaskDialog({
           <div className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(340px,0.85fr)]">
             {/* Left: title + description */}
             <div className="space-y-5">
-              <div className="rounded-xl border border-border bg-card p-4">
+              <div className="app-card p-4">
                 <div className="space-y-1.5">
-                <Label htmlFor="et-title">Title</Label>
-                <Input
-                  id="et-title"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  autoFocus
-                />
+                  <Label htmlFor="et-title">Title</Label>
+                  <Input
+                    id="et-title"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    autoFocus
+                  />
                 </div>
-              <div className="mt-4 space-y-1.5">
-                <Label>
-                  Description{" "}
-                  <span className="text-xs text-muted-foreground">
-                    (optional)
-                  </span>
-                </Label>
-                <RichTextEditor
-                  value={description}
-                  onChange={setDescription}
-                  placeholder="Add more details…"
-                />
-              </div>
+                <div className="mt-4 space-y-1.5">
+                  <Label>
+                    Description{" "}
+                    <span className="text-xs text-muted-foreground">
+                      (optional)
+                    </span>
+                  </Label>
+                  <RichTextEditor
+                    value={description}
+                    onChange={setDescription}
+                    placeholder="Add more details…"
+                  />
+                </div>
               </div>
               {task.sourceType === "automation" ? (
                 <div className="rounded-xl border border-border bg-muted/40 px-4 py-3">
@@ -943,7 +1023,7 @@ function EditTaskDialog({
 
               {/* Manual link section */}
               {task.sourceType === "manual" ? (
-                <div className="rounded-xl border border-border bg-card p-4">
+                <div className="app-card p-4">
                   <div className="flex items-center gap-1.5">
                     <Link2 className="h-3.5 w-3.5 text-muted-foreground" />
                     <Label className="text-xs font-semibold text-muted-foreground">
@@ -977,81 +1057,81 @@ function EditTaskDialog({
                 </p>
                 <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
                   <div className="space-y-1.5">
-                <Label htmlFor="et-priority">Priority</Label>
-                <select
-                  id="et-priority"
-                  value={priority}
-                  onChange={(e) => setPriority(e.target.value as Priority)}
-                  className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm text-foreground shadow-xs focus:outline-none focus:ring-1 focus:ring-ring"
-                >
-                  {PRIORITIES.map((p) => (
-                    <option key={p.value} value={p.value}>
-                      {p.label}
-                    </option>
-                  ))}
-                </select>
+                    <Label htmlFor="et-priority">Priority</Label>
+                    <select
+                      id="et-priority"
+                      value={priority}
+                      onChange={(e) => setPriority(e.target.value as Priority)}
+                      className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm text-foreground shadow-xs focus:outline-none focus:ring-1 focus:ring-ring"
+                    >
+                      {PRIORITIES.map((p) => (
+                        <option key={p.value} value={p.value}>
+                          {p.label}
+                        </option>
+                      ))}
+                    </select>
                   </div>
 
                   <div className="space-y-1.5">
-                <Label htmlFor="et-stage">Stage</Label>
-                <select
-                  id="et-stage"
-                  value={stageId}
-                  onChange={(e) => setStageId(e.target.value)}
-                  className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm text-foreground shadow-xs focus:outline-none focus:ring-1 focus:ring-ring"
-                >
-                  {systemStage ? (
-                    <option value="">{systemStage.name} (default)</option>
-                  ) : null}
-                  {stages
-                    .filter((s) => !s.isSystem)
-                    .map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {s.name}
-                      </option>
-                    ))}
-                </select>
+                    <Label htmlFor="et-stage">Stage</Label>
+                    <select
+                      id="et-stage"
+                      value={stageId}
+                      onChange={(e) => setStageId(e.target.value)}
+                      className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm text-foreground shadow-xs focus:outline-none focus:ring-1 focus:ring-ring"
+                    >
+                      {systemStage ? (
+                        <option value="">{systemStage.name} (default)</option>
+                      ) : null}
+                      {stages
+                        .filter((s) => !s.isSystem)
+                        .map((s) => (
+                          <option key={s.id} value={s.id}>
+                            {s.name}
+                          </option>
+                        ))}
+                    </select>
                   </div>
 
                   <div className="space-y-1.5">
-                <Label htmlFor="et-estimate">
-                  Estimate (hours){" "}
-                  <span className="text-xs text-muted-foreground">
-                    (optional)
-                  </span>
-                </Label>
-                  <Input
-                    id="et-estimate"
-                    type="number"
-                    min="0"
-                    step="0.25"
-                    inputMode="decimal"
-                    value={estimateHours}
-                    onChange={(e) => setEstimateHours(e.target.value)}
-                    placeholder="2.5"
-                  />
+                    <Label htmlFor="et-estimate">
+                      Estimate (hours){" "}
+                      <span className="text-xs text-muted-foreground">
+                        (optional)
+                      </span>
+                    </Label>
+                    <Input
+                      id="et-estimate"
+                      type="number"
+                      min="0"
+                      step="0.25"
+                      inputMode="decimal"
+                      value={estimateHours}
+                      onChange={(e) => setEstimateHours(e.target.value)}
+                      placeholder="2.5"
+                    />
                   </div>
 
                   <div className="space-y-1.5">
-                <Label htmlFor="et-due">
-                  Due Date{" "}
-                  <span className="text-xs text-muted-foreground">
-                    (optional)
-                  </span>
-                </Label>
-                  <Input
-                    id="et-due"
-                    type="date"
-                    value={dueDate}
-                    onChange={(e) => setDueDate(e.target.value)}
-                  />
+                    <Label htmlFor="et-due">
+                      Due Date{" "}
+                      <span className="text-xs text-muted-foreground">
+                        (optional)
+                      </span>
+                    </Label>
+                    <Input
+                      id="et-due"
+                      type="date"
+                      value={dueDate}
+                      onChange={(e) => setDueDate(e.target.value)}
+                    />
                   </div>
                 </div>
               </div>
 
               {/* Linked document viewer (read-only, shown when a document is attached) */}
               {persistedLinkedDocumentType ? (
-                <div className="rounded-xl border border-border bg-card p-4">
+                <div className="app-card p-4">
                   <button
                     type="button"
                     onClick={() => setDocumentDrawerOpen(true)}
@@ -1094,7 +1174,7 @@ function EditTaskDialog({
           widthClassName="max-w-[980px]"
         >
           <div className="overflow-y-auto px-6 py-5">
-            <div className="rounded-xl border border-border bg-card p-4">
+            <div className="app-card p-4">
               <div className="mb-3 flex items-center gap-1.5">
                 {persistedLinkedDocumentType === "invoice" ? (
                   <Receipt className="h-3.5 w-3.5 text-muted-foreground" />
@@ -1312,7 +1392,7 @@ export default function TasksPage() {
 
   if (stagesPending || tasksPending) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex min-h-0 flex-1 items-center justify-center py-24">
         <Spinner className="size-5 text-primary" label="Loading" />
       </div>
     );
@@ -1320,11 +1400,21 @@ export default function TasksPage() {
 
   if (!kanbanEnabled) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-3">
-        <p className="text-sm font-medium text-foreground">Tasks is disabled</p>
-        <p className="text-xs text-muted-foreground">
-          Go to Settings → Task Settings to enable it.
-        </p>
+      <div className="flex min-h-0 flex-1 items-center justify-center px-4 py-24">
+        <div className="app-card flex max-w-sm flex-col items-center px-8 py-10 text-center">
+          <span className="app-gradient flex h-12 w-12 items-center justify-center rounded-2xl text-white shadow-[0_10px_24px_-10px_rgba(99,102,241,0.9)]">
+            <ListTodo className="h-5 w-5" />
+          </span>
+          <p className="mt-5 text-lg font-bold tracking-tight text-foreground">
+            The task board is turned off
+          </p>
+          <p className="mt-1.5 text-sm text-muted-foreground">
+            Turn it on in Task Settings to track work on a kanban board.
+          </p>
+          <Button asChild className="mt-6">
+            <NextLink href="/app/settings/kanban">Open Task Settings</NextLink>
+          </Button>
+        </div>
       </div>
     );
   }
@@ -1344,13 +1434,11 @@ export default function TasksPage() {
   }
 
   return (
-    <div className="flex h-screen flex-col">
+    <div className="flex min-h-0 flex-1 flex-col">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-border px-6 py-4">
         <div className="flex items-center gap-3">
-          <h1 className="text-xl font-semibold tracking-tight text-foreground">
-            Tasks
-          </h1>
+          <h1 className="app-page-title">Tasks</h1>
           <span className="text-sm text-muted-foreground">
             {taskList.length} task{taskList.length !== 1 ? "s" : ""}
           </span>

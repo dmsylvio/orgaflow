@@ -1,7 +1,16 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { DollarSign, FileText, Paperclip, Percent, Plus, Trash2, Upload, X } from "lucide-react";
+import {
+  DollarSign,
+  FileText,
+  Paperclip,
+  Percent,
+  Plus,
+  Trash2,
+  Upload,
+  X,
+} from "lucide-react";
 import NextLink from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useRef, useState } from "react";
@@ -332,7 +341,7 @@ export function CreateEstimateForm() {
           </Button>
         </div>
 
-        <div className="rounded-2xl border border-border bg-card p-4">
+        <div className="app-card p-4">
           {draftItems.map((draftItem, index) => {
             const catalogItem = draftItem.itemId
               ? itemsById.get(draftItem.itemId)
@@ -480,7 +489,9 @@ export function CreateEstimateForm() {
                 <Upload className="h-4 w-4 text-muted-foreground" />
               </div>
               <div className="text-left">
-                <p className="text-sm font-medium text-foreground">Add Attachment</p>
+                <p className="text-sm font-medium text-foreground">
+                  Add Attachment
+                </p>
                 <p className="text-xs text-muted-foreground">
                   PNG, JPG, GIF, WebP — max 25 MB
                 </p>
@@ -508,7 +519,9 @@ export function CreateEstimateForm() {
                     <button
                       type="button"
                       onClick={() =>
-                        setPendingFiles((prev) => prev.filter((_, i) => i !== idx))
+                        setPendingFiles((prev) =>
+                          prev.filter((_, i) => i !== idx),
+                        )
                       }
                       className="ml-1 shrink-0 rounded p-0.5 text-muted-foreground/50 hover:text-destructive"
                     >
@@ -527,7 +540,7 @@ export function CreateEstimateForm() {
           </TabsContent>
         </Tabs>
 
-        <div className="rounded-2xl border border-border bg-card p-4">
+        <div className="app-card p-4">
           <p className="text-sm font-semibold text-foreground">Summary</p>
           <div className="mt-4 space-y-3 text-sm">
             <div className="flex items-center justify-between text-muted-foreground">

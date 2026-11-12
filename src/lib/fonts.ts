@@ -1,21 +1,13 @@
-import { Plus_Jakarta_Sans, Poppins } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 
 /**
- * Poppins is not a variable font, so weights must be listed explicitly.
- * `variable` exposes `--font-sans` which Tailwind picks up via tailwind.config.ts.
+ * One typeface for the whole product (marketing site, auth, and app).
+ * `variable` exposes `--font-sans`, which Tailwind picks up via tailwind.config.ts.
  */
-export const poppins = Poppins({
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
-  style: ["normal", "italic"],
-  variable: "--font-sans",
-  display: "swap",
-});
-
-/** Marketing site only. The app keeps Poppins. */
-export const marketingFont = Plus_Jakarta_Sans({
+export const appFont = Plus_Jakarta_Sans({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800"],
-  variable: "--font-marketing",
+  style: ["normal", "italic"],
+  variable: "--font-sans",
   display: "swap",
 });

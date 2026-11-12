@@ -16,11 +16,11 @@ import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import { formatCurrencyDisplay } from "@/lib/currency-format";
 import { toast } from "@/lib/toast";
-import { useTRPC } from "@/trpc/client";
 import {
   FREQUENCY_LABELS,
   RECURRING_FREQUENCIES,
 } from "@/schemas/recurring-invoice";
+import { useTRPC } from "@/trpc/client";
 import { PageShell } from "../recurring-invoice-ui";
 
 type DraftItem = {
@@ -75,18 +75,26 @@ export function CreateRecurringInvoiceForm() {
   const [notes, setNotes] = useState("");
   const [draftItems, setDraftItems] = useState<DraftItem[]>([makeDraftItem()]);
   const [discountValue, setDiscountValue] = useState("");
-  const [discountType, setDiscountType] = useState<"fixed" | "percentage">("fixed");
-  const [summaryTaxRows, setSummaryTaxRows] = useState<{ key: string; taxId: string }[]>([]);
+  const [discountType, setDiscountType] = useState<"fixed" | "percentage">(
+    "fixed",
+  );
+  const [summaryTaxRows, setSummaryTaxRows] = useState<
+    { key: string; taxId: string }[]
+  >([]);
 
   const create = useMutation(
     trpc.recurringInvoices.create.mutationOptions({
       onSuccess: () => {
-        queryClient.invalidateQueries(trpc.recurringInvoices.list.queryOptions());
+        queryClient.invalidateQueries(
+          trpc.recurringInvoices.list.queryOptions(),
+        );
         toast.success("Recurring invoice created.");
         router.push("/app/recurring-invoices");
       },
       onError: (error) =>
-        toast.error("Couldn't create recurring invoice.", { description: error.message }),
+        toast.error("Couldn't create recurring invoice.", {
+          description: error.message,
+        }),
     }),
   );
 
@@ -110,7 +118,9 @@ export function CreateRecurringInvoiceForm() {
     }
     const discountInputVal = Number(discountValue) || 0;
     const rawDiscount =
-      discountType === "fixed" ? discountInputVal : sub * (discountInputVal / 100);
+      discountType === "fixed"
+        ? discountInputVal
+        : sub * (discountInputVal / 100);
     const discount = Math.min(rawDiscount, sub);
     const discounted = sub - discount;
     const rows = summaryTaxRows.map(({ key, taxId }) => {
@@ -119,11 +129,18 @@ export function CreateRecurringInvoiceForm() {
       return { key, taxId, taxType, amount };
     });
     const taxTotal = rows.reduce((sum, r) => sum + r.amount, 0);
-    return { subTotal: sub, discountAmount: discount, taxRows: rows, grandTotal: discounted + taxTotal };
+    return {
+      subTotal: sub,
+      discountAmount: discount,
+      taxRows: rows,
+      grandTotal: discounted + taxTotal,
+    };
   }, [draftItems, discountValue, discountType, summaryTaxRows, taxTypesById]);
 
   function updateDraftItem(id: string, updater: (c: DraftItem) => DraftItem) {
-    setDraftItems((current) => current.map((item) => (item.id === id ? updater(item) : item)));
+    setDraftItems((current) =>
+      current.map((item) => (item.id === id ? updater(item) : item)),
+    );
   }
 
   function handleCatalogItemChange(id: string, itemId: string) {
@@ -149,7 +166,8 @@ export function CreateRecurringInvoiceForm() {
       startDate,
       limitType,
       limitDate: limitType === "date" ? limitDate || null : null,
-      limitCount: limitType === "count" && limitCount ? Number(limitCount) : null,
+      limitCount:
+        limitType === "count" && limitCount ? Number(limitCount) : null,
       dueDaysOffset: dueDaysOffset ? Number(dueDaysOffset) : null,
       sendAutomatically,
       notes: notes || null,
@@ -177,7 +195,8 @@ export function CreateRecurringInvoiceForm() {
       <PageShell title="New Recurring Invoice">
         <div className="space-y-4">
           <div className="rounded-2xl border border-border bg-muted/20 p-6 text-sm text-muted-foreground">
-            Set a default currency in Settings before creating recurring invoices.
+            Set a default currency in Settings before creating recurring
+            invoices.
           </div>
           <Button type="button" variant="outline" asChild>
             <NextLink href="/app/recurring-invoices">Back</NextLink>
@@ -291,7 +310,9 @@ export function CreateRecurringInvoiceForm() {
             <div>
               <Label htmlFor="ri-due-offset">
                 Due days offset{" "}
-                <span className="text-xs text-muted-foreground">(optional)</span>
+                <span className="text-xs text-muted-foreground">
+                  (optional)
+                </span>
               </Label>
               <Input
                 id="ri-due-offset"
@@ -327,27 +348,35 @@ export function CreateRecurringInvoiceForm() {
         <div className="space-y-4">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <h2 className="text-sm font-semibold text-foreground">Line items</h2>
+              <h2 className="text-sm font-semibold text-foreground">
+                Line items
+              </h2>
               <p className="text-xs text-muted-foreground">
-                Items from your catalog will be copied to each generated invoice.
+                Items from your catalog will be copied to each generated
+                invoice.
               </p>
             </div>
             <Button
               type="button"
               variant="outline"
               size="sm"
-              onClick={() => setDraftItems((prev) => [...prev, makeDraftItem()])}
+              onClick={() =>
+                setDraftItems((prev) => [...prev, makeDraftItem()])
+              }
             >
               <Plus className="h-4 w-4" />
               Add item
             </Button>
           </div>
 
-          <div className="rounded-2xl border border-border bg-card p-4">
+          <div className="app-card p-4">
             {draftItems.map((draftItem, index) => {
-              const catalogItem = draftItem.itemId ? itemsById.get(draftItem.itemId) : null;
+              const catalogItem = draftItem.itemId
+                ? itemsById.get(draftItem.itemId)
+                : null;
               const lineTotal =
-                Number(draftItem.quantity || 0) * Number(draftItem.unitPrice || 0);
+                Number(draftItem.quantity || 0) *
+                Number(draftItem.unitPrice || 0);
 
               return (
                 <div key={draftItem.id}>
@@ -360,7 +389,9 @@ export function CreateRecurringInvoiceForm() {
                       <ItemPicker
                         id={`ri-item-${draftItem.id}`}
                         value={draftItem.itemId}
-                        onValueChange={(id) => handleCatalogItemChange(draftItem.id, id)}
+                        onValueChange={(id) =>
+                          handleCatalogItemChange(draftItem.id, id)
+                        }
                       />
                       {catalogItem?.description ? (
                         <p className="text-xs text-muted-foreground">
@@ -387,7 +418,9 @@ export function CreateRecurringInvoiceForm() {
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label htmlFor={`ri-price-${draftItem.id}`}>Unit price</Label>
+                      <Label htmlFor={`ri-price-${draftItem.id}`}>
+                        Unit price
+                      </Label>
                       <CurrencyInput
                         id={`ri-price-${draftItem.id}`}
                         currency={currency}
@@ -413,7 +446,9 @@ export function CreateRecurringInvoiceForm() {
                         </p>
                         <p className="mt-1 text-sm font-semibold text-foreground">
                           {formatCurrencyDisplay(
-                            Number.isFinite(lineTotal) ? lineTotal.toFixed(3) : "0",
+                            Number.isFinite(lineTotal)
+                              ? lineTotal.toFixed(3)
+                              : "0",
                             currency,
                           )}
                         </p>
@@ -455,7 +490,7 @@ export function CreateRecurringInvoiceForm() {
           </div>
 
           {/* Summary panel */}
-          <div className="rounded-2xl border border-border bg-card p-4">
+          <div className="app-card p-4">
             <p className="text-sm font-semibold text-foreground">Summary</p>
             <div className="mt-4 space-y-3 text-sm">
               <div className="flex items-center justify-between text-muted-foreground">
@@ -481,7 +516,9 @@ export function CreateRecurringInvoiceForm() {
                     <NativeSelect
                       value={discountType}
                       onChange={(e) =>
-                        setDiscountType(e.target.value as "fixed" | "percentage")
+                        setDiscountType(
+                          e.target.value as "fixed" | "percentage",
+                        )
                       }
                       className="absolute inset-0 z-10 cursor-pointer opacity-0"
                       aria-label="Discount type"
@@ -490,9 +527,15 @@ export function CreateRecurringInvoiceForm() {
                       <option value="percentage">Percentage</option>
                     </NativeSelect>
                     {discountType === "fixed" ? (
-                      <DollarSign className="pointer-events-none h-4 w-4 text-muted-foreground" aria-hidden />
+                      <DollarSign
+                        className="pointer-events-none h-4 w-4 text-muted-foreground"
+                        aria-hidden
+                      />
                     ) : (
-                      <Percent className="pointer-events-none h-4 w-4 text-muted-foreground" aria-hidden />
+                      <Percent
+                        className="pointer-events-none h-4 w-4 text-muted-foreground"
+                        aria-hidden
+                      />
                     )}
                   </div>
                 </div>
@@ -506,7 +549,9 @@ export function CreateRecurringInvoiceForm() {
                       onChange={(e) =>
                         setSummaryTaxRows((prev) =>
                           prev.map((r) =>
-                            r.key === row.key ? { ...r, taxId: e.target.value } : r,
+                            r.key === row.key
+                              ? { ...r, taxId: e.target.value }
+                              : r,
                           ),
                         )
                       }
@@ -553,7 +598,9 @@ export function CreateRecurringInvoiceForm() {
               <hr className="border-border" />
 
               <div className="flex items-center justify-between">
-                <span className="font-semibold text-foreground">Total Amount</span>
+                <span className="font-semibold text-foreground">
+                  Total Amount
+                </span>
                 <span className="text-lg font-semibold text-foreground">
                   {formatCurrencyDisplay(grandTotal.toFixed(3), currency)}
                 </span>
@@ -570,7 +617,12 @@ export function CreateRecurringInvoiceForm() {
           <Button
             type="submit"
             loading={create.isPending}
-            disabled={create.isPending || !name || !customerId || validDraftItems.length === 0}
+            disabled={
+              create.isPending ||
+              !name ||
+              !customerId ||
+              validDraftItems.length === 0
+            }
           >
             Create Recurring Invoice
           </Button>

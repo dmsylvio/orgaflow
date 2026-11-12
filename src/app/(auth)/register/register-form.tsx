@@ -139,7 +139,7 @@ export function RegisterForm() {
           type="submit"
           loading={isSubmitting}
           disabled={isSubmitting}
-          className="w-full"
+          className="h-11 w-full text-[15px]"
           size="lg"
         >
           {isSubmitting ? "Creating account…" : "Create account"}

@@ -368,9 +368,7 @@ function PageShell({ title, description, children }: PageShellProps) {
   return (
     <div className="w-full min-w-0 p-6 md:p-8">
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-          {title}
-        </h1>
+        <h1 className="app-page-title">{title}</h1>
         {description ? (
           <p className="mt-1 text-sm text-muted-foreground">{description}</p>
         ) : null}
@@ -383,7 +381,7 @@ function PageShell({ title, description, children }: PageShellProps) {
 
 function SummaryTile({ label, value, accent }: SummaryTileProps) {
   return (
-    <div className="rounded-2xl border border-border bg-card px-4 py-3">
+    <div className="app-card px-4 py-3">
       <p className="text-xs uppercase tracking-wide text-muted-foreground/70">
         {label}
       </p>

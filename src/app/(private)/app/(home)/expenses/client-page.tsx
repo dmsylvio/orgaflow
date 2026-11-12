@@ -483,12 +483,10 @@ export default function ExpensesPage() {
   }
 
   return (
-    <div className="w-full p-6 md:p-8">
+    <div className="w-full px-4 py-6 sm:px-6 md:px-8 md:py-8">
       <div className="mb-6 flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-            Expenses
-          </h1>
+          <h1 className="app-page-title">Expenses</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Track and manage your organization&apos;s expenses.
           </p>
@@ -502,19 +500,15 @@ export default function ExpensesPage() {
       {expenseList.length > 0 && (
         <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-3">
           {canViewPrices ? (
-            <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
-              <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
-                Total Expenses
-              </p>
+            <div className="app-card p-4 shadow-sm">
+              <p className="app-th">Total Expenses</p>
               <p className="mt-1 text-2xl font-semibold text-foreground">
                 {formatCurrencyDisplay(totalAmount ?? 0, orgCurrency)}
               </p>
             </div>
           ) : null}
-          <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
-              Records
-            </p>
+          <div className="app-card p-4 shadow-sm">
+            <p className="app-th">Records</p>
             <p className="mt-1 text-2xl font-semibold text-foreground">
               {expenseList.length}
             </p>
@@ -522,9 +516,9 @@ export default function ExpensesPage() {
         </div>
       )}
 
-      <div className="rounded-xl border border-border bg-card shadow-sm">
+      <div className="app-card">
         <div className="flex items-center justify-between border-b border-border px-4 py-3">
-          <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
+          <p className="app-th">
             {expenseList.length} record{expenseList.length !== 1 ? "s" : ""}
           </p>
           <Button

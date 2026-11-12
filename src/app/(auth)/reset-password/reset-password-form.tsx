@@ -114,7 +114,7 @@ export function ResetPasswordForm({ initialToken }: ResetPasswordFormProps) {
             type="submit"
             loading={isSubmitting}
             disabled={isSubmitting || tokenMissing}
-            className="w-full"
+            className="h-11 w-full text-[15px]"
             size="lg"
           >
             {isSubmitting ? "Updating…" : "Update password"}

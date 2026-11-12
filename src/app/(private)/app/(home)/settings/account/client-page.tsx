@@ -27,11 +27,9 @@ function SettingsPage({
   children: React.ReactNode;
 }) {
   return (
-    <div className="w-full p-6 md:p-8">
+    <div className="w-full px-4 py-6 sm:px-6 md:px-8 md:py-8">
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-          {title}
-        </h1>
+        <h1 className="app-page-title">{title}</h1>
         {description ? (
           <p className="mt-1 text-sm text-muted-foreground">{description}</p>
         ) : null}
@@ -59,9 +57,7 @@ function Section({
           <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>
         ) : null}
       </div>
-      <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
-        {children}
-      </div>
+      <div className="app-card p-5 shadow-sm">{children}</div>
     </section>
   );
 }

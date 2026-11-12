@@ -1,7 +1,16 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { DollarSign, FileText, Paperclip, Percent, Plus, Trash2, Upload, X } from "lucide-react";
+import {
+  DollarSign,
+  FileText,
+  Paperclip,
+  Percent,
+  Plus,
+  Trash2,
+  Upload,
+  X,
+} from "lucide-react";
 import NextLink from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useRef, useState } from "react";
@@ -316,7 +325,7 @@ export function CreateInvoiceForm() {
           </Button>
         </div>
 
-        <div className="rounded-2xl border border-border bg-card p-4">
+        <div className="app-card p-4">
           {draftItems.map((draftItem, index) => {
             const catalogItem = draftItem.itemId
               ? itemsById.get(draftItem.itemId)
@@ -449,7 +458,8 @@ export function CreateInvoiceForm() {
               multiple
               onChange={(e) => {
                 const selected = Array.from(e.target.files ?? []);
-                if (selected.length) setPendingFiles((prev) => [...prev, ...selected]);
+                if (selected.length)
+                  setPendingFiles((prev) => [...prev, ...selected]);
                 if (fileInputRef.current) fileInputRef.current.value = "";
               }}
             />
@@ -462,8 +472,12 @@ export function CreateInvoiceForm() {
                 <Upload className="h-4 w-4 text-muted-foreground" />
               </div>
               <div className="text-left">
-                <p className="text-sm font-medium text-foreground">Add Attachment</p>
-                <p className="text-xs text-muted-foreground">PNG, JPG, GIF, WebP — max 25 MB</p>
+                <p className="text-sm font-medium text-foreground">
+                  Add Attachment
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  PNG, JPG, GIF, WebP — max 25 MB
+                </p>
               </div>
             </button>
 
@@ -479,11 +493,19 @@ export function CreateInvoiceForm() {
                     ) : (
                       <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                     )}
-                    <span className="min-w-0 flex-1 truncate text-foreground">{file.name}</span>
-                    <span className="shrink-0 text-xs text-muted-foreground">{formatBytes(file.size)}</span>
+                    <span className="min-w-0 flex-1 truncate text-foreground">
+                      {file.name}
+                    </span>
+                    <span className="shrink-0 text-xs text-muted-foreground">
+                      {formatBytes(file.size)}
+                    </span>
                     <button
                       type="button"
-                      onClick={() => setPendingFiles((prev) => prev.filter((_, i) => i !== idx))}
+                      onClick={() =>
+                        setPendingFiles((prev) =>
+                          prev.filter((_, i) => i !== idx),
+                        )
+                      }
                       className="ml-1 shrink-0 rounded p-0.5 text-muted-foreground/50 hover:text-destructive"
                     >
                       <X className="h-3.5 w-3.5" />
@@ -494,12 +516,14 @@ export function CreateInvoiceForm() {
             )}
 
             {pendingFiles.length === 0 && (
-              <p className="text-xs text-muted-foreground">Files will be uploaded when you save the invoice.</p>
+              <p className="text-xs text-muted-foreground">
+                Files will be uploaded when you save the invoice.
+              </p>
             )}
           </TabsContent>
         </Tabs>
 
-        <div className="rounded-2xl border border-border bg-card p-4">
+        <div className="app-card p-4">
           <p className="text-sm font-semibold text-foreground">Summary</p>
           <div className="mt-4 space-y-3 text-sm">
             <div className="flex items-center justify-between text-muted-foreground">
@@ -530,9 +554,7 @@ export function CreateInvoiceForm() {
                     className="absolute inset-0 z-10 cursor-pointer opacity-0"
                     aria-label="Discount type: fixed amount or percentage"
                     title={
-                      discountType === "fixed"
-                        ? "Fixed amount"
-                        : "Percentage"
+                      discountType === "fixed" ? "Fixed amount" : "Percentage"
                     }
                   >
                     <option value="fixed">Fixed</option>

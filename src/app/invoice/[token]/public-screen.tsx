@@ -46,7 +46,7 @@ function FileCard({ file }: { file: FileItem }) {
       href={file.storageKey}
       target="_blank"
       rel="noreferrer"
-      className="group flex flex-col overflow-hidden rounded-xl border border-border bg-background transition-shadow hover:shadow-md"
+      className="group flex flex-col overflow-hidden rounded-xl border border-border bg-card transition-shadow hover:shadow-md"
     >
       <div className="flex h-32 items-center justify-center overflow-hidden bg-muted/40">
         {isImage ? (
@@ -109,7 +109,7 @@ export function InvoicePublicScreen({ token }: { token: string }) {
 
   if (isPending || !data) {
     return (
-      <div className="flex min-h-dvh items-center justify-center bg-muted/20 px-4">
+      <div className="flex min-h-dvh items-center justify-center bg-background px-4">
         <Spinner className="size-5 text-primary" label="Loading invoice" />
       </div>
     );
@@ -117,7 +117,7 @@ export function InvoicePublicScreen({ token }: { token: string }) {
 
   if (data.status === "invalid") {
     return (
-      <div className="flex min-h-dvh items-center justify-center bg-muted/20 px-4 py-10">
+      <div className="flex min-h-dvh items-center justify-center bg-background px-4 py-10">
         <Card className="w-full max-w-xl shadow-md">
           <CardHeader className="space-y-3">
             <Badge variant="soft" className="w-fit gap-1.5">
@@ -141,7 +141,7 @@ export function InvoicePublicScreen({ token }: { token: string }) {
 
   if (data.status === "expired") {
     return (
-      <div className="flex min-h-dvh items-center justify-center bg-muted/20 px-4 py-10">
+      <div className="flex min-h-dvh items-center justify-center bg-background px-4 py-10">
         <Card className="w-full max-w-xl shadow-md">
           <CardHeader className="space-y-3">
             <Badge variant="destructive" className="w-fit gap-1.5">
@@ -166,9 +166,18 @@ export function InvoicePublicScreen({ token }: { token: string }) {
   const { invoice, expiresAt } = data;
 
   return (
-    <div className="min-h-dvh bg-muted/20 px-4 py-10">
-      <div className="mx-auto w-full max-w-4xl">
-        <Card className="shadow-md">
+    <div className="relative min-h-dvh overflow-hidden bg-background px-4 py-10">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 h-80 bg-gradient-to-b from-indigo-100/70 via-violet-50/40 to-transparent"
+      />
+      <div
+        aria-hidden
+        className="app-grid-light pointer-events-none absolute inset-x-0 top-0 h-80"
+      />
+      <div className="app-fade-in relative mx-auto w-full max-w-4xl">
+        <Card className="overflow-hidden shadow-[0_30px_80px_-30px_rgba(30,27,75,0.35)]">
+          <div aria-hidden className="app-gradient h-1.5 w-full" />
           <CardHeader className="space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <Badge variant="soft" className="w-fit gap-1.5">
@@ -195,7 +204,7 @@ export function InvoicePublicScreen({ token }: { token: string }) {
             </div>
 
             <div className="space-y-1">
-              <CardTitle className="text-2xl font-semibold tracking-tight">
+              <CardTitle className="text-3xl font-extrabold tracking-[-0.03em]">
                 {invoice.invoiceNumber}
               </CardTitle>
               <CardDescription>{invoice.organization.name}</CardDescription>

@@ -103,10 +103,10 @@ const WORKSPACE_PLAN_OPTIONS: readonly WorkspacePlanOption[] = [
 export function WorkspaceHero() {
   return (
     <header className="mb-8">
-      <h1 className="mb-2 text-3xl font-bold tracking-tight text-foreground md:text-4xl">
+      <h1 className="mb-2 text-3xl font-extrabold tracking-[-0.035em] text-white md:text-4xl">
         Workspaces
       </h1>
-      <p className="max-w-xl text-base text-muted-foreground">
+      <p className="max-w-xl text-base text-slate-300">
         Choose which organization you want to work in, or create a new one.
         Everything in the app is scoped to the active workspace.
       </p>

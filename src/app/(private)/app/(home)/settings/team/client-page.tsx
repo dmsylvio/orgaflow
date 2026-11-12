@@ -31,11 +31,9 @@ function SettingsPage({
   children: React.ReactNode;
 }) {
   return (
-    <div className="w-full p-6 md:p-8">
+    <div className="w-full px-4 py-6 sm:px-6 md:px-8 md:py-8">
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-          {title}
-        </h1>
+        <h1 className="app-page-title">{title}</h1>
         {description ? (
           <p className="mt-1 text-sm text-muted-foreground">{description}</p>
         ) : null}
@@ -158,7 +156,7 @@ export default function TeamSettingsPage() {
       description="Invite teammates, review who already has access, and track pending invitations."
     >
       <div className="space-y-6">
-        <section className="rounded-xl border border-border bg-card p-5 shadow-sm">
+        <section className="app-card p-5 shadow-sm">
           <div className="mb-4 flex items-start justify-between gap-4">
             <div>
               <h2 className="text-sm font-semibold text-foreground">
@@ -265,7 +263,7 @@ export default function TeamSettingsPage() {
           ) : null}
         </section>
 
-        <section className="rounded-xl border border-border bg-card shadow-sm">
+        <section className="app-card">
           <div className="flex items-center gap-2 border-b border-border px-5 py-4">
             <Users className="h-4 w-4 text-muted-foreground" />
             <div>
@@ -320,7 +318,7 @@ export default function TeamSettingsPage() {
           </div>
         </section>
 
-        <section className="rounded-xl border border-border bg-card shadow-sm">
+        <section className="app-card">
           <div className="flex items-center gap-2 border-b border-border px-5 py-4">
             <Mail className="h-4 w-4 text-muted-foreground" />
             <div>

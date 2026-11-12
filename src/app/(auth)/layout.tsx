@@ -1,108 +1,131 @@
 import {
-  BarChart3,
+  ArrowLeft,
+  Check,
   CheckCircle2,
-  FileText,
-  Layers,
-  Users,
+  CircleDollarSign,
   Zap,
 } from "lucide-react";
-import NextLink from "next/link";
 import type { Metadata } from "next";
+import NextLink from "next/link";
 import type { ReactNode } from "react";
+import MainLogo from "@/components/logo";
+import { ClientApprovalCard } from "@/components/marketing/product-mockups";
 
 export const metadata: Metadata = {
   title: "Account",
   robots: { index: false, follow: false },
 };
 
-const FEATURES = [
-  { Icon: Users,        text: "Full CRM — clients, history, and activity" },
-  { Icon: FileText,     text: "Estimates & invoices with client approval" },
-  { Icon: Zap,          text: "Workflow automations — zero manual handoffs" },
-  { Icon: BarChart3,    text: "Reports & analytics on every number that matters" },
-  { Icon: CheckCircle2, text: "Kanban task board linked to your documents" },
+const POINTS = [
+  "Estimates clients approve from a link",
+  "One-click invoices and payment tracking",
+  "Tasks that start themselves when a client says yes",
 ];
 
 export default function AuthLayout({
   children,
 }: Readonly<{ children: ReactNode }>) {
   return (
-    <div className="flex min-h-dvh flex-col lg:flex-row">
+    <div className="flex min-h-dvh bg-background lg:p-3">
+      {/* ── Brand panel ── */}
+      <aside className="relative hidden w-[46%] shrink-0 flex-col overflow-hidden rounded-[1.75rem] bg-[#070A1A] text-white lg:flex">
+        <div aria-hidden className="app-aurora absolute inset-0" />
+        <div aria-hidden className="app-grid absolute inset-0" />
 
-      {/* ── Left: brand panel ── */}
-      <div className="relative flex shrink-0 flex-col overflow-hidden border-r border-border bg-muted/30 lg:min-h-dvh lg:w-[52%]">
-        {/* Blobs */}
-        <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="absolute left-1/2 top-0 h-[500px] w-[700px] -translate-x-1/2 rounded-full bg-primary/6 blur-[100px]" />
-          <div className="absolute -left-24 bottom-0 h-72 w-72 rounded-full bg-violet-300/20 blur-3xl" />
-          <div className="absolute -right-16 top-1/2 h-64 w-64 -translate-y-1/2 rounded-full bg-cyan-300/15 blur-3xl" />
-        </div>
-
-        <div className="relative flex flex-1 flex-col justify-between px-8 py-10 lg:px-14 lg:py-14">
-          {/* Logo */}
-          <NextLink href="/" className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary shadow-md shadow-primary/30">
-              <Layers className="h-4.5 w-4.5 text-white" />
-            </div>
-            <span className="text-lg font-bold tracking-tight text-foreground">
-              Orgaflow
-            </span>
+        <div className="relative flex flex-1 flex-col px-12 py-10 xl:px-16">
+          <NextLink href="/" aria-label="Orgaflow home" className="w-fit">
+            <MainLogo className="h-auto w-32 fill-white" />
           </NextLink>
 
-          {/* Main content */}
-          <div className="hidden lg:block">
-            <p className="mb-2 text-sm font-semibold uppercase tracking-widest text-primary">
-              Welcome to Orgaflow
-            </p>
-            <h2 className="mb-5 text-4xl font-bold leading-tight text-foreground xl:text-5xl">
-              The smarter way to{" "}
-              <span className="bg-gradient-to-r from-primary to-violet-500 bg-clip-text text-transparent">
-                run your business
+          <div className="my-auto py-10">
+            <h2 className="max-w-md text-balance text-4xl font-extrabold leading-[1.05] tracking-[-0.04em] xl:text-5xl">
+              From the first quote to the{" "}
+              <span className="bg-gradient-to-r from-indigo-300 via-violet-300 to-emerald-300 bg-clip-text text-transparent">
+                finished job
               </span>
             </h2>
-            <p className="mb-10 max-w-md text-base leading-relaxed text-muted-foreground">
-              From the first estimate to the final payment — Orgaflow connects every
-              part of your client workflow in one unified platform.
-            </p>
-
-            <ul className="flex flex-col gap-3.5">
-              {FEATURES.map(({ Icon, text }) => (
-                <li key={text} className="flex items-center gap-3">
-                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                    <Icon className="h-3.5 w-3.5 text-primary" />
-                  </div>
-                  <span className="text-sm text-muted-foreground">{text}</span>
+            <ul className="mt-8 flex flex-col gap-3">
+              {POINTS.map((point) => (
+                <li
+                  key={point}
+                  className="flex items-center gap-3 text-slate-300"
+                >
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-400/15 text-emerald-300">
+                    <Check className="h-3 w-3" strokeWidth={3} />
+                  </span>
+                  {point}
                 </li>
               ))}
             </ul>
-          </div>
-        </div>
-      </div>
 
-      {/* ── Right: form panel ── */}
-      <div className="relative flex flex-1 flex-col bg-background">
-        {/* Back link */}
-        <div className="flex items-center justify-end px-8 py-5 lg:px-10">
+            {/* Product vignette */}
+            <div aria-hidden className="relative mt-12 max-w-sm">
+              <ClientApprovalCard className="relative z-10 rotate-[-2deg]" />
+              <div className="absolute -right-16 -top-8 z-20 flex items-center gap-3 rounded-2xl border border-white/60 bg-white px-3.5 py-3 text-slate-900 shadow-[0_20px_50px_-15px_rgba(0,0,0,0.6)] xl:-right-24">
+                <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-600">
+                  <CircleDollarSign className="h-4 w-4" />
+                </span>
+                <div>
+                  <p className="text-[12.5px] font-semibold">
+                    Payment received
+                  </p>
+                  <p className="text-[11px] text-slate-500">
+                    INV-0142 · $860.00
+                  </p>
+                </div>
+              </div>
+              <div className="absolute -bottom-6 -right-10 z-20 flex items-center gap-3 rounded-2xl border border-white/60 bg-white px-3.5 py-3 text-slate-900 shadow-[0_20px_50px_-15px_rgba(0,0,0,0.6)] xl:-right-16">
+                <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-violet-500/15 text-violet-600">
+                  <Zap className="h-4 w-4" />
+                </span>
+                <div>
+                  <p className="text-[12.5px] font-semibold">Task created</p>
+                  <p className="text-[11px] text-slate-500">Assigned to Dana</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <p className="flex items-center gap-2 text-xs text-slate-400">
+            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
+            Free plan forever. No credit card needed.
+          </p>
+        </div>
+      </aside>
+
+      {/* ── Form panel ── */}
+      <div className="relative flex flex-1 flex-col">
+        <div
+          aria-hidden
+          className="app-grid-light pointer-events-none absolute inset-x-0 top-0 h-80"
+        />
+        <div className="relative flex items-center justify-between px-6 py-5 lg:px-10">
           <NextLink
             href="/"
-            className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+            aria-label="Orgaflow home"
+            className="lg:invisible"
           >
-            ← Back to Orgaflow
+            <MainLogo className="h-auto w-28 fill-foreground" />
+          </NextLink>
+          <NextLink
+            href="/"
+            className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to site
           </NextLink>
         </div>
 
-        {/* Centered form */}
-        <div className="flex flex-1 items-center justify-center px-6 pb-16 pt-4">
+        <div className="relative flex flex-1 items-center justify-center px-6 pb-16 pt-4">
           <main
             id="auth-main"
             aria-label="Authentication"
-            className="w-full max-w-[400px]"
+            className="app-fade-in w-full max-w-[420px]"
           >
             {children}
           </main>
         </div>
       </div>
-
     </div>
   );
 }

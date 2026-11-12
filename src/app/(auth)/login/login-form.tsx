@@ -102,7 +102,7 @@ export function LoginForm() {
           type="submit"
           loading={isSubmitting}
           disabled={isSubmitting}
-          className="w-full"
+          className="h-11 w-full text-[15px]"
           size="lg"
         >
           {isSubmitting ? "Signing in…" : "Sign in"}

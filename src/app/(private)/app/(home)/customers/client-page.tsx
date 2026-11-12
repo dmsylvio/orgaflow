@@ -81,11 +81,9 @@ function PageShell({
   children: React.ReactNode;
 }) {
   return (
-    <div className="w-full p-6 md:p-8">
+    <div className="w-full px-4 py-6 sm:px-6 md:px-8 md:py-8">
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-          {title}
-        </h1>
+        <h1 className="app-page-title">{title}</h1>
         {description ? (
           <p className="mt-1 text-sm text-muted-foreground">{description}</p>
         ) : null}
@@ -520,10 +518,10 @@ export default function CustomersPage() {
         description="Keep customer records organized so estimates, invoices, and payments are faster to manage."
       >
         <div className="space-y-6">
-          <div className="rounded-xl border border-border bg-card shadow-sm">
+          <div className="app-card">
             <div className="flex items-center justify-between border-b border-border px-4 py-3">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
+                <p className="app-th">
                   {customers.length} customer{customers.length === 1 ? "" : "s"}
                 </p>
                 <p className="mt-1 text-sm text-muted-foreground">
@@ -586,19 +584,13 @@ export default function CustomersPage() {
                   <table className="w-full">
                     <thead>
                       <tr className="border-b border-border">
-                        <th className="py-3 pl-4 pr-2 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
+                        <th className="py-3 pl-4 pr-2 text-left app-th">
                           Customer
                         </th>
-                        <th className="px-2 py-3 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
-                          Contact
-                        </th>
-                        <th className="px-2 py-3 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
-                          Location
-                        </th>
-                        <th className="px-2 py-3 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
-                          Address
-                        </th>
-                        <th className="py-3 pl-2 pr-4 text-right text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
+                        <th className="px-2 py-3 text-left app-th">Contact</th>
+                        <th className="px-2 py-3 text-left app-th">Location</th>
+                        <th className="px-2 py-3 text-left app-th">Address</th>
+                        <th className="py-3 pl-2 pr-4 text-right app-th">
                           Actions
                         </th>
                       </tr>

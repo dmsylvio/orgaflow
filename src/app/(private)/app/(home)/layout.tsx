@@ -9,6 +9,7 @@ import { db } from "@/server/db";
 import {
   organizationMembers,
   organizationSubscriptions,
+  organizations,
 } from "@/server/db/schemas";
 import { syncOrganizationSubscriptionStatus } from "@/server/services/billing/sync-organization-subscription";
 import { ACTIVE_ORGANIZATION_COOKIE } from "@/server/trpc/constants";
@@ -43,8 +44,14 @@ export default async function AppHomeLayout({
     .select({
       id: organizationMembers.id,
       subscriptionStatus: organizationSubscriptions.status,
+      plan: organizationSubscriptions.plan,
+      orgName: organizations.name,
     })
     .from(organizationMembers)
+    .innerJoin(
+      organizations,
+      eq(organizations.id, organizationMembers.organizationId),
+    )
     .leftJoin(
       organizationSubscriptions,
       eq(
@@ -72,5 +79,14 @@ export default async function AppHomeLayout({
     redirect(appPaths.workspace);
   }
 
-  return <AppShell>{children}</AppShell>;
+  return (
+    <AppShell
+      workspace={{
+        name: member.orgName,
+        plan: sub?.plan ?? member.plan ?? null,
+      }}
+    >
+      {children}
+    </AppShell>
+  );
 }

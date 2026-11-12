@@ -15,8 +15,8 @@ import {
   YAxis,
 } from "recharts";
 import { Spinner } from "@/components/ui/spinner";
-import { useTRPC } from "@/trpc/client";
 import { useCanViewPrices } from "@/hooks/use-can-view-prices";
+import { useTRPC } from "@/trpc/client";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -54,10 +54,8 @@ function StatCard({
   sub?: string;
 }) {
   return (
-    <div className="rounded-2xl border border-border bg-card p-5">
-      <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
-        {label}
-      </p>
+    <div className="app-card p-5">
+      <p className="app-th">{label}</p>
       <p className="mt-2 text-2xl font-bold text-foreground">{value}</p>
       {sub && <p className="mt-0.5 text-xs text-muted-foreground">{sub}</p>}
     </div>
@@ -70,18 +68,18 @@ function StatCard({
 
 const ESTIMATE_COLORS: Record<string, string> = {
   DRAFT: "#94a3b8",
-  SENT: "#3b82f6",
-  VIEWED: "#a78bfa",
-  APPROVED: "#22c55e",
-  REJECTED: "#ef4444",
+  SENT: "#0ea5e9",
+  VIEWED: "#8b5cf6",
+  APPROVED: "#10b981",
+  REJECTED: "#f43f5e",
 };
 
 const INVOICE_COLORS: Record<string, string> = {
   DRAFT: "#94a3b8",
-  SENT: "#3b82f6",
-  VIEWED: "#a78bfa",
-  DUE: "#f97316",
-  PAID: "#22c55e",
+  SENT: "#0ea5e9",
+  VIEWED: "#8b5cf6",
+  DUE: "#f59e0b",
+  PAID: "#10b981",
   CANCELLED: "#e2e8f0",
 };
 
@@ -133,10 +131,7 @@ export function ReportsClientPage() {
     trpc.reports.getTopCustomers.queryOptions({ period }),
   );
 
-  const totalRevenue = (overview.data ?? []).reduce(
-    (s, r) => s + r.revenue,
-    0,
-  );
+  const totalRevenue = (overview.data ?? []).reduce((s, r) => s + r.revenue, 0);
   const totalExpenses = (overview.data ?? []).reduce(
     (s, r) => s + r.expenses,
     0,
@@ -159,11 +154,11 @@ export function ReportsClientPage() {
     topCustomers.isPending;
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6 px-4 py-6 sm:px-6 md:px-8 md:py-8">
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Reports</h1>
+          <h1 className="app-page-title">Reports</h1>
           <p className="mt-0.5 text-sm text-muted-foreground">
             Overview of revenue, expenses, and document activity.
           </p>
@@ -223,71 +218,79 @@ export function ReportsClientPage() {
           </div>
 
           {/* Revenue vs Expenses bar chart */}
-          {canViewPrices ? <div className="rounded-2xl border border-border bg-card p-5">
-            <h2 className="mb-4 text-sm font-semibold text-foreground">
-              Revenue vs Expenses
-            </h2>
-            <ResponsiveContainer width="100%" height={260}>
-              <BarChart
-                data={(overview.data ?? []).map((d) => ({
-                  ...d,
-                  month: formatMonthLabel(d.month),
-                }))}
-                barCategoryGap="30%"
-                barGap={4}
-              >
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  stroke="hsl(var(--border))"
-                  vertical={false}
-                />
-                <XAxis
-                  dataKey="month"
-                  tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <YAxis
-                  tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
-                  axisLine={false}
-                  tickLine={false}
-                  tickFormatter={(v) =>
-                    v >= 1000 ? `$${(v / 1000).toFixed(0)}k` : `$${v}`
-                  }
-                />
-                <Tooltip content={<BarTooltip />} />
-                <Bar
-                  dataKey="revenue"
-                  name="Revenue"
-                  fill="#2563eb"
-                  radius={[4, 4, 0, 0]}
-                />
-                <Bar
-                  dataKey="expenses"
-                  name="Expenses"
-                  fill="#f97316"
-                  radius={[4, 4, 0, 0]}
-                />
-              </BarChart>
-            </ResponsiveContainer>
+          {canViewPrices ? (
+            <div className="app-card p-5">
+              <h2 className="mb-4 text-sm font-semibold text-foreground">
+                Revenue vs Expenses
+              </h2>
+              <ResponsiveContainer width="100%" height={260}>
+                <BarChart
+                  data={(overview.data ?? []).map((d) => ({
+                    ...d,
+                    month: formatMonthLabel(d.month),
+                  }))}
+                  barCategoryGap="30%"
+                  barGap={4}
+                >
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke="hsl(var(--border))"
+                    vertical={false}
+                  />
+                  <XAxis
+                    dataKey="month"
+                    tick={{
+                      fontSize: 11,
+                      fill: "hsl(var(--muted-foreground))",
+                    }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    tick={{
+                      fontSize: 11,
+                      fill: "hsl(var(--muted-foreground))",
+                    }}
+                    axisLine={false}
+                    tickLine={false}
+                    tickFormatter={(v) =>
+                      v >= 1000 ? `$${(v / 1000).toFixed(0)}k` : `$${v}`
+                    }
+                  />
+                  <Tooltip content={<BarTooltip />} />
+                  <Bar
+                    dataKey="revenue"
+                    name="Revenue"
+                    fill="#6366f1"
+                    radius={[6, 6, 0, 0]}
+                  />
+                  <Bar
+                    dataKey="expenses"
+                    name="Expenses"
+                    fill="#f59e0b"
+                    radius={[6, 6, 0, 0]}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
 
-            {/* Legend */}
-            <div className="mt-3 flex gap-4">
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <span className="h-2.5 w-2.5 rounded-sm bg-[#2563eb]" />
-                Revenue
-              </div>
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <span className="h-2.5 w-2.5 rounded-sm bg-[#f97316]" />
-                Expenses
+              {/* Legend */}
+              <div className="mt-3 flex gap-4">
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <span className="h-2.5 w-2.5 rounded-sm bg-[#6366f1]" />
+                  Revenue
+                </div>
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <span className="h-2.5 w-2.5 rounded-sm bg-[#f59e0b]" />
+                  Expenses
+                </div>
               </div>
             </div>
-          </div> : null}
+          ) : null}
 
           {/* Pie charts row */}
           <div className="grid gap-4 md:grid-cols-2">
             {/* Estimate status */}
-            <div className="rounded-2xl border border-border bg-card p-5">
+            <div className="app-card p-5">
               <h2 className="mb-4 text-sm font-semibold text-foreground">
                 Estimates by status
               </h2>
@@ -316,9 +319,7 @@ export function ReportsClientPage() {
                           .map((entry) => (
                             <Cell
                               key={entry.status}
-                              fill={
-                                ESTIMATE_COLORS[entry.status] ?? "#94a3b8"
-                              }
+                              fill={ESTIMATE_COLORS[entry.status] ?? "#94a3b8"}
                             />
                           ))}
                       </Pie>
@@ -354,7 +355,7 @@ export function ReportsClientPage() {
             </div>
 
             {/* Invoice status */}
-            <div className="rounded-2xl border border-border bg-card p-5">
+            <div className="app-card p-5">
               <h2 className="mb-4 text-sm font-semibold text-foreground">
                 Invoices by status
               </h2>
@@ -401,8 +402,7 @@ export function ReportsClientPage() {
                           <span
                             className="h-2.5 w-2.5 shrink-0 rounded-full"
                             style={{
-                              background:
-                                INVOICE_COLORS[s.status] ?? "#94a3b8",
+                              background: INVOICE_COLORS[s.status] ?? "#94a3b8",
                             }}
                           />
                           <span className="text-muted-foreground">
@@ -420,46 +420,51 @@ export function ReportsClientPage() {
           </div>
 
           {/* Top customers */}
-          {canViewPrices ? <div className="rounded-2xl border border-border bg-card p-5">
-            <h2 className="mb-4 text-sm font-semibold text-foreground">
-              Top customers by revenue
-            </h2>
-            {!topCustomers.data?.length ? (
-              <p className="py-4 text-center text-sm text-muted-foreground">
-                No payment data for this period.
-              </p>
-            ) : (
-              <div className="space-y-3">
-                {topCustomers.data.map((c, i) => {
-                  const max = topCustomers.data![0]!.total;
-                  const pct = max > 0 ? (c.total / max) * 100 : 0;
-                  return (
-                    <div key={c.customerId} className="flex items-center gap-3">
-                      <span className="w-4 shrink-0 text-right text-xs font-semibold text-muted-foreground">
-                        {i + 1}
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center justify-between">
-                          <p className="truncate text-sm font-medium text-foreground">
-                            {c.customerName}
-                          </p>
-                          <p className="ml-3 shrink-0 text-sm font-semibold text-foreground">
-                            {formatCurrency(c.total)}
-                          </p>
-                        </div>
-                        <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-muted">
-                          <div
-                            className="h-full rounded-full bg-primary"
-                            style={{ width: `${pct}%` }}
-                          />
+          {canViewPrices ? (
+            <div className="app-card p-5">
+              <h2 className="mb-4 text-sm font-semibold text-foreground">
+                Top customers by revenue
+              </h2>
+              {!topCustomers.data?.length ? (
+                <p className="py-4 text-center text-sm text-muted-foreground">
+                  No payment data for this period.
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {topCustomers.data.map((c, i) => {
+                    const max = topCustomers.data![0]!.total;
+                    const pct = max > 0 ? (c.total / max) * 100 : 0;
+                    return (
+                      <div
+                        key={c.customerId}
+                        className="flex items-center gap-3"
+                      >
+                        <span className="w-4 shrink-0 text-right text-xs font-semibold text-muted-foreground">
+                          {i + 1}
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center justify-between">
+                            <p className="truncate text-sm font-medium text-foreground">
+                              {c.customerName}
+                            </p>
+                            <p className="ml-3 shrink-0 text-sm font-semibold text-foreground">
+                              {formatCurrency(c.total)}
+                            </p>
+                          </div>
+                          <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                            <div
+                              className="h-full rounded-full bg-primary"
+                              style={{ width: `${pct}%` }}
+                            />
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div> : null}
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          ) : null}
         </>
       )}
     </div>

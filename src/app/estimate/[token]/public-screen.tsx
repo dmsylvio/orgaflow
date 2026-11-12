@@ -86,7 +86,7 @@ function FileCard({ file }: { file: FileItem }) {
       href={file.storageKey}
       target="_blank"
       rel="noreferrer"
-      className="group flex flex-col overflow-hidden rounded-xl border border-border bg-background transition-shadow hover:shadow-md"
+      className="group flex flex-col overflow-hidden rounded-xl border border-border bg-card transition-shadow hover:shadow-md"
     >
       {/* Preview area */}
       <div className="flex h-36 items-center justify-center overflow-hidden bg-muted/40">
@@ -193,9 +193,9 @@ function StateScreen({
   description: string;
 }) {
   return (
-    <div className="flex min-h-dvh items-center justify-center bg-muted/20 px-4 py-10">
+    <div className="flex min-h-dvh items-center justify-center bg-background px-4 py-10">
       <div className="w-full max-w-sm text-center">
-        <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-border bg-background shadow-sm">
+        <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center app-card shadow-sm">
           <Icon className={`h-7 w-7 ${iconClass}`} />
         </div>
         <h1 className="mb-2 text-xl font-semibold text-foreground">{title}</h1>
@@ -292,17 +292,24 @@ export function EstimatePublicScreen({ token }: { token: string }) {
     <>
       {/* Page — add bottom padding when sticky bar is shown */}
       <div
-        className={`min-h-dvh bg-muted/20 px-4 py-10 ${canDecide ? "pb-36" : ""}`}
+        className={`relative min-h-dvh overflow-hidden bg-background px-4 py-10 ${canDecide ? "pb-36" : ""}`}
       >
-        <div className="mx-auto w-full max-w-3xl space-y-5">
-
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 top-0 h-80 bg-gradient-to-b from-indigo-100/70 via-violet-50/40 to-transparent"
+        />
+        <div
+          aria-hidden
+          className="app-grid-light pointer-events-none absolute inset-x-0 top-0 h-80"
+        />
+        <div className="app-fade-in relative mx-auto w-full max-w-3xl space-y-5">
           {/* ── Header ────────────────────────────────────────── */}
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
                 Estimate
               </p>
-              <h1 className="mt-1 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+              <h1 className="mt-1 text-3xl font-extrabold tracking-[-0.03em] text-foreground sm:text-4xl">
                 {estimate.estimateNumber}
               </h1>
               <p className="mt-1 text-sm text-muted-foreground">
@@ -370,24 +377,24 @@ export function EstimatePublicScreen({ token }: { token: string }) {
 
           {/* ── Summary cards ─────────────────────────────────── */}
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <div className="rounded-2xl border border-border bg-background p-4">
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
+            <div className="app-card p-4">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
                 Date
               </p>
               <p className="mt-1.5 text-sm font-semibold text-foreground">
                 {formatDate(estimate.estimateDate)}
               </p>
             </div>
-            <div className="rounded-2xl border border-border bg-background p-4">
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
+            <div className="app-card p-4">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
                 Expires
               </p>
               <p className="mt-1.5 text-sm font-semibold text-foreground">
                 {formatDate(estimate.expiryDate)}
               </p>
             </div>
-            <div className="rounded-2xl border border-border bg-background p-4">
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
+            <div className="app-card p-4">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
                 Subtotal
               </p>
               <p className="mt-1.5 text-sm font-semibold text-foreground">
@@ -395,11 +402,11 @@ export function EstimatePublicScreen({ token }: { token: string }) {
               </p>
             </div>
             {/* Total — highlighted */}
-            <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4">
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-primary/70">
+            <div className="app-gradient rounded-2xl p-4 text-white shadow-[0_14px_30px_-14px_rgba(99,102,241,0.9)]">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-white/75">
                 Total
               </p>
-              <p className="mt-1.5 text-base font-bold text-primary">
+              <p className="mt-1.5 text-lg font-extrabold text-white">
                 {formatCurrencyDisplay(estimate.total, estimate.currency)}
               </p>
             </div>
@@ -407,7 +414,7 @@ export function EstimatePublicScreen({ token }: { token: string }) {
 
           {/* ── Attachments ───────────────────────────────────── */}
           {estimate.files.length > 0 && (
-            <div className="rounded-2xl border border-border bg-background p-5">
+            <div className="app-card p-5">
               <div className="mb-4 flex items-center justify-between">
                 <h2 className="text-sm font-semibold text-foreground">
                   Attachments
@@ -426,21 +433,13 @@ export function EstimatePublicScreen({ token }: { token: string }) {
           )}
 
           {/* ── Line items ────────────────────────────────────── */}
-          <div className="rounded-2xl border border-border bg-background">
+          <div className="app-card">
             {/* Table header */}
             <div className="grid grid-cols-[1fr_auto] gap-4 border-b border-border px-5 py-3 sm:grid-cols-[1fr_80px_100px_100px]">
-              <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
-                Item
-              </p>
-              <p className="hidden text-right text-xs font-semibold uppercase tracking-widest text-muted-foreground/60 sm:block">
-                Qty
-              </p>
-              <p className="hidden text-right text-xs font-semibold uppercase tracking-widest text-muted-foreground/60 sm:block">
-                Unit price
-              </p>
-              <p className="text-right text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
-                Total
-              </p>
+              <p className="app-th">Item</p>
+              <p className="hidden text-right app-th sm:block">Qty</p>
+              <p className="hidden text-right app-th sm:block">Unit price</p>
+              <p className="text-right app-th">Total</p>
             </div>
 
             {estimate.items.length === 0 ? (
@@ -495,7 +494,10 @@ export function EstimatePublicScreen({ token }: { token: string }) {
                 <div className="flex justify-between text-muted-foreground">
                   <span>Subtotal</span>
                   <span className="font-medium text-foreground">
-                    {formatCurrencyDisplay(estimate.subTotal, estimate.currency)}
+                    {formatCurrencyDisplay(
+                      estimate.subTotal,
+                      estimate.currency,
+                    )}
                   </span>
                 </div>
                 <div className="flex justify-between text-muted-foreground">
@@ -517,7 +519,7 @@ export function EstimatePublicScreen({ token }: { token: string }) {
 
           {/* ── Notes ─────────────────────────────────────────── */}
           {estimate.notes && (
-            <div className="rounded-2xl border border-border bg-background px-5 py-5">
+            <div className="app-card px-5 py-5">
               <h2 className="mb-3 text-sm font-semibold text-foreground">
                 Notes
               </h2>
@@ -544,7 +546,7 @@ export function EstimatePublicScreen({ token }: { token: string }) {
 
       {/* ── Sticky action bar ─────────────────────────────────── */}
       {canDecide && (
-        <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background/95 px-4 py-4 shadow-[0_-4px_24px_rgba(0,0,0,0.06)] backdrop-blur-sm">
+        <div className="fixed inset-x-3 bottom-3 z-50 rounded-2xl border border-border bg-card/90 px-4 py-4 shadow-[0_20px_60px_-15px_rgba(30,27,75,0.45)] backdrop-blur-xl sm:inset-x-auto sm:left-1/2 sm:w-[min(48rem,calc(100vw-1.5rem))] sm:-translate-x-1/2">
           <div className="mx-auto flex w-full max-w-3xl flex-col items-center gap-3 text-center">
             <div>
               <p className="text-sm font-semibold text-foreground">
@@ -568,7 +570,7 @@ export function EstimatePublicScreen({ token }: { token: string }) {
                 onClick={() => approve.mutate(token)}
                 loading={approve.isPending}
                 disabled={approve.isPending || reject.isPending}
-                className="gap-2 bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-600 dark:hover:bg-emerald-700"
+                className="gap-2 bg-gradient-to-b from-emerald-500 to-emerald-600 shadow-[0_8px_20px_-8px_rgba(16,185,129,0.9)] hover:from-emerald-500 hover:to-emerald-700"
               >
                 <CheckCircle2 className="h-4 w-4" />
                 Approve Estimate
