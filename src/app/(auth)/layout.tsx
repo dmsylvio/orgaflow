@@ -26,9 +26,9 @@ export default function AuthLayout({
   children,
 }: Readonly<{ children: ReactNode }>) {
   return (
-    <div className="flex min-h-dvh bg-background lg:p-3">
+    <div className="flex min-h-dvh bg-background">
       {/* ── Brand panel ── */}
-      <aside className="relative hidden w-[46%] shrink-0 flex-col overflow-hidden rounded-[1.75rem] bg-[#070A1A] text-white lg:flex">
+      <aside className="relative hidden min-h-dvh w-[46%] shrink-0 flex-col overflow-hidden bg-[#070A1A] text-white lg:flex">
         <div aria-hidden className="app-aurora absolute inset-0" />
         <div aria-hidden className="app-grid absolute inset-0" />
 

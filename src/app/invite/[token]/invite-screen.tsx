@@ -108,7 +108,7 @@ export function InviteScreen({ token }: { token: string }) {
     <div className="relative flex min-h-dvh items-center justify-center overflow-hidden bg-background px-4 py-10">
       <div
         aria-hidden
-        className="absolute inset-x-3 top-3 h-[45vh] overflow-hidden rounded-[1.75rem] bg-[#070A1A]"
+        className="absolute inset-x-0 top-0 h-[45vh] overflow-hidden bg-[#070A1A]"
       >
         <div className="app-aurora absolute inset-0" />
         <div className="app-grid absolute inset-0" />
