@@ -5,6 +5,10 @@ export const HOME_FAQS = [
     a: "No. FreshBooks and QuickBooks are built around the books. Orgaflow covers what happens before them: the estimate, the approval, the invoice, the payment record, and the work that follows.",
   },
   {
+    q: "How is Orgaflow different from FreshBooks, QuickBooks, or Jobber?",
+    a: "FreshBooks and QuickBooks are accounting tools, and Jobber is a field service platform for home service crews. Orgaflow focuses on the client workflow: estimates clients approve from a link, invoices, payment records, and the tasks your team does next. It has a free plan, and the first paid plan includes 5 team members.",
+  },
+  {
     q: "Do my clients need an account to approve an estimate?",
     a: "No. Each estimate has a secure link. Your client opens it, reviews the details, and approves or rejects it without signing up.",
   },

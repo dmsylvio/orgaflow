@@ -94,3 +94,43 @@ export function HomeFaqJsonLd() {
     />
   );
 }
+
+export function BreadcrumbJsonLd({
+  items,
+}: {
+  items: { name: string; path: string }[];
+}) {
+  const baseUrl = getAppBaseUrl();
+  return (
+    <JsonLdScript
+      data={{
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        itemListElement: [{ name: "Home", path: "/" }, ...items].map(
+          ({ name, path }, index) => ({
+            "@type": "ListItem",
+            position: index + 1,
+            name,
+            item: `${baseUrl}${path === "/" ? "" : path}`,
+          }),
+        ),
+      }}
+    />
+  );
+}
+
+export function FaqJsonLd({ faqs }: { faqs: { q: string; a: string }[] }) {
+  return (
+    <JsonLdScript
+      data={{
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        mainEntity: faqs.map(({ q, a }) => ({
+          "@type": "Question",
+          name: q,
+          acceptedAnswer: { "@type": "Answer", text: a },
+        })),
+      }}
+    />
+  );
+}

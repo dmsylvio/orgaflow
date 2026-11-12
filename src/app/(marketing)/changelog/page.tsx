@@ -782,7 +782,7 @@ const TYPE_CONFIG = {
 export default function ChangelogPage() {
   return (
     <div className="overflow-hidden">
-      <PageHero title="What's new in Orgaflow.">
+      <PageHero eyebrow="Changelog" title="What's new in Orgaflow.">
         Every release, with its new features, improvements, and fixes.
       </PageHero>
 

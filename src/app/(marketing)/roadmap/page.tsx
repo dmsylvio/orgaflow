@@ -23,6 +23,7 @@ export default function RoadmapPage() {
   return (
     <div className="overflow-hidden">
       <PageHero
+        eyebrow="Roadmap"
         title="What's shipped and what's next."
         note={`Last updated: ${lastUpdated}`}
       >

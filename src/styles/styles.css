@@ -58,24 +58,24 @@
   }
 }
 
-/* Marketing site: carbon-copy pad palette. Scoped so the app is unaffected. */
+/* Marketing site: "midnight ink + iris" palette. Scoped so the app is unaffected. */
 .marketing {
   --font-sans: var(--font-marketing);
-  --background: 240 40% 99%;
-  --foreground: 237 37% 12%;
+  --background: 228 33% 98%;
+  --foreground: 232 47% 8%;
   --card: 0 0% 100%;
-  --card-foreground: 237 37% 12%;
-  --border: 238 30% 86%;
-  --input: 238 30% 80%;
-  --ring: 240 63% 44%;
-  --primary: 240 63% 44%;
+  --card-foreground: 232 47% 8%;
+  --border: 228 24% 89%;
+  --input: 228 24% 84%;
+  --ring: 246 83% 60%;
+  --primary: 246 83% 60%;
   --primary-foreground: 0 0% 100%;
-  --secondary: 240 30% 95%;
-  --secondary-foreground: 237 37% 12%;
-  --muted: 240 30% 96%;
-  --muted-foreground: 238 14% 36%;
-  --accent: 240 30% 95%;
-  --accent-foreground: 237 37% 12%;
+  --secondary: 228 30% 95%;
+  --secondary-foreground: 232 47% 8%;
+  --muted: 228 30% 95%;
+  --muted-foreground: 230 14% 38%;
+  --accent: 246 90% 96%;
+  --accent-foreground: 246 70% 40%;
   --radius: 0.875rem;
   font-family: var(--font-marketing), system-ui, sans-serif;
   color: hsl(var(--foreground));
@@ -87,7 +87,242 @@
 }
 
 .marketing .on-dark :focus-visible {
-  outline-color: #ffd84d;
+  outline-color: #a5b4fc;
+}
+
+/* ---------- Marketing effects ---------- */
+
+.marketing .text-gradient {
+  background: linear-gradient(100deg, #818cf8 0%, #c084fc 45%, #34d399 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.marketing .text-gradient-dark {
+  background: linear-gradient(100deg, #4f46e5 0%, #9333ea 55%, #059669 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Fine grid that fades out toward the edges. */
+.marketing .bg-grid {
+  background-image:
+    linear-gradient(to right, rgb(255 255 255 / 0.06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(255 255 255 / 0.06) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: radial-gradient(
+    ellipse 80% 70% at 50% 0%,
+    #000 40%,
+    transparent 100%
+  );
+}
+
+.marketing .bg-grid-light {
+  background-image:
+    linear-gradient(to right, hsl(var(--border)) 1px, transparent 1px),
+    linear-gradient(to bottom, hsl(var(--border)) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(
+    ellipse 70% 60% at 50% 0%,
+    #000 30%,
+    transparent 100%
+  );
+}
+
+/* Soft aurora glow used behind dark sections. */
+.marketing .aurora {
+  background:
+    radial-gradient(40% 50% at 20% 10%, rgb(99 102 241 / 0.45), transparent 70%),
+    radial-gradient(35% 45% at 80% 0%, rgb(168 85 247 / 0.35), transparent 70%),
+    radial-gradient(30% 40% at 60% 60%, rgb(16 185 129 / 0.18), transparent 70%);
+  filter: blur(20px);
+  animation: aurora-drift 18s ease-in-out infinite alternate;
+}
+
+@keyframes aurora-drift {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(-3%, 2%, 0) scale(1.05);
+  }
+  100% {
+    transform: translate3d(3%, -1%, 0) scale(1);
+  }
+}
+
+/* Gradient hairline border (works on rounded corners). */
+.marketing .ring-gradient {
+  position: relative;
+}
+.marketing .ring-gradient::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    140deg,
+    rgb(129 140 248 / 0.9),
+    rgb(192 132 252 / 0.4) 40%,
+    rgb(52 211 153 / 0.6)
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* 3D tilt for the hero product shot. */
+.marketing .tilt-in {
+  transform: perspective(2200px) rotateX(14deg) scale(0.96);
+  transform-origin: 50% 0%;
+  animation: tilt-settle 1.4s cubic-bezier(0.2, 0.7, 0.2, 1) 0.2s forwards;
+}
+@keyframes tilt-settle {
+  to {
+    transform: perspective(2200px) rotateX(0deg) scale(1);
+  }
+}
+
+.marketing .float-slow {
+  animation: float 7s ease-in-out infinite;
+}
+.marketing .float-slower {
+  animation: float 9s ease-in-out -3s infinite;
+}
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.marketing .pop-in {
+  opacity: 0;
+  animation: pop-in 0.6s cubic-bezier(0.2, 0.8, 0.2, 1.2) forwards;
+}
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.marketing .draw-line {
+  stroke-dasharray: 1200;
+  stroke-dashoffset: 1200;
+  animation: draw 2.2s cubic-bezier(0.4, 0, 0.2, 1) 0.6s forwards;
+}
+@keyframes draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.marketing .grow-bar {
+  transform-origin: bottom;
+  transform: scaleY(0);
+  animation: grow-bar 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+@keyframes grow-bar {
+  to {
+    transform: scaleY(1);
+  }
+}
+
+.marketing .pulse-dot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: currentColor;
+  animation: pulse-ring 1.8s ease-out infinite;
+}
+@keyframes pulse-ring {
+  from {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  to {
+    transform: scale(2.6);
+    opacity: 0;
+  }
+}
+
+.marketing .marquee {
+  animation: marquee 32s linear infinite;
+}
+@keyframes marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.marketing .shimmer {
+  background: linear-gradient(
+    110deg,
+    transparent 30%,
+    rgb(255 255 255 / 0.35) 50%,
+    transparent 70%
+  );
+  background-size: 250% 100%;
+  animation: shimmer 3.2s ease-in-out infinite;
+}
+@keyframes shimmer {
+  from {
+    background-position: 150% 0;
+  }
+  to {
+    background-position: -50% 0;
+  }
+}
+
+.marketing .progress-fill {
+  transform-origin: left;
+  animation: progress-fill var(--duration, 6s) linear forwards;
+}
+@keyframes progress-fill {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* Scroll reveal. Content stays visible without JavaScript. */
+@media (scripting: enabled) {
+  .marketing [data-reveal]:not([data-visible]) {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+}
+.marketing [data-reveal] {
+  transition:
+    opacity 0.8s cubic-bezier(0.2, 0.7, 0.2, 1),
+    transform 0.8s cubic-bezier(0.2, 0.7, 0.2, 1);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+
+/* Spotlight that follows the pointer on feature cards. */
+.marketing .spotlight {
+  background: radial-gradient(
+    420px circle at var(--mx, 50%) var(--my, 50%),
+    rgb(99 102 241 / 0.12),
+    transparent 60%
+  );
 }
 
 .roadmap-cards-container {
@@ -109,7 +344,9 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;

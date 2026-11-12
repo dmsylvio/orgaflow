@@ -1,4 +1,4 @@
-import { Poppins, Schibsted_Grotesk } from "next/font/google";
+import { Plus_Jakarta_Sans, Poppins } from "next/font/google";
 
 /**
  * Poppins is not a variable font, so weights must be listed explicitly.
@@ -13,8 +13,9 @@ export const poppins = Poppins({
 });
 
 /** Marketing site only. The app keeps Poppins. */
-export const schibsted = Schibsted_Grotesk({
+export const marketingFont = Plus_Jakarta_Sans({
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
   variable: "--font-marketing",
   display: "swap",
 });

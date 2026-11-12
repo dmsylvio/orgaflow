@@ -1,18 +1,22 @@
 import type { Metadata } from "next";
 import NextLink from "next/link";
+import { ComparisonTable } from "@/components/marketing/comparison-table";
+import { CtaBand } from "@/components/marketing/cta-band";
 import { PageHero } from "@/components/marketing/page-hero";
-import { Button } from "@/components/ui/button";
+import { SectionHeading } from "@/components/marketing/section-heading";
 import { marketingMetadata } from "@/lib/marketing-metadata";
 import {
   ANNUAL_DISCOUNT_PERCENT,
+  formatUsdPrice,
+  getWorkspacePlanPrice,
   PLAN_TRIAL_DAYS,
 } from "@/lib/subscription-plans";
 import { PricingPlans } from "./pricing-plans";
 
 export const metadata: Metadata = marketingMetadata({
-  title: "Pricing for Estimate & Invoice Software",
+  title: `Pricing: Free Plan, Paid Plans from ${formatUsdPrice(getWorkspacePlanPrice("growth", "monthly"))}/mo`,
   description:
-    "Orgaflow pricing: a free Starter plan, plus Growth and Scale with a 15-day free trial. Save 30% with annual billing. See what each plan includes.",
+    "Orgaflow pricing: a free-forever Starter plan, plus Growth and Scale with a 15-day free trial and 30% off annually. Compare plans and see how Orgaflow stacks up against FreshBooks, QuickBooks, and Jobber.",
   path: "/pricing",
 });
 
@@ -50,7 +54,10 @@ const FAQS = [
 export default function PricingPage() {
   return (
     <>
-      <PageHero title="Start free. Upgrade when the work grows.">
+      <PageHero
+        eyebrow="Pricing"
+        title="Start free. Upgrade when the work grows."
+      >
         Starter costs nothing. Growth and Scale include a {PLAN_TRIAL_DAYS}-day
         free trial, and annual billing saves {ANNUAL_DISCOUNT_PERCENT}%.
       </PageHero>
@@ -59,7 +66,7 @@ export default function PricingPage() {
         <PricingPlans />
       </section>
 
-      <section className="mx-3 rounded-[2rem] sm:mx-5 bg-muted">
+      <section className="mx-3 rounded-[2rem] bg-muted sm:mx-5">
         <div className="mx-auto grid max-w-6xl gap-10 px-6 py-20 lg:grid-cols-[1fr_2fr]">
           <h2 className="text-4xl font-extrabold tracking-[-0.03em]">
             Pricing questions
@@ -77,20 +84,25 @@ export default function PricingPage() {
         </div>
       </section>
 
-      <section className="mx-3 rounded-[2rem] sm:mx-5 mb-5 mt-5 bg-canary">
-        <div className="mx-auto flex max-w-6xl flex-col items-start gap-6 px-6 py-16 md:flex-row md:items-center md:justify-between">
-          <h2 className="text-3xl font-extrabold tracking-[-0.03em] sm:text-5xl">
-            Send your first estimate today.
-          </h2>
-          <Button
-            size="lg"
-            asChild
-            className="h-12 shrink-0 rounded-full bg-foreground px-7 text-base text-background hover:bg-foreground/85"
-          >
-            <NextLink href="/register">Start free</NextLink>
-          </Button>
+      <section className="mx-auto max-w-6xl px-6 py-24">
+        <SectionHeading eyebrow="Compare" title="What you get for the price">
+          List prices for the entry paid plan of each tool, and what they
+          include. Orgaflow also has a free plan with no time limit.
+        </SectionHeading>
+        <div className="mt-12 rounded-3xl border border-border bg-white p-4 sm:p-8">
+          <ComparisonTable />
         </div>
+        <p className="mt-6">
+          <NextLink
+            href="/compare"
+            className="font-semibold text-primary underline underline-offset-4"
+          >
+            Read the full comparisons
+          </NextLink>
+        </p>
       </section>
+
+      <CtaBand />
     </>
   );
 }

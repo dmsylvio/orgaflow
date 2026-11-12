@@ -13,7 +13,10 @@ export const metadata: Metadata = marketingMetadata({
 export default function ContactPage() {
   return (
     <>
-      <PageHero title="Write to the person who builds Orgaflow.">
+      <PageHero
+        eyebrow="Contact"
+        title="Write to the person who builds Orgaflow."
+      >
         Ask a question, report a bug, or tell us what's missing. We read every
         message.
       </PageHero>

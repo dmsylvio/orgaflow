@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { getAppBaseUrl } from "@/lib/base-url";
+import { COMPETITORS } from "@/lib/competitors";
 import { ROADMAP_ITEMS } from "@/lib/roadmap";
 
 export default function sitemap(): MetadataRoute.Sitemap {
@@ -8,13 +9,31 @@ export default function sitemap(): MetadataRoute.Sitemap {
   return [
     {
       url: baseUrl,
-      lastModified: new Date("2026-11-01"),
+      lastModified: new Date("2026-11-12"),
       changeFrequency: "weekly",
       priority: 1,
     },
     {
+      url: `${baseUrl}/features`,
+      lastModified: new Date("2026-11-12"),
+      changeFrequency: "monthly",
+      priority: 0.9,
+    },
+    {
+      url: `${baseUrl}/compare`,
+      lastModified: new Date("2026-11-12"),
+      changeFrequency: "monthly",
+      priority: 0.8,
+    },
+    ...COMPETITORS.map(({ slug }) => ({
+      url: `${baseUrl}/compare/${slug}`,
+      lastModified: new Date("2026-11-12"),
+      changeFrequency: "monthly" as const,
+      priority: 0.8,
+    })),
+    {
       url: `${baseUrl}/pricing`,
-      lastModified: new Date("2026-11-01"),
+      lastModified: new Date("2026-11-12"),
       changeFrequency: "monthly",
       priority: 0.9,
     },

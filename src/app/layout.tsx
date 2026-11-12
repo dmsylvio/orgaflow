@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Toaster } from "sonner";
 import { AuthSessionProvider } from "@/components/providers/auth-session-provider";
 import { getAppBaseUrl } from "@/lib/base-url";
@@ -6,15 +6,49 @@ import { poppins } from "@/lib/fonts";
 import { TRPCReactProvider } from "@/trpc/client";
 import "@/styles/styles.css";
 
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#F8F9FC" },
+    { media: "(prefers-color-scheme: dark)", color: "#070A1A" },
+  ],
+};
+
+const DESCRIPTION =
+  "Estimate, invoice, and job software for small businesses. Clients approve estimates from a link, then you invoice, track payment, and start the work automatically. Free plan.";
+
 export const metadata: Metadata = {
   metadataBase: new URL(getAppBaseUrl()),
   title: {
     default: "Orgaflow",
     template: "%s | Orgaflow",
   },
-  description:
-    "Estimate and invoice software for small businesses. Send estimates clients approve from a link, then invoice, record payment, and start the work.",
+  description: DESCRIPTION,
   applicationName: "Orgaflow",
+  keywords: [
+    "estimate software",
+    "quoting software",
+    "invoice software",
+    "estimate and invoice app",
+    "small business invoicing",
+    "job management software",
+    "quote to cash",
+    "FreshBooks alternative",
+    "QuickBooks alternative",
+    "Jobber alternative",
+  ],
+  category: "business",
+  creator: "Orgaflow LLC",
+  publisher: "Orgaflow LLC",
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
   referrer: "origin-when-cross-origin",
   formatDetection: {
     email: false,
@@ -23,8 +57,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "Orgaflow",
-    description:
-      "Estimate and invoice software for small businesses. Send estimates clients approve from a link, then invoice, record payment, and start the work.",
+    description: DESCRIPTION,
     siteName: "Orgaflow",
     locale: "en_US",
     type: "website",
@@ -32,8 +65,8 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Orgaflow",
-    description:
-      "Estimate and invoice software for small businesses. Send estimates clients approve from a link, then invoice, record payment, and start the work.",
+    description: DESCRIPTION,
+    site: "@orgaflowapp",
   },
 };
 

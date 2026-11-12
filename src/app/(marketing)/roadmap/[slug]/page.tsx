@@ -124,7 +124,7 @@ export default async function RoadmapItemPage({ params }: PageProps) {
               <li key={entry.slug}>
                 <NextLink
                   href={`/roadmap/${entry.slug}`}
-                  className="block rounded-2xl border border-border bg-white px-5 py-4 font-semibold transition-colors hover:border-primary"
+                  className="block rounded-2xl border border-border bg-card px-5 py-4 font-semibold transition-colors hover:border-primary"
                 >
                   {entry.title}
                 </NextLink>
@@ -134,11 +134,11 @@ export default async function RoadmapItemPage({ params }: PageProps) {
         </section>
       ) : null}
 
-      <section className="mt-12 flex flex-col items-start gap-4 rounded-3xl bg-canary p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8">
+      <section className="mt-12 flex flex-col items-start gap-4 rounded-3xl bg-gradient-to-br from-indigo-600 to-violet-600 p-6 text-white sm:flex-row sm:items-center sm:justify-between sm:p-8">
         <p className="text-lg font-bold">Have feedback on this?</p>
         <Button
           asChild
-          className="rounded-full bg-foreground text-background hover:bg-foreground/85"
+          className="rounded-full bg-white text-ink hover:bg-white/90"
         >
           <NextLink href="/contact">Contact us</NextLink>
         </Button>

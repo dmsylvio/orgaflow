@@ -18,7 +18,9 @@ import {
 import { appPaths } from "@/lib/app-paths";
 
 const NAV_LINKS = [
+  { href: "/features", label: "Features" },
   { href: "/pricing", label: "Pricing" },
+  { href: "/compare", label: "Compare" },
   { href: "/about", label: "About" },
   { href: "/roadmap", label: "Roadmap" },
   { href: "/changelog", label: "Changelog" },
@@ -47,7 +49,11 @@ function UserMenu({ mobile = false }: { mobile?: boolean }) {
         <Button
           size="sm"
           asChild
-          className={mobile ? "justify-start" : "rounded-full px-4"}
+          className={
+            mobile
+              ? "justify-start rounded-full bg-gradient-to-r from-indigo-500 to-violet-500"
+              : "rounded-full bg-gradient-to-r from-indigo-500 to-violet-500 px-4 shadow-[0_8px_20px_-8px_rgba(99,102,241,0.8)] transition-shadow hover:shadow-[0_10px_24px_-8px_rgba(139,92,246,0.9)]"
+          }
         >
           <Link href="/register">Start free</Link>
         </Button>
@@ -138,7 +144,7 @@ export function MarketingNavbar() {
     <header
       className={`sticky top-0 z-50 transition-all duration-300 ${
         scrolled
-          ? "border-b border-border bg-background"
+          ? "border-b border-border/70 bg-background/80 shadow-[0_8px_30px_-20px_rgba(15,23,42,0.25)] backdrop-blur-xl"
           : "border-b border-transparent bg-background"
       }`}
     >
@@ -159,7 +165,7 @@ export function MarketingNavbar() {
               key={href}
               href={href}
               className={`rounded-full px-3.5 py-2 text-sm font-semibold transition-colors ${
-                pathname === href
+                pathname === href || pathname?.startsWith(`${href}/`)
                   ? "bg-muted text-foreground"
                   : "text-foreground/75 hover:bg-muted hover:text-foreground"
               }`}

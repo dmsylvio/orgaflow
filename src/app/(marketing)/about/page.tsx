@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
-import NextLink from "next/link";
+import { CtaBand } from "@/components/marketing/cta-band";
 import { PageHero } from "@/components/marketing/page-hero";
-import { Button } from "@/components/ui/button";
 import { marketingMetadata } from "@/lib/marketing-metadata";
 
 export const metadata: Metadata = marketingMetadata({
@@ -51,7 +50,7 @@ const VALUES = [
 export default function AboutPage() {
   return (
     <>
-      <PageHero title="Organization + flow.">
+      <PageHero eyebrow="About" title="Organization + flow.">
         That's where the name comes from, and it's still the goal: keep work
         moving from quote to payment, without enterprise complexity or pricing.
       </PageHero>
@@ -93,15 +92,17 @@ export default function AboutPage() {
         </ol>
       </section>
 
-      <section className="mx-3 rounded-[2rem] sm:mx-5 bg-copy-pink">
+      <section className="relative mx-3 overflow-hidden rounded-[2rem] bg-gradient-to-br from-indigo-600 via-violet-600 to-indigo-700 text-white sm:mx-5">
         <div className="mx-auto grid max-w-6xl gap-8 px-6 py-20 md:grid-cols-2 md:gap-16">
           <div>
             <h2 className="text-3xl font-extrabold tracking-[-0.03em] sm:text-4xl">
               Sylvio Lima
             </h2>
-            <p className="mt-2 font-semibold">Founder and owner</p>
+            <p className="mt-2 font-semibold text-indigo-200">
+              Founder and owner
+            </p>
           </div>
-          <p className="text-lg leading-relaxed">
+          <p className="text-lg leading-relaxed text-indigo-50">
             I'm a full-stack developer with more than 10 years of experience,
             from enterprise government systems to SaaS platforms and client
             websites. I build and support Orgaflow myself, so when you write in,
@@ -126,28 +127,7 @@ export default function AboutPage() {
         </dl>
       </section>
 
-      <section className="mx-3 rounded-[2rem] sm:mx-5 mb-5 bg-canary">
-        <div className="mx-auto flex max-w-6xl flex-col items-start gap-6 px-6 py-16 md:flex-row md:items-center md:justify-between">
-          <h2 className="text-3xl font-extrabold tracking-[-0.03em] sm:text-5xl">
-            Try it on your next job.
-          </h2>
-          <div className="flex shrink-0 flex-wrap items-center gap-5">
-            <Button
-              size="lg"
-              asChild
-              className="h-12 rounded-full bg-foreground px-7 text-base text-background hover:bg-foreground/85"
-            >
-              <NextLink href="/register">Start free</NextLink>
-            </Button>
-            <NextLink
-              href="/contact"
-              className="font-semibold underline decoration-2 underline-offset-4"
-            >
-              Contact us
-            </NextLink>
-          </div>
-        </div>
-      </section>
+      <CtaBand title="Try it on your next job." />
     </>
   );
 }

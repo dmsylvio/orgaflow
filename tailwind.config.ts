@@ -6,8 +6,14 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        canary: "#FFD84D",
-        "copy-pink": "#FFC7D1",
+        /* Marketing: midnight surfaces + mint accent. */
+        ink: {
+          DEFAULT: "#070A1A",
+          800: "#0B1026",
+          700: "#121838",
+          600: "#1B2350",
+        },
+        mint: "#10B981",
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",

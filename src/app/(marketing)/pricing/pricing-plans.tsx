@@ -20,7 +20,7 @@ export function PricingPlans() {
   return (
     <>
       <div className="flex justify-center">
-        <div className="inline-flex items-center gap-1 rounded-full border border-foreground/15 bg-white p-1">
+        <div className="inline-flex items-center gap-1 rounded-full border border-border bg-white p-1 shadow-sm">
           <button
             type="button"
             aria-pressed={!isAnnual}
@@ -48,7 +48,7 @@ export function PricingPlans() {
               className={`rounded-full px-1.5 py-0.5 text-xs font-semibold ${
                 isAnnual
                   ? "bg-primary-foreground/20 text-primary-foreground"
-                  : "bg-canary text-foreground"
+                  : "bg-emerald-100 text-emerald-700"
               }`}
             >
               Save {ANNUAL_DISCOUNT_PERCENT}%
@@ -84,13 +84,13 @@ export function PricingPlans() {
                 key={name}
                 className={`relative flex flex-col overflow-hidden rounded-3xl ${
                   popular
-                    ? "border-2 border-primary bg-white"
-                    : "border-2 border-foreground/10 bg-white"
-                } p-8`}
+                    ? "ring-gradient bg-white shadow-[0_30px_60px_-30px_rgba(79,70,229,0.6)] md:-translate-y-2"
+                    : "border border-border bg-white"
+                } p-8 transition-transform duration-300 hover:-translate-y-1`}
               >
                 {popular && (
                   <div className="absolute right-4 top-4">
-                    <div className="rounded-full bg-canary px-3 py-1 text-xs font-bold text-foreground">
+                    <div className="rounded-full bg-gradient-to-r from-indigo-500 to-violet-500 px-3 py-1 text-xs font-bold text-white">
                       Recommended
                     </div>
                   </div>
