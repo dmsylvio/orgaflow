@@ -189,8 +189,8 @@ export default function RecurringInvoicesClientPage() {
       description="Automatically generate invoices on a recurring schedule."
     >
       <div className="space-y-8">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="grid gap-3 sm:grid-cols-3">
+        <div className="flex flex-col-reverse gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             <div className="app-card px-4 py-3">
               <p className="text-xs uppercase tracking-wide text-muted-foreground/70">
                 Active
@@ -218,14 +218,14 @@ export default function RecurringInvoicesClientPage() {
           </div>
 
           {hasDependencies ? (
-            <Button type="button" asChild>
+            <Button type="button" asChild className="w-full sm:w-auto">
               <NextLink href="/app/recurring-invoices/create">
                 <Plus className="h-4 w-4" />
                 New Recurring Invoice
               </NextLink>
             </Button>
           ) : (
-            <Button type="button" disabled>
+            <Button type="button" disabled className="w-full sm:w-auto">
               <Plus className="h-4 w-4" />
               New Recurring Invoice
             </Button>
@@ -252,8 +252,8 @@ export default function RecurringInvoicesClientPage() {
             </div>
           </div>
         ) : (
-          <div className="overflow-hidden rounded-2xl border border-border">
-            <table className="w-full text-left">
+          <div className="app-card overflow-x-auto">
+            <table className="w-full min-w-[720px] text-left">
               <thead>
                 <tr className="border-b border-border bg-muted/30">
                   <th className="py-3 pl-4 pr-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">

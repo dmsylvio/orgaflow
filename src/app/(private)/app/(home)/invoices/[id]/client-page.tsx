@@ -215,7 +215,7 @@ export default function InvoiceDetailPage() {
           </div>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
           <div className="app-card p-4">
             <p className="text-xs uppercase tracking-wide text-muted-foreground/70">
               Invoice date

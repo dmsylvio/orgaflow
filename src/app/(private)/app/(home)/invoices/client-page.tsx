@@ -127,6 +127,63 @@ function InvoiceRow({
   );
 }
 
+/** Compact card shown instead of the table on small screens. */
+function InvoiceCard({
+  invoice,
+  canViewPrices,
+  isDeleting,
+  isCloning,
+  isUpdatingStatus,
+  onClone,
+  onSetStatus,
+  onDelete,
+}: Parameters<typeof InvoiceRow>[0]) {
+  return (
+    <li className="flex items-start gap-3 px-4 py-3.5">
+      <NextLink
+        href={`/app/invoices/${invoice.id}`}
+        className="min-w-0 flex-1 space-y-1.5"
+      >
+        <div className="flex items-center justify-between gap-2">
+          <p className="truncate text-sm font-semibold text-foreground">
+            {invoice.invoiceNumber}
+          </p>
+          <InvoiceStatusBadge status={invoice.status} />
+        </div>
+        <p className="truncate text-sm text-foreground">
+          {invoice.customer.displayName}
+        </p>
+        <div className="flex items-end justify-between gap-2">
+          <p className="text-xs text-muted-foreground">
+            {formatInvoiceDate(invoice.invoiceDate) ?? "Not set"}
+            {invoice.dueDate
+              ? ` · Due ${formatInvoiceDate(invoice.dueDate)}`
+              : ""}
+          </p>
+          {canViewPrices ? (
+            <p className="shrink-0 text-sm font-semibold tabular-nums text-foreground">
+              {formatCurrencyDisplay(invoice.total ?? "", invoice.currency)}
+            </p>
+          ) : null}
+        </div>
+      </NextLink>
+      <div className="-mr-2 -mt-1 shrink-0">
+        <InvoiceActionsDropdown
+          invoiceId={invoice.id}
+          invoiceNumber={invoice.invoiceNumber}
+          customerEmail={invoice.customer.email}
+          isDeleting={isDeleting}
+          isCloning={isCloning}
+          isUpdatingStatus={isUpdatingStatus}
+          onClone={onClone}
+          onSetStatus={onSetStatus}
+          onDelete={onDelete}
+        />
+      </div>
+    </li>
+  );
+}
+
 export default function InvoicesPage() {
   const trpc = useTRPC();
   const router = useRouter();
@@ -265,8 +322,8 @@ export default function InvoicesPage() {
       description="Create and track invoices using your customer and item catalogs."
     >
       <div className="space-y-8">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="grid gap-3 sm:grid-cols-3">
+        <div className="flex flex-col-reverse gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             <div className="app-card px-4 py-3">
               <p className="text-xs uppercase tracking-wide text-muted-foreground/70">
                 Total invoices
@@ -284,7 +341,7 @@ export default function InvoicesPage() {
               </p>
             </div>
             {canViewPrices ? (
-              <div className="app-card px-4 py-3">
+              <div className="app-card col-span-2 px-4 py-3 sm:col-span-1">
                 <p className="text-xs uppercase tracking-wide text-muted-foreground/70">
                   Billed value
                 </p>
@@ -299,14 +356,14 @@ export default function InvoicesPage() {
           </div>
 
           {canCreate && hasDependencies ? (
-            <Button type="button" asChild>
+            <Button type="button" asChild className="w-full sm:w-auto">
               <NextLink href="/app/invoices/create">
                 <Plus className="h-4 w-4" />
                 New Invoice
               </NextLink>
             </Button>
           ) : (
-            <Button type="button" disabled>
+            <Button type="button" disabled className="w-full sm:w-auto">
               <Plus className="h-4 w-4" />
               New Invoice
             </Button>
@@ -332,7 +389,7 @@ export default function InvoicesPage() {
           <div
             role="tablist"
             aria-label="Invoice status filters"
-            className="flex w-full flex-wrap gap-2 rounded-2xl border border-border bg-muted/20 p-2"
+            className="flex w-full gap-2 overflow-x-auto rounded-2xl border border-border bg-muted/20 p-2 [scrollbar-width:none] sm:flex-wrap [&::-webkit-scrollbar]:hidden"
           >
             {filterTabs.map((tab) => (
               <button
@@ -345,7 +402,7 @@ export default function InvoicesPage() {
                   setPage(1);
                 }}
                 className={cn(
-                  "inline-flex min-w-fit items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition-colors",
+                  "inline-flex min-w-fit shrink-0 items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition-colors",
                   activeFilter === tab.value
                     ? "bg-card text-foreground shadow-sm"
                     : "text-muted-foreground hover:bg-card/60 hover:text-foreground",
@@ -386,7 +443,38 @@ export default function InvoicesPage() {
           </div>
         ) : (
           <div className="overflow-hidden app-card">
-            <table className="w-full table-fixed">
+            <ul className="divide-y divide-border md:hidden">
+              {paginatedInvoices.map((invoice) => (
+                <InvoiceCard
+                  key={invoice.id}
+                  invoice={invoice}
+                  canViewPrices={canViewPrices}
+                  isDeleting={
+                    deleteInvoice.isPending &&
+                    deleteInvoice.variables?.id === invoice.id
+                  }
+                  isCloning={
+                    cloneInvoice.isPending &&
+                    cloneInvoice.variables?.id === invoice.id
+                  }
+                  isUpdatingStatus={
+                    setInvoiceStatus.isPending &&
+                    setInvoiceStatus.variables?.id === invoice.id
+                  }
+                  onClone={() => cloneInvoice.mutate({ id: invoice.id })}
+                  onSetStatus={(status, successMessage) =>
+                    setInvoiceStatus.mutate(
+                      { id: invoice.id, status },
+                      {
+                        onSuccess: () => toast.success(successMessage),
+                      },
+                    )
+                  }
+                  onDelete={() => deleteInvoice.mutate({ id: invoice.id })}
+                />
+              ))}
+            </ul>
+            <table className="hidden w-full table-fixed md:table">
               <thead>
                 <tr className="border-b border-border">
                   <th className="w-[18%] py-3 pl-4 pr-2 text-left app-th">
