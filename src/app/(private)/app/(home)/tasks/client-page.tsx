@@ -1402,7 +1402,7 @@ export default function TasksPage() {
     return (
       <div className="flex min-h-0 flex-1 items-center justify-center px-4 py-24">
         <div className="app-card flex max-w-sm flex-col items-center px-8 py-10 text-center">
-          <span className="app-gradient flex h-12 w-12 items-center justify-center rounded-2xl text-white shadow-[0_10px_24px_-10px_rgba(99,102,241,0.9)]">
+          <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-accent text-primary">
             <ListTodo className="h-5 w-5" />
           </span>
           <p className="mt-5 text-lg font-bold tracking-tight text-foreground">

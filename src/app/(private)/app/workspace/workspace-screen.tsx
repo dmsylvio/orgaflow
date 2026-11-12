@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ChevronRight } from "lucide-react";
+import { Check, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { type ReactNode, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -54,8 +54,8 @@ interface FormSectionProps {
 
 function FormSection({ title, children }: FormSectionProps) {
   return (
-    <div className="mb-6 app-card p-5 shadow-sm">
-      <h2 className="mb-4 text-sm font-semibold text-foreground">{title}</h2>
+    <div className="mb-4 app-card p-5 sm:p-6">
+      <h2 className="mb-4 text-base font-semibold text-foreground">{title}</h2>
       {children}
     </div>
   );
@@ -71,29 +71,39 @@ const STEPS: { id: FlowStep; label: string }[] = [
 
 function StepIndicator({ current }: { current: FlowStep }) {
   return (
-    <div className="mb-6 flex items-center gap-1.5">
+    <ol className="mb-8 flex items-center gap-3" aria-label="Progress">
       {STEPS.map((step, i) => {
         const active = current === step.id;
         const done = current === "create-plan" && step.id === "create-details";
         return (
-          <div key={step.id} className="flex items-center gap-1.5">
-            {i > 0 && <ChevronRight className="h-3.5 w-3.5 text-slate-500" />}
-            <span
-              className={cn(
-                "rounded-full px-3 py-0.5 text-xs font-semibold transition-colors",
-                active
-                  ? "bg-white text-[#070A1A]"
-                  : done
-                    ? "bg-white/10 text-slate-300 line-through"
-                    : "text-slate-400",
-              )}
-            >
-              {step.label}
+          <li key={step.id} className="flex items-center gap-3">
+            {i > 0 && <span aria-hidden className="h-px w-8 bg-border" />}
+            <span className="flex items-center gap-2">
+              <span
+                className={cn(
+                  "flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold",
+                  active
+                    ? "bg-primary text-primary-foreground"
+                    : done
+                      ? "bg-emerald-100 text-emerald-700"
+                      : "bg-muted text-muted-foreground",
+                )}
+              >
+                {done ? <Check className="h-3.5 w-3.5" /> : i + 1}
+              </span>
+              <span
+                className={cn(
+                  "text-sm font-medium",
+                  active ? "text-foreground" : "text-muted-foreground",
+                )}
+              >
+                {step.label}
+              </span>
             </span>
-          </div>
+          </li>
         );
       })}
-    </div>
+    </ol>
   );
 }
 
@@ -111,6 +121,12 @@ export function WorkspaceScreen() {
   );
 
   const [step, setStep] = useState<FlowStep>("pick-org");
+
+  // Start each step at the top of the page.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: step is the trigger
+  useEffect(() => {
+    window.scrollTo({ top: 0 });
+  }, [step]);
   const [selectedOrgId, setSelectedOrgId] = useState<string | null>(null);
   const [orgName, setOrgName] = useState("");
   const [addressLine1, setAddressLine1] = useState("");
@@ -281,7 +297,7 @@ export function WorkspaceScreen() {
   if (isPending) {
     return (
       <div className="flex min-h-96 items-center justify-center p-8">
-        <div className="flex items-center gap-3 app-card p-6 shadow-sm">
+        <div className="flex items-center gap-3 app-card p-6">
           <Spinner className="size-5 text-primary" label="Loading" />
           <p className="text-sm text-muted-foreground">
             Loading your workspace…
@@ -302,12 +318,10 @@ export function WorkspaceScreen() {
       languageOptions.length > 0 && currencyOptions.length > 0;
 
     return (
-      <div className="mx-auto max-w-2xl px-4 pb-16 pt-10">
+      <div className="mx-auto max-w-2xl px-4 pb-16 pt-10 sm:px-6">
         <StepIndicator current="create-details" />
-        <h1 className="mb-1 text-2xl font-extrabold tracking-[-0.03em] text-white sm:text-3xl">
-          Organization details
-        </h1>
-        <p className="mb-8 text-sm text-slate-300">
+        <h1 className="app-page-title mb-1">Organization details</h1>
+        <p className="mb-8 text-sm text-muted-foreground">
           Name, optional phone, registered address, default language, and
           currency. The URL slug is generated automatically from the name.
         </p>
@@ -455,12 +469,10 @@ export function WorkspaceScreen() {
 
   if (step === "create-plan") {
     return (
-      <div className="mx-auto max-w-6xl px-8 pb-16 pt-10">
+      <div className="mx-auto max-w-5xl px-4 pb-16 pt-10 sm:px-6">
         <StepIndicator current="create-plan" />
-        <h1 className="mb-1 text-2xl font-extrabold tracking-[-0.03em] text-white sm:text-3xl">
-          Choose a plan
-        </h1>
-        <p className="mb-8 text-sm text-slate-300">
+        <h1 className="app-page-title mb-1">Choose a plan</h1>
+        <p className="mb-8 text-sm text-muted-foreground">
           Starter is free and opens immediately. Growth expands capacity, and
           Scale unlocks payments and automation.
         </p>
@@ -481,8 +493,8 @@ export function WorkspaceScreen() {
   // -------------------------------------------------------------------------
 
   return (
-    <div className="mx-auto max-w-6xl px-8 pb-16 pt-10">
-      <WorkspaceHero />
+    <div className="mx-auto max-w-xl px-4 pb-16 pt-12 sm:px-6 sm:pt-16">
+      <WorkspaceHero hasWorkspaces={orgList.length > 0} />
 
       {orgList.length > 0 ? (
         <OrgCardScroll
@@ -494,26 +506,27 @@ export function WorkspaceScreen() {
           isAccessPending={setActive.isPending}
           isResumePending={resumeCheckout.isPending}
         />
-      ) : (
-        <div className="mb-6 rounded-xl border border-dashed border-border bg-muted/20 p-8 text-center">
-          <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-muted">
-            <span className="text-lg text-muted-foreground/50">✦</span>
-          </div>
-          <h2 className="mb-1 text-sm font-semibold text-foreground">
-            No workspaces yet
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            Create your first workspace below. Starter is free, and paid plans
-            can be added when you need more capacity.
-          </p>
-        </div>
-      )}
+      ) : null}
 
-      <Button type="button" onClick={handleStartCreate}>
-        {orgList.length === 0
-          ? "Create organization"
-          : "Create another organization"}
-      </Button>
+      <button
+        type="button"
+        onClick={handleStartCreate}
+        className="flex w-full items-center gap-3 rounded-xl border border-dashed border-border bg-card px-4 py-3.5 text-left transition-colors hover:border-primary/50 hover:bg-accent/40"
+      >
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent text-primary">
+          <Plus className="h-5 w-5" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm font-semibold text-foreground">
+            {orgList.length === 0
+              ? "Create your first workspace"
+              : "Create a new workspace"}
+          </span>
+          <span className="block text-sm text-muted-foreground">
+            Starter is free. Upgrade any time.
+          </span>
+        </span>
+      </button>
     </div>
   );
 }

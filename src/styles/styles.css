@@ -37,13 +37,13 @@
 
     --radius: 0.75rem;
 
-    /* Sidebar: midnight ink */
-    --sidebar: 231 52% 7%;
-    --sidebar-foreground: 228 30% 80%;
-    --sidebar-border: 232 35% 14%;
-    --sidebar-accent: 232 38% 14%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-primary: 239 90% 76%;
+    /* Sidebar: light */
+    --sidebar: 0 0% 100%;
+    --sidebar-foreground: 230 13% 34%;
+    --sidebar-border: 228 24% 91%;
+    --sidebar-accent: 246 90% 96.5%;
+    --sidebar-accent-foreground: 246 65% 42%;
+    --sidebar-primary: 246 83% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
   }
 

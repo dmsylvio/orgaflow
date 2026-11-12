@@ -28,6 +28,7 @@ import {
   YAxis,
 } from "recharts";
 import { StatusPill, type StatusTone } from "@/components/app/page-shell";
+import { Button } from "@/components/ui/button";
 import { useCanViewPrices } from "@/hooks/use-can-view-prices";
 import { cn } from "@/lib/utils";
 import { useTRPC } from "@/trpc/client";
@@ -105,7 +106,7 @@ function StatusBadge({
 
 function ActivityIcon({ type, status }: { type: string; status?: string }) {
   const base =
-    "relative z-10 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ring-4 ring-card";
+    "relative z-10 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ring-4 ring-card";
 
   if (type === "payment")
     return (
@@ -188,8 +189,8 @@ type ChartTooltipProps = {
 function ChartTooltip({ active, payload, label }: ChartTooltipProps) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="rounded-xl border border-white/10 bg-[#0B1026] px-3 py-2 text-xs text-white shadow-xl">
-      <p className="mb-0.5 text-slate-400">{label}</p>
+    <div className="rounded-lg border border-border bg-card px-3 py-2 text-xs text-foreground shadow-lg">
+      <p className="mb-0.5 text-muted-foreground">{label}</p>
       <p className="text-sm font-bold">{formatCurrency(payload[0].value)}</p>
     </div>
   );
@@ -258,10 +259,10 @@ function EmptyState({ Icon, text }: { Icon: typeof FileText; text: string }) {
 }
 
 const KPI_TONES = {
-  sky: "from-sky-500 to-blue-600 shadow-sky-500/40",
-  violet: "from-violet-500 to-purple-600 shadow-violet-500/40",
-  amber: "from-amber-400 to-orange-500 shadow-orange-500/40",
-  emerald: "from-emerald-400 to-teal-600 shadow-emerald-500/40",
+  sky: "bg-sky-50 text-sky-600",
+  violet: "bg-violet-50 text-violet-600",
+  amber: "bg-amber-50 text-amber-600",
+  emerald: "bg-emerald-50 text-emerald-600",
 } as const;
 
 const QUICK_ACTIONS = [
@@ -331,36 +332,24 @@ export function DashboardClient({ orgName }: { orgName: string | null }) {
 
   return (
     <div className="space-y-6 px-4 py-6 sm:px-6 md:px-8 md:py-8">
-      {/* ── Hero ─────────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden rounded-3xl bg-[#070A1A] p-6 text-white shadow-[0_24px_60px_-30px_rgba(49,46,129,0.8)] sm:p-8">
-        <div aria-hidden className="app-aurora absolute inset-0" />
-        <div aria-hidden className="app-grid absolute inset-0" />
-        <div className="relative flex flex-wrap items-end justify-between gap-6">
-          <div>
-            <p className="text-sm font-medium text-indigo-200">{greeting()}</p>
-            <h1 className="mt-1 text-2xl font-bold tracking-[-0.025em] sm:text-3xl">
-              {orgName
-                ? `Here's ${orgName} today`
-                : "Here's your business today"}
-            </h1>
-            <p className="mt-2 max-w-xl text-sm text-slate-300">
-              Estimates waiting on clients, invoices that need attention, and
-              everything that happened recently.
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {QUICK_ACTIONS.map(({ href, label, Icon }, i) => (
-              <NextLink
-                key={href}
-                href={href}
-                className={cn(
-                  "items-center gap-2 rounded-xl px-3.5 py-2 text-sm font-semibold transition-all hover:-translate-y-0.5",
-                  i < 2 ? "inline-flex" : "hidden sm:inline-flex",
-                  i === 0
-                    ? "bg-white text-[#070A1A] shadow-[0_8px_20px_-8px_rgba(255,255,255,0.6)]"
-                    : "border border-white/10 bg-white/5 text-white backdrop-blur hover:bg-white/10",
-                )}
-              >
+      {/* ── Header ───────────────────────────────────────────── */}
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p className="text-sm text-muted-foreground">{greeting()}</p>
+          <h1 className="app-page-title mt-0.5">
+            {orgName ? `${orgName} overview` : "Overview"}
+          </h1>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {QUICK_ACTIONS.map(({ href, label, Icon }, i) => (
+            <Button
+              key={href}
+              asChild
+              size="sm"
+              variant={i === 0 ? "default" : "outline"}
+              className={cn("gap-1.5", i >= 2 && "hidden sm:inline-flex")}
+            >
+              <NextLink href={href}>
                 {i < 2 ? (
                   <Plus className="h-4 w-4" />
                 ) : (
@@ -368,10 +357,10 @@ export function DashboardClient({ orgName }: { orgName: string | null }) {
                 )}
                 {label}
               </NextLink>
-            ))}
-          </div>
+            </Button>
+          ))}
         </div>
-      </section>
+      </div>
 
       {/* ── KPI cards ────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
@@ -379,18 +368,18 @@ export function DashboardClient({ orgName }: { orgName: string | null }) {
           <NextLink
             key={label}
             href={href}
-            className="app-card group relative overflow-hidden p-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-[0_18px_40px_-24px_rgba(79,70,229,0.6)] sm:p-5"
+            className="app-card group relative overflow-hidden p-4 transition-colors hover:border-primary/40 sm:p-5"
           >
             <div className="flex items-start justify-between gap-2">
               <span
                 className={cn(
-                  "flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br text-white shadow-lg",
+                  "flex h-9 w-9 items-center justify-center rounded-lg",
                   KPI_TONES[tone],
                 )}
               >
                 <Icon className="h-[18px] w-[18px]" />
               </span>
-              <ArrowUpRight className="h-4 w-4 text-muted-foreground/40 transition-all group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-primary" />
+              <ArrowUpRight className="h-4 w-4 text-muted-foreground/40 transition-colors group-hover:text-primary" />
             </div>
             <p className="mt-4 text-xs font-medium text-muted-foreground">
               {label}
@@ -452,11 +441,6 @@ export function DashboardClient({ orgName }: { orgName: string | null }) {
                       />
                       <stop offset="100%" stopColor="#6366f1" stopOpacity={0} />
                     </linearGradient>
-                    <linearGradient id="revStroke" x1="0" y1="0" x2="1" y2="0">
-                      <stop offset="0%" stopColor="#6366f1" />
-                      <stop offset="65%" stopColor="#8b5cf6" />
-                      <stop offset="100%" stopColor="#10b981" />
-                    </linearGradient>
                   </defs>
                   <CartesianGrid
                     strokeDasharray="4 6"
@@ -491,8 +475,8 @@ export function DashboardClient({ orgName }: { orgName: string | null }) {
                   <Area
                     type="monotone"
                     dataKey="revenue"
-                    stroke="url(#revStroke)"
-                    strokeWidth={3}
+                    stroke="#6366f1"
+                    strokeWidth={2.5}
                     fill="url(#revGrad)"
                     dot={false}
                     activeDot={{

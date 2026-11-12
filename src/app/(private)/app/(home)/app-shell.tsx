@@ -31,6 +31,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 import { type ReactNode, useCallback, useEffect, useState } from "react";
 import MainLogo from "@/components/logo";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -112,7 +113,7 @@ function UserAvatar({
   return (
     <span
       className={cn(
-        "app-gradient flex shrink-0 items-center justify-center rounded-full font-bold text-white shadow-[0_4px_12px_-4px_rgba(99,102,241,0.8)]",
+        "flex shrink-0 items-center justify-center rounded-full bg-accent font-semibold text-accent-foreground",
         size === "sm" ? "h-7 w-7 text-[11px]" : "h-8 w-8 text-xs",
       )}
     >
@@ -242,15 +243,15 @@ function CommandPalette({
   };
 
   const itemClass =
-    "flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-foreground/80 aria-selected:bg-accent aria-selected:text-accent-foreground";
+    "flex cursor-pointer items-center gap-3 rounded-md px-3 py-2 text-sm text-foreground/80 aria-selected:bg-accent aria-selected:text-accent-foreground";
 
   return (
     <Command.Dialog
       open={open}
       onOpenChange={onOpenChange}
       label="Command menu"
-      overlayClassName="ui-fade fixed inset-0 z-[130] bg-[#070A1A]/55 backdrop-blur-sm"
-      contentClassName="ui-pop fixed left-1/2 top-[14vh] z-[131] w-[min(36rem,calc(100vw-2rem))] -translate-x-1/2 overflow-hidden rounded-2xl border border-border bg-card shadow-[0_30px_80px_-20px_rgba(30,27,75,0.5)]"
+      overlayClassName="ui-fade fixed inset-0 z-[130] bg-black/40"
+      contentClassName="ui-pop fixed left-1/2 top-[14vh] z-[131] w-[min(36rem,calc(100vw-2rem))] -translate-x-1/2 overflow-hidden rounded-xl border border-border bg-card shadow-2xl"
     >
       <div className="flex items-center gap-3 border-b border-border px-4">
         <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
@@ -279,7 +280,7 @@ function CommandPalette({
               onSelect={() => go(href)}
               className={itemClass}
             >
-              <span className="app-gradient flex h-7 w-7 items-center justify-center rounded-lg text-white">
+              <span className="flex h-7 w-7 items-center justify-center rounded-md bg-accent text-primary">
                 <Icon className="h-3.5 w-3.5" />
               </span>
               {label}
@@ -300,7 +301,7 @@ function CommandPalette({
                 onSelect={() => go(item.href)}
                 className={itemClass}
               >
-                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                <span className="flex h-7 w-7 items-center justify-center rounded-md bg-muted text-muted-foreground">
                   <Icon className="h-3.5 w-3.5" />
                 </span>
                 {item.label}
@@ -321,7 +322,7 @@ function CommandPalette({
                 onSelect={() => go(item.href)}
                 className={itemClass}
               >
-                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                <span className="flex h-7 w-7 items-center justify-center rounded-md bg-muted text-muted-foreground">
                   <Settings className="h-3.5 w-3.5" />
                 </span>
                 {item.label}
@@ -410,57 +411,52 @@ export function AppShell({ children, workspace }: AppShellProps) {
 
   const sidebarContent = (
     <>
-      <div
-        aria-hidden
-        className="app-aurora pointer-events-none absolute inset-0"
-      />
-
       {/* Logo */}
-      <div className="relative flex h-16 shrink-0 items-center justify-between px-5">
+      <div className="flex h-16 shrink-0 items-center justify-between px-5">
         <NextLink href="/app" aria-label="Dashboard">
-          <MainLogo className="h-auto w-[6.5rem] fill-white" />
+          <MainLogo className="h-auto w-[6.25rem] fill-foreground" />
         </NextLink>
         <button
           type="button"
           aria-label="Close menu"
           onClick={() => setSidebarOpen(false)}
-          className="flex h-8 w-8 items-center justify-center rounded-lg text-sidebar-foreground/60 transition-colors hover:bg-sidebar-accent hover:text-white md:hidden"
+          className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground md:hidden"
         >
           <X className="h-4 w-4" />
         </button>
       </div>
 
       {/* Workspace switcher */}
-      <div className="relative px-3">
+      <div className="px-3">
         <NextLink
           href={appPaths.workspace}
-          className="group flex items-center gap-3 rounded-xl border border-white/[0.08] bg-white/[0.04] p-2.5 transition-colors hover:border-white/15 hover:bg-white/[0.07]"
+          className="group flex items-center gap-2.5 rounded-lg border border-border bg-card px-2.5 py-2 shadow-sm transition-colors hover:bg-muted"
         >
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-amber-400 to-orange-500 text-sm font-bold text-white shadow-[0_4px_14px_-4px_rgba(251,146,60,0.8)]">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary text-sm font-semibold text-primary-foreground">
             {initialOf(workspace.name)}
           </span>
           <span className="min-w-0 flex-1">
-            <span className="block truncate text-sm font-semibold text-white">
+            <span className="block truncate text-sm font-semibold text-foreground">
               {workspace.name}
             </span>
-            <span className="block truncate text-[11px] text-sidebar-foreground/60">
+            <span className="block truncate text-xs text-muted-foreground">
               {planLabel ? `${planLabel} plan` : "Workspace"}
             </span>
           </span>
-          <ChevronsUpDown className="h-4 w-4 shrink-0 text-sidebar-foreground/40 transition-colors group-hover:text-white" />
+          <ChevronsUpDown className="h-4 w-4 shrink-0 text-muted-foreground" />
         </NextLink>
       </div>
 
       {/* Search */}
-      <div className="relative px-3 pt-3">
+      <div className="px-3 pt-3">
         <button
           type="button"
           onClick={() => setPaletteOpen(true)}
-          className="flex w-full items-center gap-2.5 rounded-lg border border-white/[0.06] bg-white/[0.03] px-3 py-2 text-left text-sm text-sidebar-foreground/50 transition-colors hover:border-white/15 hover:text-sidebar-foreground"
+          className="flex w-full items-center gap-2.5 rounded-md border border-border bg-muted/50 px-3 py-2 text-left text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
         >
           <Search className="h-4 w-4" />
           <span className="flex-1">Search…</span>
-          <kbd className="rounded border border-white/10 bg-white/5 px-1.5 text-[10px] font-semibold">
+          <kbd className="rounded border border-border bg-card px-1.5 text-[10px] font-semibold">
             ⌘K
           </kbd>
         </button>
@@ -469,20 +465,17 @@ export function AppShell({ children, workspace }: AppShellProps) {
       {/* Nav */}
       <nav
         aria-label="Main"
-        className="relative flex flex-1 flex-col overflow-y-auto px-3 pb-3 pt-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="flex flex-1 flex-col overflow-y-auto px-3 pb-3 pt-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {isPending ? (
           <div className="flex flex-col gap-1.5 px-1 py-3">
             {[0, 1, 2, 3, 4, 5].map((i) => (
-              <div
-                key={i}
-                className="h-8 animate-pulse rounded-lg bg-white/[0.04]"
-              />
+              <div key={i} className="app-shimmer h-8 rounded-md" />
             ))}
           </div>
         ) : null}
         {isError ? (
-          <p className="px-2 text-xs text-rose-300">Could not load menu.</p>
+          <p className="px-2 text-xs text-destructive">Could not load menu.</p>
         ) : null}
 
         {items?.map((item, index) => {
@@ -497,7 +490,7 @@ export function AppShell({ children, workspace }: AppShellProps) {
               {startsNewGroup ? (
                 <p
                   className={cn(
-                    "px-3 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-sidebar-foreground/35",
+                    "px-3 pb-1 text-[11px] font-medium text-muted-foreground/80",
                     prev ? "pt-5" : "pt-3",
                     !groupLabel && "sr-only",
                   )}
@@ -509,25 +502,19 @@ export function AppShell({ children, workspace }: AppShellProps) {
                 href={item.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "group relative flex items-center gap-3 rounded-lg px-3 py-2 text-[13.5px] font-medium transition-all duration-200",
+                  "group flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
                   active
-                    ? "bg-gradient-to-r from-indigo-500/25 via-violet-500/15 to-transparent text-white"
-                    : "text-sidebar-foreground/65 hover:bg-white/[0.05] hover:text-white",
+                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                    : "text-sidebar-foreground hover:bg-muted hover:text-foreground",
                 )}
               >
-                {active ? (
-                  <span
-                    aria-hidden
-                    className="absolute inset-y-1.5 left-0 w-[3px] rounded-r-full bg-gradient-to-b from-indigo-300 to-violet-400 shadow-[0_0_12px_rgba(165,180,252,0.9)]"
-                  />
-                ) : null}
                 {Icon ? (
                   <Icon
                     className={cn(
-                      "h-[18px] w-[18px] shrink-0 transition-colors",
+                      "h-[18px] w-[18px] shrink-0",
                       active
-                        ? "text-indigo-300"
-                        : "text-sidebar-foreground/40 group-hover:text-sidebar-foreground/80",
+                        ? "text-primary"
+                        : "text-muted-foreground group-hover:text-foreground",
                     )}
                   />
                 ) : null}
@@ -539,17 +526,17 @@ export function AppShell({ children, workspace }: AppShellProps) {
       </nav>
 
       {/* Bottom: plan + user */}
-      <div className="relative shrink-0 space-y-2 p-3">
+      <div className="shrink-0 space-y-2 border-t border-sidebar-border p-3">
         {workspace.plan === "starter" ? (
           <NextLink
             href="/app/settings/billing"
-            className="block overflow-hidden rounded-xl border border-indigo-400/20 bg-gradient-to-br from-indigo-500/20 via-violet-500/10 to-transparent p-3.5 transition-colors hover:border-indigo-300/40"
+            className="block rounded-lg border border-border bg-muted/50 p-3 transition-colors hover:bg-muted"
           >
-            <p className="flex items-center gap-1.5 text-xs font-semibold text-white">
-              <Sparkles className="h-3.5 w-3.5 text-indigo-300" /> Upgrade to
+            <p className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
+              <Sparkles className="h-3.5 w-3.5 text-primary" /> Upgrade to
               Growth
             </p>
-            <p className="mt-1 text-[11px] leading-snug text-sidebar-foreground/60">
+            <p className="mt-1 text-xs leading-snug text-muted-foreground">
               Unlimited documents, task board, and your branding.
             </p>
           </NextLink>
@@ -565,18 +552,18 @@ export function AppShell({ children, workspace }: AppShellProps) {
             <button
               type="button"
               aria-label="User menu"
-              className="flex w-full items-center gap-2.5 rounded-xl px-2 py-2 text-left transition-colors hover:bg-white/[0.06]"
+              className="flex w-full items-center gap-2.5 rounded-md px-2 py-2 text-left transition-colors hover:bg-muted"
             >
               <UserAvatar name={session.user.name} />
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-[13px] font-semibold text-white">
+                <span className="block truncate text-sm font-medium text-foreground">
                   {session.user.name}
                 </span>
-                <span className="block truncate text-[11px] text-sidebar-foreground/50">
+                <span className="block truncate text-xs text-muted-foreground">
                   {session.user.email}
                 </span>
               </span>
-              <ChevronsUpDown className="h-4 w-4 shrink-0 text-sidebar-foreground/40" />
+              <ChevronsUpDown className="h-4 w-4 shrink-0 text-muted-foreground" />
             </button>
           </UserDropdown>
         ) : null}
@@ -587,13 +574,10 @@ export function AppShell({ children, workspace }: AppShellProps) {
   const newMenu = (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button
-          type="button"
-          className="app-gradient flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm font-semibold text-white shadow-[0_6px_16px_-6px_rgba(99,102,241,0.8)] transition-all hover:shadow-[0_10px_22px_-8px_rgba(139,92,246,0.9)] active:scale-[0.98]"
-        >
+        <Button size="sm" className="gap-1.5">
           <Plus className="h-4 w-4" />
           <span className="hidden sm:inline">New</span>
-        </button>
+        </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" sideOffset={8} className="w-56">
         <DropdownMenuLabel className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
@@ -617,7 +601,7 @@ export function AppShell({ children, workspace }: AppShellProps) {
       {sidebarOpen ? (
         <div
           aria-hidden="true"
-          className="fixed inset-0 z-40 bg-[#070A1A]/60 backdrop-blur-sm md:hidden"
+          className="fixed inset-0 z-40 bg-black/40 md:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       ) : null}
@@ -625,7 +609,7 @@ export function AppShell({ children, workspace }: AppShellProps) {
       {/* Main sidebar: fixed slide-in on mobile, static on desktop */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex h-screen w-[17rem] shrink-0 flex-col overflow-hidden bg-sidebar transition-transform duration-300 ease-out",
+          "fixed inset-y-0 left-0 z-50 flex h-screen w-64 shrink-0 flex-col overflow-hidden border-r border-sidebar-border bg-sidebar transition-transform duration-300 ease-out",
           "md:relative md:translate-x-0 md:transition-none",
           sidebarOpen ? "translate-x-0" : "-translate-x-full",
         )}
@@ -635,12 +619,12 @@ export function AppShell({ children, workspace }: AppShellProps) {
 
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         {/* Top bar */}
-        <header className="relative z-30 flex h-16 shrink-0 items-center gap-3 border-b border-border/70 bg-background/80 px-4 backdrop-blur-xl md:px-6">
+        <header className="relative z-30 flex h-16 shrink-0 items-center gap-3 border-b border-border bg-card px-4 md:px-6">
           <button
             type="button"
             aria-label="Open menu"
             onClick={() => setSidebarOpen(true)}
-            className="flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground transition-colors hover:text-foreground md:hidden"
+            className="flex h-9 w-9 items-center justify-center rounded-md border border-border bg-card text-muted-foreground transition-colors hover:text-foreground md:hidden"
           >
             <Menu className="h-[18px] w-[18px]" />
           </button>
@@ -681,7 +665,7 @@ export function AppShell({ children, workspace }: AppShellProps) {
             <button
               type="button"
               onClick={() => setPaletteOpen(true)}
-              className="hidden h-9 w-60 items-center gap-2 rounded-lg border border-border bg-card px-3 text-sm text-muted-foreground shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-colors hover:border-primary/30 hover:text-foreground lg:flex"
+              className="hidden h-9 w-60 items-center gap-2 rounded-md border border-border bg-muted/50 px-3 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground lg:flex"
             >
               <Search className="h-4 w-4" />
               <span className="flex-1 text-left">Search or jump to…</span>
@@ -693,7 +677,7 @@ export function AppShell({ children, workspace }: AppShellProps) {
               type="button"
               aria-label="Search"
               onClick={() => setPaletteOpen(true)}
-              className="flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground transition-colors hover:text-foreground lg:hidden"
+              className="flex h-9 w-9 items-center justify-center rounded-md border border-border bg-card text-muted-foreground transition-colors hover:text-foreground lg:hidden"
             >
               <Search className="h-4 w-4" />
             </button>
@@ -715,9 +699,9 @@ export function AppShell({ children, workspace }: AppShellProps) {
         <div className="flex min-w-0 flex-1 overflow-hidden">
           {/* Settings sidebar (desktop) */}
           {inSettings ? (
-            <aside className="hidden h-full w-60 shrink-0 flex-col border-r border-border/70 bg-card/60 md:flex">
+            <aside className="hidden h-full w-56 shrink-0 flex-col border-r border-border bg-card md:flex">
               <div className="px-5 pb-2 pt-6">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                <p className="text-sm font-semibold text-foreground">
                   Settings
                 </p>
               </div>
@@ -743,9 +727,9 @@ export function AppShell({ children, workspace }: AppShellProps) {
                       href={item.href}
                       aria-current={active ? "page" : undefined}
                       className={cn(
-                        "rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                        "rounded-md px-3 py-2 text-sm font-medium transition-colors",
                         active
-                          ? "bg-accent font-semibold text-accent-foreground shadow-[inset_0_0_0_1px_hsl(var(--primary)/0.15)]"
+                          ? "bg-accent text-accent-foreground"
                           : "text-muted-foreground hover:bg-muted hover:text-foreground",
                       )}
                     >
@@ -758,10 +742,6 @@ export function AppShell({ children, workspace }: AppShellProps) {
           ) : null}
 
           <main className="relative flex min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-auto">
-            <div
-              aria-hidden
-              className="app-grid-light pointer-events-none absolute inset-x-0 top-0 h-72"
-            />
             <PaymentAlertBanner />
 
             {/* Settings nav (mobile) */}
@@ -784,9 +764,9 @@ export function AppShell({ children, workspace }: AppShellProps) {
                           key={item.key}
                           href={item.href}
                           className={cn(
-                            "shrink-0 whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-semibold transition-colors",
+                            "shrink-0 whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
                             active
-                              ? "app-gradient text-white"
+                              ? "bg-primary text-primary-foreground"
                               : "bg-muted text-muted-foreground hover:text-foreground",
                           )}
                         >

@@ -402,7 +402,7 @@ export function EstimatePublicScreen({ token }: { token: string }) {
               </p>
             </div>
             {/* Total — highlighted */}
-            <div className="app-gradient rounded-2xl p-4 text-white shadow-[0_14px_30px_-14px_rgba(99,102,241,0.9)]">
+            <div className="app-gradient rounded-2xl p-4 text-white">
               <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-white/75">
                 Total
               </p>
@@ -570,7 +570,7 @@ export function EstimatePublicScreen({ token }: { token: string }) {
                 onClick={() => approve.mutate(token)}
                 loading={approve.isPending}
                 disabled={approve.isPending || reject.isPending}
-                className="gap-2 bg-gradient-to-b from-emerald-500 to-emerald-600 shadow-[0_8px_20px_-8px_rgba(16,185,129,0.9)] hover:from-emerald-500 hover:to-emerald-700"
+                className="gap-2 bg-emerald-600 hover:bg-emerald-700"
               >
                 <CheckCircle2 className="h-4 w-4" />
                 Approve Estimate

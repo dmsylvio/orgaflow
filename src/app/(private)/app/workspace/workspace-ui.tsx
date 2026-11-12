@@ -2,7 +2,6 @@ import { Check, Layers, Star, Zap } from "lucide-react";
 import type { CSSProperties } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import {
   ANNUAL_DISCOUNT_PERCENT,
@@ -100,15 +99,16 @@ const WORKSPACE_PLAN_OPTIONS: readonly WorkspacePlanOption[] = [
   },
 ];
 
-export function WorkspaceHero() {
+export function WorkspaceHero({ hasWorkspaces }: { hasWorkspaces: boolean }) {
   return (
-    <header className="mb-8">
-      <h1 className="mb-2 text-3xl font-extrabold tracking-[-0.035em] text-white md:text-4xl">
-        Workspaces
+    <header className="mb-8 text-center">
+      <h1 className="app-page-title">
+        {hasWorkspaces ? "Choose a workspace" : "Welcome to Orgaflow"}
       </h1>
-      <p className="max-w-xl text-base text-slate-300">
-        Choose which organization you want to work in, or create a new one.
-        Everything in the app is scoped to the active workspace.
+      <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
+        {hasWorkspaces
+          ? "Pick the organization you want to work in. Everything in the app is scoped to the active workspace."
+          : "Create a workspace for your business to start sending estimates and invoices."}
       </p>
     </header>
   );
@@ -163,14 +163,14 @@ export function OrgCardScroll({
   isResumePending,
 }: OrgCardScrollProps) {
   return (
-    <fieldset
-      className="mb-6 min-w-0 border-0 p-0"
+    <section
       aria-labelledby="workspace-org-list-title"
+      className="app-card mb-4 overflow-hidden"
     >
-      <legend id="workspace-org-list-title" className="sr-only">
+      <h2 id="workspace-org-list-title" className="sr-only">
         Organizations
-      </legend>
-      <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      </h2>
+      <ul className="divide-y divide-border">
         {organizations.map((org) => {
           const selected = selectedId === org.id;
           const canOpenWorkspace = isWorkspaceAccessible(
@@ -179,91 +179,79 @@ export function OrgCardScroll({
           const statusLabel = formatSubscriptionStatusLabel(
             org.subscriptionStatus,
           );
-          const iconColor = PLAN_ICON_COLORS[org.plan];
+          const pending =
+            selected && (canOpenWorkspace ? isAccessPending : isResumePending);
+
           return (
-            <Card
-              key={org.id}
-              className={cn(
-                "cursor-pointer transition-all duration-200",
-                selected
-                  ? "border-primary shadow-md ring-2 ring-primary/20"
-                  : "hover:border-primary/30 hover:shadow-sm",
-              )}
-            >
-              <CardContent className="p-5">
-                <button
-                  type="button"
-                  aria-pressed={selected}
-                  aria-label={`${org.name}, ${planLabel(org.plan)} plan${statusLabel ? `, ${statusLabel}` : ""}. ${selected ? "Selected." : "Select this organization."}`}
-                  className="flex w-full flex-col gap-3 border-0 bg-transparent p-0 text-left"
-                  onClick={() => onSelect(org.id)}
+            <li key={org.id}>
+              <div className="flex items-center gap-3 px-4 py-3.5 transition-colors hover:bg-muted/60">
+                <span
+                  className={cn(
+                    "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-sm font-semibold",
+                    PLAN_ICON_COLORS[org.plan],
+                  )}
                 >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-center gap-2.5">
-                      <div
-                        className={cn(
-                          "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg",
-                          iconColor,
-                        )}
-                      >
-                        <Layers className="h-4 w-4" />
-                      </div>
-                      <span className="text-sm font-semibold text-foreground">
-                        {org.name}
-                      </span>
-                    </div>
-                    <Badge variant="secondary" className="shrink-0 text-xs">
+                  {org.name.trim()[0]?.toUpperCase() ?? "?"}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="flex items-center gap-2">
+                    <span className="truncate text-sm font-semibold text-foreground">
+                      {org.name}
+                    </span>
+                    <Badge variant="secondary" className="shrink-0 text-[11px]">
                       {planLabel(org.plan)}
                     </Badge>
-                  </div>
-                  <span className="text-xs text-muted-foreground">
-                    {org.slug}
-                  </span>
-                  {statusLabel ? (
-                    <span className="text-xs font-medium text-amber-600">
-                      {statusLabel}
-                    </span>
-                  ) : null}
-                </button>
-                {selected ? (
-                  <>
-                    <Separator className="my-3" />
-                    {canOpenWorkspace ? (
-                      <Button
-                        type="button"
-                        className="w-full"
-                        size="sm"
-                        onClick={() => onAccessOrganization(org.id)}
-                        loading={isAccessPending}
-                        disabled={isAccessPending}
-                      >
-                        Open workspace
-                      </Button>
-                    ) : org.isOwner ? (
-                      <Button
-                        type="button"
-                        className="w-full"
-                        size="sm"
-                        onClick={() => onResumeBilling(org.id)}
-                        loading={isResumePending}
-                        disabled={isResumePending}
-                      >
-                        Complete billing
-                      </Button>
+                  </p>
+                  <p className="truncate text-xs text-muted-foreground">
+                    {statusLabel ? (
+                      <span className="font-medium text-amber-600">
+                        {statusLabel}
+                      </span>
                     ) : (
-                      <p className="text-xs text-muted-foreground">
-                        Billing still needs to be completed by the organization
-                        owner before this workspace can be opened.
-                      </p>
+                      org.slug
                     )}
-                  </>
-                ) : null}
-              </CardContent>
-            </Card>
+                  </p>
+                </div>
+                {canOpenWorkspace ? (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={selected ? "default" : "outline"}
+                    aria-label={`Open ${org.name}`}
+                    onClick={() => {
+                      onSelect(org.id);
+                      onAccessOrganization(org.id);
+                    }}
+                    loading={pending}
+                    disabled={isAccessPending}
+                  >
+                    Open
+                  </Button>
+                ) : org.isOwner ? (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      onSelect(org.id);
+                      onResumeBilling(org.id);
+                    }}
+                    loading={pending}
+                    disabled={isResumePending}
+                  >
+                    Complete billing
+                  </Button>
+                ) : (
+                  <span className="max-w-[9rem] text-right text-xs text-muted-foreground">
+                    Waiting on the owner to finish billing
+                  </span>
+                )}
+              </div>
+            </li>
           );
         })}
-      </div>
-    </fieldset>
+      </ul>
+    </section>
   );
 }
 
@@ -295,7 +283,7 @@ export function PlanScroll({
           Billing cycle
         </p>
         <fieldset
-          className="m-0 inline-flex rounded-xl border-0 bg-muted p-1"
+          className="m-0 inline-flex rounded-lg border border-border bg-card p-1"
           aria-labelledby="workspace-billing-cycle-heading"
         >
           {(["monthly", "annual"] as WorkspaceBillingInterval[]).map(
@@ -304,16 +292,23 @@ export function PlanScroll({
                 key={interval}
                 type="button"
                 className={cn(
-                  "rounded-lg px-5 py-2 text-sm font-medium transition-all",
+                  "rounded-md px-4 py-1.5 text-sm font-medium transition-colors",
                   billingInterval === interval
-                    ? "bg-background text-foreground shadow-sm"
+                    ? "bg-primary text-primary-foreground"
                     : "text-muted-foreground hover:text-foreground",
                 )}
                 onClick={() => onBillingIntervalChange(interval)}
               >
                 {interval === "monthly" ? "Monthly" : "Annual"}
                 {interval === "annual" && (
-                  <span className="ml-1.5 text-xs font-semibold text-primary">
+                  <span
+                    className={cn(
+                      "ml-1.5 text-xs font-semibold",
+                      billingInterval === interval
+                        ? "text-primary-foreground/80"
+                        : "text-emerald-600",
+                    )}
+                  >
                     Save {ANNUAL_DISCOUNT_PERCENT}%
                   </span>
                 )}
@@ -393,10 +388,10 @@ function PlanOptionCard({
   return (
     <div
       className={cn(
-        "box-border w-[min(320px,88vw)] shrink-0 rounded-xl border bg-card transition-all duration-200 lg:w-auto",
+        "box-border w-[min(320px,88vw)] shrink-0 rounded-xl border bg-card shadow-sm transition-colors lg:w-auto",
         selected
-          ? "border-primary shadow-md ring-2 ring-primary/20"
-          : "border-border hover:border-primary/30 hover:shadow-sm",
+          ? "border-primary ring-1 ring-primary"
+          : "border-border hover:border-primary/40",
       )}
     >
       <div className="flex h-full flex-col">
@@ -412,7 +407,7 @@ function PlanOptionCard({
             <div className="flex items-center gap-2.5">
               <span
                 className={cn(
-                  "flex h-9 w-9 items-center justify-center rounded-xl",
+                  "flex h-9 w-9 items-center justify-center rounded-lg",
                   selected
                     ? option.iconColor
                     : "bg-muted text-muted-foreground",
@@ -450,7 +445,7 @@ function PlanOptionCard({
 
           <Separator className="mb-5" />
 
-          <p className="mb-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
+          <p className="mb-2 text-xs font-medium text-muted-foreground">
             Limits
           </p>
           <ul className="mb-5 space-y-2">
@@ -459,13 +454,13 @@ function PlanOptionCard({
                 key={line}
                 className="flex items-start gap-2 text-sm text-foreground"
               >
-                <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
+                <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
                 {line}
               </li>
             ))}
           </ul>
 
-          <p className="mb-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
+          <p className="mb-2 text-xs font-medium text-muted-foreground">
             Included
           </p>
           <ul className="mb-2 space-y-2">
@@ -474,7 +469,7 @@ function PlanOptionCard({
                 key={line}
                 className="flex items-start gap-2 text-sm text-foreground"
               >
-                <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
+                <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
                 {line}
               </li>
             ))}
