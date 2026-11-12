@@ -361,7 +361,8 @@ export function AppShell({ children, workspace }: AppShellProps) {
     setSidebarOpen(false);
   }, [pathname]);
 
-  // Avoid double scroll: the shell is h-screen and <main> scrolls.
+  // Avoid double scroll: the shell is h-dvh (visible viewport, so mobile
+  // browser bars never hide the bottom of the page) and <main> scrolls.
   useEffect(() => {
     const html = document.documentElement;
     const prevHtml = html.style.overflow;
@@ -596,7 +597,7 @@ export function AppShell({ children, workspace }: AppShellProps) {
   );
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
+    <div className="flex h-dvh overflow-hidden bg-background">
       {/* Mobile backdrop */}
       {sidebarOpen ? (
         <div
@@ -609,7 +610,7 @@ export function AppShell({ children, workspace }: AppShellProps) {
       {/* Main sidebar: fixed slide-in on mobile, static on desktop */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex h-screen w-64 shrink-0 flex-col overflow-hidden border-r border-sidebar-border bg-sidebar transition-transform duration-300 ease-out",
+          "fixed inset-y-0 left-0 z-50 flex h-dvh w-64 shrink-0 flex-col overflow-hidden border-r border-sidebar-border bg-sidebar transition-transform duration-300 ease-out",
           "md:relative md:translate-x-0 md:transition-none",
           sidebarOpen ? "translate-x-0" : "-translate-x-full",
         )}
@@ -781,7 +782,7 @@ export function AppShell({ children, workspace }: AppShellProps) {
 
             <div
               key={pathname}
-              className="app-fade-in relative flex min-w-0 flex-1 flex-col"
+              className="app-fade-in relative flex min-w-0 flex-1 flex-col pb-[env(safe-area-inset-bottom)]"
             >
               {children}
             </div>

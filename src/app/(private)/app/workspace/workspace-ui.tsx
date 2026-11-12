@@ -194,14 +194,14 @@ export function OrgCardScroll({
                   {org.name.trim()[0]?.toUpperCase() ?? "?"}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="flex items-center gap-2">
+                  <div className="flex items-center gap-2">
                     <span className="truncate text-sm font-semibold text-foreground">
                       {org.name}
                     </span>
                     <Badge variant="secondary" className="shrink-0 text-[11px]">
                       {planLabel(org.plan)}
                     </Badge>
-                  </p>
+                  </div>
                   <p className="truncate text-xs text-muted-foreground">
                     {statusLabel ? (
                       <span className="font-medium text-amber-600">
