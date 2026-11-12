@@ -3,8 +3,10 @@ import "server-only";
 import { compare, hash } from "bcryptjs";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { createAuthMiddleware } from "better-auth/api";
 import { nextCookies } from "better-auth/next-js";
 import { magicLink } from "better-auth/plugins/magic-link";
+import { and, eq } from "drizzle-orm";
 import { uuidv7 } from "uuidv7";
 import { getAppBaseUrl } from "@/lib/base-url";
 import { db } from "@/server/db";
@@ -41,6 +43,44 @@ async function deliverAuthEmail(
     return;
   }
   await send();
+}
+
+/**
+ * Self-healing for accounts from the NextAuth era: if a user still has their
+ * bcrypt hash only in `users.password` (e.g. the database was updated with
+ * `db:push`, which skips the data copy in migration 0019), copy it into a
+ * Better Auth credential account right before the password sign-in runs.
+ */
+async function ensureLegacyCredentialAccount(rawEmail: unknown) {
+  if (typeof rawEmail !== "string" || !rawEmail.trim()) return;
+  const email = rawEmail.trim().toLowerCase();
+
+  try {
+    const user = await db.query.users.findFirst({
+      where: eq(users.email, email),
+      columns: { id: true, password: true },
+    });
+    if (!user?.password) return;
+
+    const existing = await db.query.authAccounts.findFirst({
+      where: and(
+        eq(authAccounts.userId, user.id),
+        eq(authAccounts.providerId, "credential"),
+      ),
+      columns: { id: true },
+    });
+    if (existing) return;
+
+    await db.insert(authAccounts).values({
+      userId: user.id,
+      accountId: user.id,
+      providerId: "credential",
+      password: user.password,
+    });
+    console.info("[auth] Migrated legacy password for user", user.id);
+  } catch (error) {
+    console.error("[auth] Legacy password migration failed", { error });
+  }
 }
 
 export const auth = betterAuth({
@@ -83,6 +123,13 @@ export const auth = betterAuth({
         sendPasswordResetEmail({ email: user.email, url }),
       );
     },
+  },
+  hooks: {
+    before: createAuthMiddleware(async (ctx) => {
+      if (ctx.path === "/sign-in/email") {
+        await ensureLegacyCredentialAccount(ctx.body?.email);
+      }
+    }),
   },
   databaseHooks: {
     user: {

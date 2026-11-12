@@ -162,8 +162,14 @@ export function LoginForm() {
             });
 
             if (error) {
+              const wrongCredentials =
+                error.status === 401 ||
+                error.code === "INVALID_EMAIL_OR_PASSWORD";
               toast.error("Couldn't sign in", {
-                description: "Invalid email or password. Please try again.",
+                description: wrongCredentials
+                  ? "Invalid email or password. Please try again, or use an email link."
+                  : (error.message ??
+                    "Something went wrong. Please try again in a moment."),
               });
               return;
             }
