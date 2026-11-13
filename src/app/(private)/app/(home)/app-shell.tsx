@@ -77,12 +77,6 @@ const CREATE_ACTIONS = [
   },
 ];
 
-const PLAN_LABELS: Record<string, string> = {
-  starter: "Starter",
-  growth: "Growth",
-  scale: "Scale",
-};
-
 export interface ShellWorkspace {
   name: string;
   plan: string | null;
@@ -408,7 +402,6 @@ export function AppShell({ children, workspace }: AppShellProps) {
   const activeSetting = settingsItems?.find((item) =>
     isNavItemActive(pathname, item.href),
   );
-  const planLabel = workspace.plan ? PLAN_LABELS[workspace.plan] : null;
 
   const sidebarContent = (
     <>
@@ -424,42 +417,6 @@ export function AppShell({ children, workspace }: AppShellProps) {
           className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground md:hidden"
         >
           <X className="h-4 w-4" />
-        </button>
-      </div>
-
-      {/* Workspace switcher */}
-      <div className="px-3">
-        <NextLink
-          href={appPaths.workspace}
-          className="group flex items-center gap-2.5 rounded-lg border border-border bg-card px-2.5 py-2 shadow-sm transition-colors hover:bg-muted"
-        >
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary text-sm font-semibold text-primary-foreground">
-            {initialOf(workspace.name)}
-          </span>
-          <span className="min-w-0 flex-1">
-            <span className="block truncate text-sm font-semibold text-foreground">
-              {workspace.name}
-            </span>
-            <span className="block truncate text-xs text-muted-foreground">
-              {planLabel ? `${planLabel} plan` : "Workspace"}
-            </span>
-          </span>
-          <ChevronsUpDown className="h-4 w-4 shrink-0 text-muted-foreground" />
-        </NextLink>
-      </div>
-
-      {/* Search */}
-      <div className="px-3 pt-3">
-        <button
-          type="button"
-          onClick={() => setPaletteOpen(true)}
-          className="flex w-full items-center gap-2.5 rounded-md border border-border bg-muted/50 px-3 py-2 text-left text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-        >
-          <Search className="h-4 w-4" />
-          <span className="flex-1">Search…</span>
-          <kbd className="rounded border border-border bg-card px-1.5 text-[10px] font-semibold">
-            ⌘K
-          </kbd>
         </button>
       </div>
 
