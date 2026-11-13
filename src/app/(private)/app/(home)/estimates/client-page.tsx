@@ -68,9 +68,12 @@ function EstimateRow({
     <tr className="border-b border-border last:border-0">
       <td className="py-3 pl-4 pr-2 align-top">
         <div className="min-w-0 space-y-1">
-          <p className="truncate text-sm font-medium text-foreground">
+          <NextLink
+            href={`/app/estimates/${estimate.id}`}
+            className="block truncate text-sm font-semibold text-primary hover:underline"
+          >
             {estimate.estimateNumber}
-          </p>
+          </NextLink>
           {estimate.notes ? (
             <p className="line-clamp-1 text-xs text-muted-foreground">
               {estimate.notes}

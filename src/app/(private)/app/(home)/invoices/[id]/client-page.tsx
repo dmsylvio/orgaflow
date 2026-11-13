@@ -8,14 +8,16 @@ import {
   Paperclip,
   Pencil,
   Trash2,
-  Upload,
 } from "lucide-react";
 import NextLink from "next/link";
 import { useParams } from "next/navigation";
 import { useRef, useState } from "react";
+import { AttachmentDropzone } from "@/components/app/document-editor";
+import {
+  DocumentSummaryCard,
+  DocumentView,
+} from "@/components/app/document-view";
 import { Button } from "@/components/ui/button";
-import { RichTextContent } from "@/components/ui/rich-text-editor";
-import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
 import { useCanViewPrices } from "@/hooks/use-can-view-prices";
 import { formatCurrencyDisplay } from "@/lib/currency-format";
@@ -73,16 +75,17 @@ function InvoiceFilesSection({ invoiceId }: { invoiceId: string }) {
   const files = filesQuery.data ?? [];
 
   return (
-    <div className="app-card p-5">
-      <div className="flex items-center gap-2">
-        <Paperclip className="h-4 w-4 text-muted-foreground" />
-        <h2 className="text-sm font-semibold text-foreground">Attachments</h2>
-        <span className="ml-auto text-xs text-muted-foreground">
+    <section className="app-card">
+      <header className="flex items-center justify-between gap-3 border-b border-border px-5 py-3.5">
+        <h2 className="text-[15px] font-semibold text-foreground">
+          Attachments
+        </h2>
+        <span className="text-xs text-muted-foreground">
           {files.length} file{files.length !== 1 ? "s" : ""}
         </span>
-      </div>
+      </header>
 
-      <div className="mt-4 space-y-3">
+      <div className="space-y-3 px-5 py-4">
         <input
           ref={inputRef}
           type="file"
@@ -91,28 +94,10 @@ function InvoiceFilesSection({ invoiceId }: { invoiceId: string }) {
           multiple
           onChange={(e) => handleFiles(e.target.files)}
         />
-        <button
-          type="button"
+        <AttachmentDropzone
           onClick={() => inputRef.current?.click()}
-          disabled={uploading}
-          className="flex w-full items-center gap-3 rounded-lg border border-dashed border-border bg-muted/30 p-4 transition-colors hover:bg-muted/50 disabled:opacity-60"
-        >
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border bg-background">
-            {uploading ? (
-              <Spinner className="h-4 w-4 text-primary" />
-            ) : (
-              <Upload className="h-4 w-4 text-muted-foreground" />
-            )}
-          </div>
-          <div className="text-left">
-            <p className="text-sm font-medium text-foreground">
-              {uploading ? "Uploading…" : "Upload Attachment"}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              PNG, JPG, GIF, WebP — max 25 MB
-            </p>
-          </div>
-        </button>
+          uploading={uploading}
+        />
 
         {filesQuery.isLoading && (
           <div className="flex justify-center py-2">
@@ -121,11 +106,11 @@ function InvoiceFilesSection({ invoiceId }: { invoiceId: string }) {
         )}
 
         {files.length > 0 && (
-          <ul className="space-y-1.5">
+          <ul className="space-y-2">
             {files.map((file) => (
               <li
                 key={file.id}
-                className="flex items-center gap-2 rounded-md border border-border bg-muted/30 px-3 py-2 text-sm"
+                className="flex items-center gap-3 rounded-lg border border-border bg-card px-3 py-2 text-sm"
               >
                 {file.mimeType.startsWith("image/") ? (
                   <Paperclip className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
@@ -156,7 +141,7 @@ function InvoiceFilesSection({ invoiceId }: { invoiceId: string }) {
           </ul>
         )}
       </div>
-    </div>
+    </section>
   );
 }
 
@@ -182,190 +167,77 @@ export default function InvoiceDetailPage() {
   return (
     <PageShell
       title={invoice.invoiceNumber}
-      description="Review invoice details, totals, notes, and line items."
+      description={`Invoice for ${invoice.customer.displayName}`}
+      actions={
+        <Button type="button" variant="outline" size="sm" asChild>
+          <NextLink href="/app/invoices">
+            <ArrowLeft className="h-4 w-4" />
+            All invoices
+          </NextLink>
+        </Button>
+      }
     >
-      <div className="space-y-6">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <InvoiceStatusBadge status={invoice.status} />
-            <span className="text-sm text-muted-foreground">
-              {invoice.customer.displayName}
-            </span>
-          </div>
-
-          <div className="flex gap-2">
-            <Button type="button" variant="outline" asChild>
-              <NextLink href="/app/invoices">
-                <ArrowLeft className="h-4 w-4" />
-                Back
-              </NextLink>
-            </Button>
-            <Button type="button" variant="outline" asChild>
-              <a href={`/api/pdf/invoice/${invoice.id}`} download>
-                <Download className="h-4 w-4" />
-                PDF
-              </a>
-            </Button>
-            <Button type="button" asChild>
-              <NextLink href={`/app/invoices/edit?id=${invoice.id}`}>
-                <Pencil className="h-4 w-4" />
-                Edit
-              </NextLink>
-            </Button>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
-          <div className="app-card p-4">
-            <p className="text-xs uppercase tracking-wide text-muted-foreground/70">
-              Invoice date
-            </p>
-            <p className="mt-1 text-sm font-semibold text-foreground">
-              {formatInvoiceDate(invoice.invoiceDate)}
-            </p>
-          </div>
-          <div className="app-card p-4">
-            <p className="text-xs uppercase tracking-wide text-muted-foreground/70">
-              Due date
-            </p>
-            <p className="mt-1 text-sm font-semibold text-foreground">
-              {formatInvoiceDate(invoice.dueDate) ?? "No due date"}
-            </p>
-          </div>
-          {canViewPrices ? (
-            <div className="app-card p-4">
-              <p className="text-xs uppercase tracking-wide text-muted-foreground/70">
-                Subtotal
-              </p>
-              <p className="mt-1 text-sm font-semibold text-foreground">
-                {formatCurrencyDisplay(
-                  invoice.subTotal ?? "",
-                  invoice.currency,
-                )}
-              </p>
-            </div>
-          ) : null}
-          {canViewPrices ? (
-            <div className="app-card p-4">
-              <p className="text-xs uppercase tracking-wide text-muted-foreground/70">
-                Total
-              </p>
-              <p className="mt-1 text-sm font-semibold text-foreground">
-                {formatCurrencyDisplay(invoice.total ?? "", invoice.currency)}
-              </p>
-            </div>
-          ) : null}
-        </div>
-
-        <div className="app-card p-5">
-          <div className="flex items-center justify-between gap-3">
-            <h2 className="text-lg font-semibold text-foreground">
-              Line items
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              {invoice.items.length} item{invoice.items.length !== 1 ? "s" : ""}
-            </p>
-          </div>
-
-          <div className="mt-4 space-y-4">
-            {invoice.items.map((item) => (
-              <div key={item.id} className="rounded-xl bg-muted/30 p-4">
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div>
-                    <p className="text-sm font-semibold text-foreground">
-                      {item.name}
-                    </p>
-                    {item.description ? (
-                      <p className="mt-1 text-sm text-muted-foreground">
-                        {item.description}
-                      </p>
-                    ) : null}
-                  </div>
-                  {canViewPrices ? (
-                    <p className="text-sm font-semibold text-foreground">
-                      {formatCurrencyDisplay(
-                        item.total ?? "",
-                        invoice.currency,
-                      )}
-                    </p>
-                  ) : null}
-                </div>
-
-                <div className="mt-3 grid gap-3 text-sm text-muted-foreground sm:grid-cols-3">
-                  <div>
-                    Qty:{" "}
-                    <span className="text-foreground">{item.quantity}</span>
-                  </div>
-                  {canViewPrices ? (
-                    <div>
-                      Unit price:{" "}
-                      <span className="text-foreground">
-                        {formatCurrencyDisplay(
-                          item.price ?? "",
-                          invoice.currency,
-                        )}
-                      </span>
-                    </div>
-                  ) : null}
-                  <div>
-                    Unit:{" "}
-                    <span className="text-foreground">
-                      {item.unitName ?? "No unit"}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {invoice.items.length === 0 ? (
-            <p className="mt-4 text-sm text-muted-foreground">
-              This invoice has no line items.
-            </p>
-          ) : null}
-
-          <Separator className="my-5" />
-
-          {canViewPrices ? (
-            <div className="ml-auto max-w-sm space-y-3 text-sm">
-              <div className="flex items-center justify-between text-muted-foreground">
-                <span>Subtotal</span>
-                <span className="font-medium text-foreground">
-                  {formatCurrencyDisplay(
-                    invoice.subTotal ?? "",
-                    invoice.currency,
-                  )}
-                </span>
-              </div>
-              <div className="flex items-center justify-between text-muted-foreground">
-                <span>Tax</span>
-                <span className="font-medium text-foreground">
-                  {formatCurrencyDisplay(invoice.tax ?? "", invoice.currency)}
-                </span>
-              </div>
-              <Separator />
-              <div className="flex items-center justify-between">
-                <span className="font-semibold text-foreground">Total</span>
-                <span className="text-lg font-semibold text-foreground">
-                  {formatCurrencyDisplay(invoice.total ?? "", invoice.currency)}
-                </span>
-              </div>
-            </div>
-          ) : null}
-        </div>
-
-        {invoice.notes ? (
-          <div className="app-card p-5">
-            <h2 className="text-lg font-semibold text-foreground">Notes</h2>
-            <RichTextContent
-              html={invoice.notes}
-              className="mt-3 text-sm text-muted-foreground"
-            />
-          </div>
-        ) : null}
-
-        <InvoiceFilesSection invoiceId={invoiceId} />
-      </div>
+      <DocumentView
+        kindLabel="Invoice"
+        number={invoice.invoiceNumber}
+        status={<InvoiceStatusBadge status={invoice.status} />}
+        customer={{
+          name: invoice.customer.displayName,
+          email: invoice.customer.email,
+        }}
+        dates={[
+          ["Invoice date", formatInvoiceDate(invoice.invoiceDate) ?? "Not set"],
+          ["Due date", formatInvoiceDate(invoice.dueDate) ?? "No due date"],
+        ]}
+        items={invoice.items}
+        currency={invoice.currency}
+        canViewPrices={canViewPrices}
+        totals={{
+          subTotal: invoice.subTotal,
+          tax: invoice.tax,
+          total: invoice.total,
+        }}
+        notes={invoice.notes}
+        attachments={<InvoiceFilesSection invoiceId={invoiceId} />}
+        summary={
+          <DocumentSummaryCard
+            total={
+              canViewPrices
+                ? formatCurrencyDisplay(invoice.total ?? "", invoice.currency)
+                : null
+            }
+            facts={[
+              [
+                "Status",
+                <InvoiceStatusBadge key="s" status={invoice.status} />,
+              ],
+              ["Due", formatInvoiceDate(invoice.dueDate) ?? "No due date"],
+              ["Items", String(invoice.items.length)],
+            ]}
+            actions={
+              <>
+                <Button type="button" asChild className="w-full">
+                  <NextLink href={`/app/invoices/edit?id=${invoice.id}`}>
+                    <Pencil className="h-4 w-4" />
+                    Edit invoice
+                  </NextLink>
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  asChild
+                  className="w-full"
+                >
+                  <a href={`/api/pdf/invoice/${invoice.id}`} download>
+                    <Download className="h-4 w-4" />
+                    Download PDF
+                  </a>
+                </Button>
+              </>
+            }
+          />
+        }
+      />
     </PageShell>
   );
 }
